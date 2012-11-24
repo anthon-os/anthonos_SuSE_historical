@@ -1,0 +1,228 @@
+#!/bin/bash
+#
+# Copyright (c) 2004 SUSE LINUX AG Nuernberg, Germany.
+# All rights reserved.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+# Place, Suite 330, Boston, MA 02111-1307 USA
+#
+# Author: Lars Mueller <lmuelle@suse.de>
+
+# dhcpcd-hook-samba
+#
+# Script to update /etc/samba/dhcp.conf if the DHCP client get new settings
+# for the NetBIOS Name Server or Scope.
+#
+# We expact at least two arguments:
+# $1 The configuration name, e.g. ifcfg-eth-id-00:08:f9:3d:ab:3d.
+# $2 The interface name, e.g. eth0.
+# $3 -$n are used as additional options.  We only check if it includes debug.
+
+unset ${!LC_*} LANGUAGE
+export LANG="POSIX"
+export PATH="/sbin:/usr/sbin:/bin/:/usr/bin"
+
+numArgs=$#
+configname="$1"
+shift
+interface="$1"
+if [ "${interface}" = "lo" ]; then
+  exit 0
+fi
+shift
+
+# And shift away the '-o'.
+shift
+options="$@"
+
+# Log functions
+function log_dbg()
+{
+  	case "${options}" in
+		*debug*)
+			logger -t $0 -p daemon.debug "$1"
+			;;
+	esac
+}
+function log_err()
+{
+	logger -t $0 -p daemon.err "$1"
+	exit 1
+}
+
+SYSCONFIG_FILE="/etc/sysconfig/network/dhcp"
+if [ -r "${SYSCONFIG_FILE}" ]; then
+	source "${SYSCONFIG_FILE}"
+	# Exit gracefully if this feature was disabled.
+	if [ "${DHCLIENT_MODIFY_SMB_CONF}" = "no" ]; then
+		exit 0
+	fi
+fi
+
+# Check if this configuration is known and configured for DHCP.
+INTEFACE_CONFIG_FILE="/etc/sysconfig/network/ifcfg-${configname}"
+case "${options}" in
+	*nm*)
+		log_dbg "NetworkManager Mode"
+	;;
+	*)
+		log_dbg "Traditional mode with DHCP"
+		if [ -r "${INTEFACE_CONFIG_FILE}" ]; then
+			source "${INTEFACE_CONFIG_FILE}"
+			# Check if the interface is configured for autoip or DHCP.
+			IfBootprotoAuto="no"
+			for CurrBootproto in ${BOOTPROTO//+/ } ; do
+				case "${CurrBootproto}" in autoip|dhcp|dhcp4|dhcp6)
+					IfBootprotoAuto="yes" ;;
+				esac
+			done
+			test "${IfBootprotoAuto}" = "no" && exit 0
+		fi
+	;;
+esac
+
+if [ $numArgs -lt 2 ]; then
+	log_err "At least configuration and interface name are needed as arguments."
+fi
+
+HOOK_FUNCTIONS_FILE="/etc/sysconfig/network/scripts/dhcpcd-hook-samba-functions"
+if [ -r "${HOOK_FUNCTIONS_FILE}" ]; then
+	log_dbg "Source ${HOOK_FUNCTIONS_FILE}"
+	source ${HOOK_FUNCTIONS_FILE}
+else
+	log_err "${HOOK_FUNCTIONS_FILE} not found."
+fi
+
+# Check for and get the new data.
+function getNetConfig()
+{
+	HostInfoFiles="/var/lib/dhcpcd/dhcpcd-${interface}.info"
+	# Check first for lease on openSUSE 11.1, 11.0 and then CODE10
+	HostLeaseFiles="/var/lib/dhcp/dhclient-${interface}.lease /var/run/dhclient-${interface}.lease /var/lib/dhcp/dhclient-${interface}.leases"
+	unset new_netbios_name_servers WINSSERVERS NETBIOSSCOPE
+	for HostInfo in ${HostInfoFiles}; do
+		if test -r ${HostInfo}; then
+			break
+		fi
+	done
+	log_dbg "HostInfo: ${HostInfo}"
+
+	for HostLease in ${HostLeaseFiles}; do
+		if test -r ${HostLease}; then
+			break
+		fi
+	done
+	log_dbg "HostLease: ${HostLease}"
+
+	if [ -n "${HostInfo}" -o -n "${HostLease}" ]; then
+		if test "${HostInfo}" -nt "${HostLease}"; then
+			source "${HostInfo}"
+			OLD_IFS=${IFS}
+			IFS=','
+			for server in "${WINSSERVERS} ${NETBIOSNAMESERVER}"; do
+				new_netbios_name_servers="${new_netbios_name_servers} ${server}"
+			done
+			IFS=${OLD_IFS}
+		elif test "${HostLease}" -nt "${HostInfo}"; then
+			eval $( awk 'BEGIN { FS="[[:blank:];]*" } /netbios-name-servers/ { netbios_name_servers=$4 }; /netbios-scope/ { netbios_scope=$4 } END { print "new_netbios_name_servers=\"" netbios_name_servers "\"\nNETBIOSSCOPE=" netbios_scope}' "${HostLease}")
+		else
+			log_err "No dhcpcd info nor dhclient leases file found for ${interface}."
+		fi
+	fi
+	export new_netbios_name_servers
+	export new_netbios_scope="${NETBIOSSCOPE}"
+	log_dbg "new_netbios_name_servers: ${new_netbios_name_servers}"
+}
+
+# Check for and get the old data.
+function getOldConfig()
+{
+	OldHostInfoFiles="/var/lib/dhcpcd/dhcpcd-${interface}.info.old"
+	# Check first for lease on openSUSE 11.1, 11.0 and then CODE10
+	OldHostLeasesFiles="/var/lib/dhcp/dhclient-${interface}.lease /var/run/dhclient-${interface}.lease /var/lib/dhcp/dhclient-${interface}.leases"
+	unset old_netbios_name_servers old_netbios_scope WINSSERVERS NETBIOSSCOPE
+	for OldHostInfo in ${OldHostInfoFiles}; do
+		if test -r ${OldHostInfo}; then
+			break
+		fi
+	done
+	log_dbg "OldHostInfo: ${OldHostInfo}"
+
+	for OldHostLease in ${OldHostLeaseFiles}; do
+		if test -r ${OldHostLease}; then
+			break
+		fi
+	done
+	log_dbg "OldHostLease: ${OldHostLease}"
+
+	if [ -n "${OldHostInfo}" -o -n "${OldHostLease}" ]; then
+		if test "${OldHostInfo}" -nt "${OldHostLease}"; then
+			source "${OldHostInfo}"
+			OLD_IFS=${IFS}
+			IFS=','
+			for server in "${WINSSERVERS} ${NETBIOSNAMESERVER}"; do
+				old_netbios_name_servers="${old_netbios_name_servers} ${server}"
+			done
+			IFS=${OLD_IFS}
+		elif test "${OldHostLease}" -nt "${OldHostInfo}"; then
+			eval $(awk 'BEGIN { FS="[[:blank:];]*" } /netbios-name-servers/ { old_netbios_name_servers=netbios_name_servers; netbios_name_servers=$4 }; /netbios-scope/ { old_netbios_scope=netbios_scope; netbios_scope=$4 } END { print "old_netbios_name_servers=\"" old_netbios_name_servers "\"\nNETBIOSSCOPE=" old_netbios_scope}' "${OldHostLease}")
+		else
+			log_dbg "No old dhcpcd info nor dhclient leases file found for ${interface}."
+		fi
+	fi
+	export old_netbios_name_servers
+	export old_netbios_scope="${NETBIOSSCOPE}"
+	log_dbg "old_netbios_name_servers: ${old_netbios_name_servers}"
+}
+
+# Functions called by the main case statement.
+function ifUp()
+{
+	export reason="RENEW"
+	export SAMBA_DHCP_CONF_INFO_FILE="/var/adm/fillup-templates/samba-client-dhcp.conf"
+	netbios_setup
+	if test -n "${new_netbios_name_servers}"; then
+		if test "${new_netbios_name_servers}" != "${old_netbios_name_servers}" -o \
+			"${new_netbios_scope}" != "${old_netbios_scope}"; then
+			servicesToReload="nmb winbind smb"
+			grep -q -E ':name=systemd:/system/' /proc/$$/cgroup 2>/dev/null
+			not_in_systemd=$?
+			for service in ${servicesToReload}; do
+				if test ${not_in_systemd} -ne 0; then
+					test -x /etc/init.d/${service} && /etc/init.d/${service} force-reload
+				else
+					systemctl --ignore-dependencies force-reload ${service}.service
+				fi
+			done
+			log_dbg "Got new settings.  Services ${servicesToReload} reloaded."
+		fi
+	fi
+}
+
+#function ifDown()
+#{
+#}
+
+# Main case switch
+case "$0" in
+	*if-up.d*)
+		getNetConfig
+		getOldConfig
+		ifUp
+		;;
+	*if-down.d*) ;;
+	*)
+		log_err "Don't know what to do.  This script used to be called from dir if-{up,down}.d/."
+		;;
+esac

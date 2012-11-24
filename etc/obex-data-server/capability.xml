@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<!DOCTYPE Capability SYSTEM "obex-capability.dtd">
+<Capability Version="1.0">
+	<General>
+		<Manufacturer>Generic</Manufacturer>
+		<Model>Computer</Model>
+		<SW Version="{$ODS_VER}"/>
+		<Memory>
+			<MemType>Filesystem</MemType>
+			<Free>{$MEM_FREE}</Free>
+			<Used>{$MEM_USED}</Used>
+			<CaseSenN/>
+		</Memory>
+	</General>
+</Capability>

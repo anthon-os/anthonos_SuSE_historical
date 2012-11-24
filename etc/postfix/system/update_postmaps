@@ -1,0 +1,31 @@
+#!/bin/bash
+# Copyright (c) 2012 SUSE LINUX Products AG
+#
+# Author: Peter Varkoly
+# Please send feedback to http://www.suse.de/feedback/
+#
+# /etc/postfix/system/update_postmaps
+#
+
+
+test -f /etc/sysconfig/postfix && . /etc/sysconfig/postfix 
+
+if [ -n "${POSTFIX_UPDATE_MAPS/[yY][Ee][Ss]/}" ]; then 
+    return 
+fi 
+# Update the postmaps 
+for i in $POSTFIX_MAP_LIST; do 
+    m=/etc/postfix/$i; 
+    d=$m.db 
+    if [ -e $m -a $m -nt $d ]; then 
+        postmap $m; 
+    fi 
+done 
+for i in /etc/aliases /etc/aliases.d/*; do 
+    m=${i/.db//} 
+    d=$m.db 
+    if [ -e $m -a $m -nt $d ]; then 
+        postalias $m; 
+    fi 
+done 
+

@@ -1,0 +1,19 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Name=Evince文档阅读器
+Comment=View multi-page documents
+TryExec=evince
+Exec=evince %U
+StartupNotify=true
+Terminal=false
+Type=Application
+Icon=evince
+NoDisplay=true
+X-GNOME-DocPath=
+X-GNOME-Bugzilla-Bugzilla=GNOME
+X-GNOME-Bugzilla-Product=evince
+X-GNOME-Bugzilla-Component=BugBuddyBugs
+X-GNOME-Bugzilla-Version=3.4.0
+Categories=GNOME;GTK;Office;Viewer;Graphics;VectorGraphics;
+MimeType=application/pdf;application/x-bzpdf;application/x-gzpdf;application/x-xzpdf;application/postscript;application/x-bzpostscript;application/x-gzpostscript;image/x-eps;image/x-bzeps;image/x-gzeps;application/x-dvi;application/x-bzdvi;application/x-gzdvi;image/vnd.djvu;image/tiff;application/x-cbr;application/x-cbz;application/x-cb7;application/x-cbt;application/oxps;application/vnd.ms-xpsdocument;
+

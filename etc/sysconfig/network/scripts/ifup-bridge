@@ -1,0 +1,291 @@
+#!/bin/bash
+#
+# Copyright (c) 2005-2008 SUSE LINUX Products GmbH Nuernberg, Germany.
+# All rights reserved.
+#
+# Author: 
+#    Stefan Scheler <sscheler@suse.de> 
+#    Marius Tomaschewski <mt@suse.de>
+#
+# Based on a patch by:
+#    Jan Engelhardt <jengelh@linux01.gwdg.de>
+#
+# $Id$
+#
+
+unset POSIXLY_CORRECT ; set +o posix # we're using non-posix bash features
+
+usage () {
+	echo $@
+	echo "usage: if{up,down,status}-bridge [<config>] <interface> [-o <options>]"
+	echo ""
+	echo "Options are:"
+	echo "    [on]boot : we are currently booting (or shutting down)"
+	echo "    auto     : alias for boot"
+	echo "    hotplug  : we are handling a hotplug event"
+	echo "    debug    : be verbose"
+	exit $R_USAGE
+}
+
+######################################################################
+# change the working direcory and source some common files
+#
+R_INTERNAL=1      # internal error, e.g. no config or missing scripts
+cd /etc/sysconfig/network || exit $R_INTERNAL
+test -f ./config && . ./config
+test -f scripts/functions && . scripts/functions || exit $R_INTERNAL
+
+######################################################################
+# check arguments and how we are called (in case of links)
+#
+SCRIPTNAME=${0##*/}
+debug $*
+ACTION=${SCRIPTNAME#if}
+ACTION=${ACTION%%-bridge}
+case "${ACTION}" in
+	up|status|down) ;;
+	*) usage
+esac
+case "$1" in ""|-h|*help*) usage; esac
+CONFIG=$1
+shift
+if [ -n "$1" -a "$1" != "-o" ] ; then
+	INTERFACE=$1
+else
+	INTERFACE=$CONFIG
+fi
+shift
+test "$1" = "-o" && shift
+OPTIONS="$@"
+MODE=manual
+while [ $# -gt 0 ]; do
+	case $1 in
+		boot|onboot) MODE=auto ;;
+		hotplug)     MODE=auto ;;
+		auto)        MODE=auto ;;
+		quiet)       be_quiet_has_gone ;;
+		debug)       DEBUG=yes ;;
+		*)           debug unknown option $1 ;;
+	esac
+	shift
+done
+
+######################################################################
+# Check needed tools
+#
+if ! [ -x /sbin/brctl ]; then
+	err_mesg "bridge-utils not installed"
+	exit $R_INTERNAL
+fi
+
+######################################################################
+# check presence of configuration file and source it
+#
+source_iface_config "$CONFIG"
+
+######################################################################
+# global variables
+#
+SYSFS="/sys/class/net"
+
+######################################################################
+apply_constraints()
+{
+	local var=$1
+	local -i min=$(($2))
+	local -i max=$(($3))
+	local    def=$4
+
+	test -n "${!var}" || return
+	if   test $((${!var})) -lt $min ; then
+		def=${def:-$min}
+		message_if_not_run_from_rc \
+			"Warning: Correcting $var from ${!var} to $def"
+		eval "${var}=$def"
+	elif test $((${!var})) -gt $max ; then
+		def=${def:-$max}
+		message_if_not_run_from_rc \
+			"Warning: Correcting $var from ${!var} to $def"
+		eval "${var}=$def"
+	fi
+}
+
+######################################################################
+case $ACTION in
+up)
+
+	######################################################################
+	# Bridge setup
+	#
+	printf "    %-9s " "$INTERFACE"
+
+	# Add bridge
+	if test -d $SYSFS/$INTERFACE/ ; then
+		if test -d $SYSFS/$INTERFACE/bridge ; then
+			err_mesg "Warning: Bridge $INTERFACE already exists!"
+			printf "    %-9s " "$INTERFACE"
+		else
+			err_mesg "Error: Interface $INTERFACE exists and is not a bridge!"
+			exit $R_ERROR
+		fi
+	else
+		MESSAGE=`brctl addbr "$INTERFACE"`
+		if [ $? -ne 0 ]; then
+			err_mesg "Error: Failed to create bridge $INTERFACE: $MESSAGE"
+			exit $R_ERROR
+		fi
+	fi
+
+	# Add ports
+	printf "Ports: "
+	for PORT_INTERFACE in $(ls -1 $SYSFS/$INTERFACE/brif/ 2>/dev/null) ; do
+		printf "<${PORT_INTERFACE}> "
+	done
+	SHOW=1
+	COUNTER=0
+	BRIFINDEX=`cat $SYSFS/$INTERFACE/ifindex`
+	for PORT_INTERFACE in $BRIDGE_PORTS; do
+		test $SHOW -eq 2 && printf "    %-9s Ports:" "$INTERFACE"
+		SHOW=1
+		# add port to bridge
+		if test -d $SYSFS/$PORT_INTERFACE/ -a \
+			-d $SYSFS/$PORT_INTERFACE/brport/bridge ; then
+			INDEX=`cat $SYSFS/$PORT_INTERFACE/brport/bridge/ifindex`
+			if test $((INDEX)) -ne $((BRIFINDEX)) ; then
+				printf "\n    %-9s " "$INTERFACE"
+				err_mesg " Error: Port $PORT_INTERFACE is member of another bridge"
+				exit $R_ERROR
+			fi
+			# else ok, port already in this bridge
+			if ! is_iface_up $PORT_INTERFACE ; then
+				ip link set dev "$PORT_INTERFACE" up
+			fi
+			SHOW=0
+		else
+			MESSAGE=`ip link set dev "$PORT_INTERFACE" up 2>&1 && brctl addif "$INTERFACE" "$PORT_INTERFACE" 2>&1`
+			if [ $? -ne 0 ]; then
+				printf "\n    %-9s " "$INTERFACE"
+				err_mesg "Warning: failed to add port $PORT_INTERFACE: $MESSAGE"
+				SHOW=2
+				COUNTER=$((COUNTER+1))
+				continue
+			fi
+		fi
+
+		# set path costs
+		if [ -n "$BRIDGE_PATHCOSTS" ]; then
+			COSTS=(${BRIDGE_PATHCOSTS})
+			if test "x${COSTS[$COUNTER]}" != "x" -a \
+				"x${COSTS[$COUNTER]}" != "x-" ; then
+				brctl setpathcost $INTERFACE $PORT_INTERFACE ${COSTS[$COUNTER]}
+			fi
+		fi
+		# set port prio
+		if [ -n "$BRIDGE_PORTPRIORITIES" ]; then
+			PRIOS=(${BRIDGE_PORTPRIORITIES})
+			if test "x${PRIOS[$COUNTER]}" != "x" -a \
+				"x${PRIOS[$COUNTER]}" != "x-" ; then
+				brctl setportprio $INTERFACE $PORT_INTERFACE ${PRIOS[$COUNTER]}
+			fi
+		fi
+
+		test $SHOW -eq 1 && printf "[$PORT_INTERFACE] "
+		COUNTER=$((COUNTER+1))
+	done
+	test $SHOW -lt 2 && printf "\n"
+
+	# Set flags
+	[ -n "$BRIDGE_AGEINGTIME"   ] && brctl setageing     "$INTERFACE" "$BRIDGE_AGEINGTIME"
+	[ -n "$BRIDGE_STP"          ] && brctl stp           "$INTERFACE" "$BRIDGE_STP"
+	case $BRIDGE_STP in
+	on)
+		apply_constraints BRIDGE_FORWARDDELAY 4 30
+		apply_constraints BRIDGE_HELLOTIME    1  6
+		apply_constraints BRIDGE_MAXAGE       6 40
+	;;
+	esac
+	[ -n "$BRIDGE_PRIORITY"     ] && brctl setbridgeprio "$INTERFACE" "$BRIDGE_PRIORITY"
+	[ -n "$BRIDGE_FORWARDDELAY" ] && brctl setfd         "$INTERFACE" "$BRIDGE_FORWARDDELAY"
+	[ -n "$BRIDGE_HELLOTIME"    ] && brctl sethello      "$INTERFACE" "$BRIDGE_HELLOTIME"
+	[ -n "$BRIDGE_MAXAGE"       ] && brctl setmaxage     "$INTERFACE" "$BRIDGE_MAXAGE"
+
+	ip link set up dev $INTERFACE
+	typeset -i N=-300
+	typeset -i NMAX
+	typeset -i EMPTY=0
+	typeset -i STATE=0
+	typeset -i S
+
+	mesg_n "`printf "    %-9s forwarddelay (see man ifcfg-bridge) " $INTERFACE`"
+	read -t 1 NMAX < $SYSFS/$INTERFACE/bridge/forward_delay
+	while (((N+=1) < NMAX)) ; do
+		let STATE=0
+		for bp in $SYSFS/$INTERFACE/brif/* ; do
+			test -e "$bp" || break 2
+			let EMPTY++
+			sf="$SYSFS/$INTERFACE/brif/${bp##*/}/state"
+			test -e $sf || continue
+			read -t 1 S < $sf
+			if ((S == 2 )) ; then
+				let STATE=-1
+				break
+			fi
+			let STATE+=S
+		done
+		((STATE > 0)) && break
+		# make a dot every 2nd second
+		((N%200 == 1)) && mesg_n "."
+		usleep 10000
+	done
+	if test $EMPTY -eq 0 ; then
+		mesg "- no ports in bridge."
+	else
+		test "$STATE" -gt 0    \
+			&& mesg "... ready" \
+			|| mesg " not ready. Proceeding in background."
+	fi
+	RETVAL=$R_SUCCESS
+	;;
+down)
+
+	######################################################################
+	# Bridge shutdown
+	#
+	if test -d $SYSFS/$INTERFACE/bridge ; then
+		MESSAGE=`brctl delbr "$INTERFACE"`
+		if [ $? -ne 0 ]; then
+			err_mesg "Error: failed to delete bridge $INTERFACE: $MESSAGE"
+			exit $R_STATUS
+		fi
+		for PORT_INTERFACE in $BRIDGE_PORTS \
+			$(ls -1 $SYSFS/$INTERFACE/brif/ 2>/dev/null)
+		do
+			test -d $SYSFS/$PORT_INTERFACE || continue
+			MESSAGE=`ip link set dev "$PORT_INTERFACE" down`
+			if [ $? -ne 0 ]; then
+				err_mesg "Warning: failed to bring $PORT_INTERFACE down: $MESSAGE"
+			fi
+		done
+	fi
+	RETVAL=$R_SUCCESS
+	;;
+status)
+
+	######################################################################
+	# Bridge status
+	#
+	if is_iface_up $INTERFACE ; then
+	    # do not show status output on boot, this may log
+	    # the WEP key in the boot log
+	    if [ "$MODE" != onboot ]; then
+			brctl show $INTERFACE
+			brctl showstp $INTERFACE
+		fi
+	    RETVAL=$R_SUCCESS
+	else
+	    RETVAL=$R_NOTRUNNING
+	fi
+	;;
+esac
+
+exit $RETVAL

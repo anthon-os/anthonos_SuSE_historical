@@ -1,0 +1,4 @@
+#
+# Update links for mkinitrd scripts
+#
+%install_mkinitrd   /usr/bin/perl /sbin/mkinitrd_setup

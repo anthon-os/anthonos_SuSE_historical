@@ -1,0 +1,9 @@
+## Path:	Hardware/SmartCard
+## Description:	Hard disc health monitoring
+## ServiceReload: pcscd
+## Type:	string
+## Default:	
+#
+# Command line options for pcscd(8) init script.
+#
+PCSCD_OPTIONS=""

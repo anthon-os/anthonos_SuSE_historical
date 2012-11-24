@@ -1,0 +1,29 @@
+[Desktop Entry]
+X-SuSE-DocTeamID=ycc_ldap
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Net_advanced;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+X-SuSE-YaST-Call=ldap
+
+X-SuSE-YaST-Group=Net_advanced
+X-SuSE-YaST-Argument=
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-AutoInst=all
+X-SuSE-YaST-Geometry=
+X-SuSE-YaST-SortKey=
+X-SuSE-YaST-AutoInstResource=ldap
+X-SuSE-YaST-AutoInstClonable=true
+X-SuSE-YaST-AutoInstRequires=ldap-server
+X-SuSE-YaST-AutoInstSchema=ldap_client.rnc
+X-SuSE-YaST-Keywords=ldap,authentication,sssd,pam
+
+Icon=yast-ldap
+Exec=xdg-su -c "/sbin/yast2 ldap"
+
+Name=LDAP Client
+GenericName=Configure the LDAP client
+StartupNotify=true
+

@@ -1,0 +1,7 @@
+# sasl_passwd
+# Syntax:
+# domain	username:password
+# Example:
+# foo.com	username:password
+# See /usr/share/doc/packages/postfix/README_FILES/SASL_README
+# for more details

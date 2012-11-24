@@ -1,0 +1,7 @@
+# relay_ccerts
+# Syntax:
+# fingerprint	name
+# Example:
+# D7:04:2F:A7:0B:8C:A5:21:FA:31:77:E1:41:8A:EE:80 lutzpc.at.home
+# See /usr/share/doc/packages/postfix/samples/sample-tls.cf
+# for more details

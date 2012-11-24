@@ -1,0 +1,111 @@
+#!/bin/sh
+#
+# Xstartup:	Do log on of the local or remote user by writing
+#		utmp/wtmp/lastlog entries for the X session.
+#
+# Copyright (c) 1998-2000 SuSE GmbH Nuernberg, Germany.
+# please report bugfixes or comments at http://www.suse.de/feedback.
+#
+# Author: Werner Fink,   <werner@suse.de>
+#
+  LIBDIR=/usr/lib/X11
+  ETCDIR=/etc/X11
+  XDMDIR=${ETCDIR}/xdm
+  BINDIR=/usr/bin
+xmessage=${BINDIR}/xmessage
+ NOLOGIN=/etc/nologin
+# halporp=/usr/bin/hal-find-by-property
+   xvkbd=${BINDIR}/xvkbd
+   kvkbd=${BINDIR}/kvkbd
+  xsetup=${XDMDIR}/Xsetup
+
+no_exit_on_failed_exec=1
+type shopt &> /dev/null && shopt -s execfail
+set +e     &> /dev/null
+
+#
+# Check if the machine is a TabletPC and kill xvkbd
+# to avoid multiple start on user desktop
+#
+#$halporp --key system.formfactor.subtype --string tabletpc
+#if test $? -eq 0 -a -x $xvkbd ; then
+#    /sbin/killproc -p /var/run/xvkbd.pid -TERM $xvkbd
+#    # in case it's actually kvkbd
+#    /sbin/killproc -p /var/run/xvkbd.pid -TERM $kvkbd
+#    # Bug #408736
+#    # in case xvkbd hasn't been started by the Xsetup subshell yet
+#    /sbin/killproc -p /var/run/xvkbd.pid -TERM $xsetup
+#fi
+
+#
+# The real user id
+#
+RUID=`id -ur $USER`
+
+#
+# If login is disabled, give an appropriate message
+# and exit if normal user knock on.
+#
+if test -r $NOLOGIN ; then
+   $xmessage -file $NOLOGIN -timeout 10 -default okay -center
+   test "$RUID" != "0" && exit 1
+fi
+
+# 
+# Find out if this is a local or remote connection
+#
+LOCATION=${DISPLAY%:*}
+LINE=:${DISPLAY#*:}
+if test -z "$LOCATION" ; then
+    # local connection
+    case "$LINE" in
+	:0|:0.0) LOCATION=console   ;;
+	*)       LOCATION=localhost ;;
+    esac
+else
+    # TCP/IP connection (remote or local)
+    NAME=${LOCATION%%.*}
+    if test -z "${NAME%%*[0-9]}" ; then
+	LINE=${LINE}/${LOCATION}
+    else
+	LINE=${LINE}/${NAME}
+    fi
+fi
+
+#
+# Do not allow foreign root login if set in /etc/sysconfig/displaymanager
+#
+while test "$RUID" = "0" ; do
+    test "$LOCATION" = "console"       && break
+    test "$LOCATION" = "localhost"     && break
+    test -s /etc/sysconfig/displaymanager && . /etc/sysconfig/displaymanager
+    test "$DISPLAYMANAGER_ROOT_LOGIN_REMOTE" = "yes"  && break
+    $xmessage -timeout 10 -default okay -center "No foreign root login allowed"
+    exit 1
+done
+
+#
+# Make devices ready for the user.
+#
+case "$DISPLAY" in
+    :[0-5]|:[0-5].0)
+	# Only for local displays we have to set up the owner ship
+	# and permissions of the /dev/xconsole FIFO and the current
+	# virtual console.
+
+	${XDMDIR}/GiveDevices
+	;;
+    *)
+esac
+
+if test -x /sbin/preload && test -s /var/run/preload-session.pid; then
+   /sbin/killproc -p /var/run/preload-session.pid /sbin/preload 
+fi
+
+#
+# Write utmp, wtmp, and lastlog entries.  Note that the `exec' is required
+# to hold an exisiting pid in utmp during xsession.
+#
+exec ${BINDIR}/sessreg -l $LINE -h $LOCATION -a $USER
+$xmessage -timeout 10 -default okay -center "$0: sessreg failed."
+exit 1

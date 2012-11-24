@@ -1,0 +1,130 @@
+## Path:	System/Cron/Man
+## Description: cron configuration for man utility
+## Type:	yesno
+## Default:	yes
+#
+# Should mandb and whatis be recreated by cron.daily ("yes" or "no")
+#
+REINIT_MANDB=yes
+
+## Type:	yesno
+## Default:	yes
+#
+# Should old preformatted man pages (in /var/cache/man) be deleted? (yes/no)
+#
+DELETE_OLD_CATMAN=yes
+
+## Type:	integer
+## Default:	7
+#
+# How long should old preformatted man pages be kept before deletion? (days)
+#
+CATMAN_ATIME=7
+## Path:	System/Cron
+## Description:	days to keep old files in tmp-dirs, 0 to disable
+## Type:	integer
+## Default:	0
+## Config:
+#
+# cron.daily can check for old files in tmp-dirs. It will delete all files
+# not accessed for more than MAX_DAYS_IN_TMP. If MAX_DAYS_IN_TMP is not set
+# or set to 0, this feature will be disabled. 
+#
+MAX_DAYS_IN_TMP="0"
+
+## Type:	integer
+## Default:	0
+#
+# see MAX_DAYS_IN_TMP. This allows to specify another frequency for
+# a second set of directories.
+#
+MAX_DAYS_IN_LONG_TMP="0"
+
+## Type:	string
+#
+# This variable contains a list of directories, in which old files are to
+# be searched and deleted. The frequency is determined by MAX_DAYS_IN_TMP
+#
+# Defaults to /tmp if empty
+#
+TMP_DIRS_TO_CLEAR=""
+
+## Type:	string
+## Default:	""
+#
+# This variable contains a list of directories, in which old files are to
+# be searched and deleted. The frequency is determined by MAX_DAYS_IN_LONG_TMP
+# If cleaning of /var/tmp is wanted add it here.
+#
+LONG_TMP_DIRS_TO_CLEAR=""
+
+## Type:	string
+## Default:	root
+#
+# In OWNER_TO_KEEP_IN_TMP, you can specify, whose files shall not be deleted.
+#
+OWNER_TO_KEEP_IN_TMP="root"
+
+## Type:	string
+#
+# "Set this to "yes" to entirely remove (rm -rf) all  files and subdirectories
+# from the temporary directories defined in TMP_DIRS_TO_CLEAR on bootup.
+# Please note, that this feature ignores OWNER_TO_KEEP_IN_TMP - all files will
+# be removed without exception."
+#
+# If this is set to a list of directories (i.e. starts with a "/"), these
+# directories will be cleared instead of those listed in TMP_DIRS_TO_CLEAR.
+# This can be used to clear directories at boot as well as clearing unused
+# files out of other directories.
+#
+# Defaults to 'no' if unset
+#
+CLEAR_TMP_DIRS_AT_BOOTUP=""
+
+## Type:         string
+## Default:      ""
+#
+# At which time cron.daily should start. Default is 15 minutes after booting
+# the system. Example setting would be "14:00".
+# Due to the fact that cron script runs only every 15 minutes,
+# it will only run on xx:00, xx:15, xx:30, xx:45, not at the accurate time
+# you set.
+DAILY_TIME=""
+
+## Type:         integer
+## Default:      5
+#
+# Maximum days not running when using a fixed time set in DAILY_TIME.
+# 0 to skip this. This is for users who will power off their system.
+#
+# There is a fixed max. of 14 days set,  if you want to override this
+# change MAX_NOT_RUN_FORCE in /usr/lib/cron/run-crons
+MAX_NOT_RUN="5"
+
+## Type:	yesno
+## Default:	no
+#
+# send status email even if all scripts in 
+# cron.{hourly,daily,weekly,monthly} 
+# returned without error? (yes/no)
+#
+SEND_MAIL_ON_NO_ERROR="no"
+
+## Type:	yesno
+## Default:	no
+#
+# send email containing output from all successful jobs in
+# cron.{hourly,daily,weekly,monthly}. Output from failed
+# jobs is always sent. If SEND_MAIL_ON_NO_ERROR is yes, this 
+# setting is ignored.  (yes/no)
+#
+SEND_OUTPUT_ON_NO_ERROR="no"
+
+## Type:	yesno
+## Default:	no
+#
+# generate syslog message for all scripts in 
+# cron.{hourly,daily,weekly,monthly} 
+# even if they haven't returned an error? (yes/no)
+#
+SYSLOG_ON_NO_ERROR="no"

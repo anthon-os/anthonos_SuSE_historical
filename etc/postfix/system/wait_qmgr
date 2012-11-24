@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# /etc/postfix/system/wait_qmgr
+#
+# Description:
+#
+
+POSTFIX_BIN=/usr/sbin/postfix
+typeset -i sec=$1
+typeset -i ms=$((sec*100))
+
+(   while ! pidof qmgr > /dev/null 2>&1 ; do
+	((ms-- <= 0)) && break
+	usleep 10000
+    done
+    exec -a $POSTFIX_BIN $POSTFIX_BIN flush
+) > /dev/null 2>&1 &
+
+#
+# end /etc/postfix/system/wait_qmgr

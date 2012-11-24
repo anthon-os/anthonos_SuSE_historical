@@ -1,0 +1,11 @@
+## Path:	System/File systems/LVM
+## Description:	LVM configuration 
+## Type:	string
+## Default:	""
+# 
+# This variable allows to only activate the LVM volume groups listed at
+# bootup. If it is empty, all LVM volume groups are activated at bootup.
+# This variable needs setting only under very special circumstances.
+# For almost all standard LVM installations it can safely stay empty.
+#
+LVM_VGS_ACTIVATED_ON_BOOT=""

@@ -1,0 +1,219 @@
+#!/bin/bash
+#
+# Copyright (c) 2002 SuSE Linux AG Nuernberg, Germany.
+# All rights reserved.
+#
+# Author: Olaf Kirch <okir@suse.de>, 2002
+#         Marius Tomaschewski <mt@suse.de>, 2007-2009
+#
+
+unset POSIXLY_CORRECT ; set +o posix # we're using non-posix bash features
+
+usage () {
+	echo $@
+	echo "Usage: if{up,down}-802.1q [<config>] <interface> [-o <options>]"
+	echo ""
+	echo "Any option will be ignored."
+	exit $R_USAGE
+}
+
+######################################################################
+# change the working direcory and source some common files
+#
+R_INTERNAL=1      # internal error, e.g. no config or missing scripts
+cd /etc/sysconfig/network || exit $R_INTERNAL
+test -f ./config && . ./config
+test -f scripts/functions && . scripts/functions || exit $R_INTERNAL
+
+######################################################################
+# check arguments and how we are called (in case of links)
+#
+SCRIPTNAME=${0##*/}
+debug $*
+case "${SCRIPTNAME}" in
+	ifup-*) ACTION=start ;;
+	ifdown-*) ACTION=stop ;;
+	*) usage
+esac
+case "$1" in ""|-h|*help*) usage; esac
+CONFIG=$1
+shift
+if [ -n "$1" -a "$1" != "-o" ] ; then
+	INTERFACE=$1
+else
+	INTERFACE=$CONFIG
+fi
+shift
+test "$1" = "-o" && shift
+OPTIONS="$@"
+MODE=manual
+while [ $# -gt 0 ]; do
+	case $1 in
+		boot|onboot) MODE=onboot ;;
+		hotplug)     MODE=hotplug ;;
+		quiet)       be_quiet_has_gone ;;
+		debug)       DEBUG=yes ;;
+		*)           debug unknown option $1 ;;
+	esac
+	shift
+done
+
+######################################################################
+# Check needed tools
+#
+vconfig=/sbin/vconfig
+if [ ! -x $vconfig ] ; then
+	# check compatibility path
+	if [ ! -x /usr/sbin/vconfig ] ; then
+		err_mesg "VLAN utilities not installed"
+		exit $R_INTERNAL
+	fi
+	vconfig=/usr/sbin/vconfig 
+fi
+
+######################################################################
+# check presence of configuration file and source it
+#
+source_iface_config "$CONFIG"
+
+######################################################################
+# get the base interface and check if it is available or up
+#
+if [ "$ACTION" = start ] ; then
+	if ! is_iface_available  "$ETHERDEVICE" ; then
+		err_mesg "interface '$ETHERDEVICE' is not available"
+		exit $R_NODEV
+	fi
+	if ! is_iface_up "$ETHERDEVICE" ; then
+		ip link set dev "$ETHERDEVICE" up || {
+			err_mesg "interface '$ETHERDEVICE' is not up"
+			exit $R_NOTRUNNING
+		}
+	fi
+fi
+
+
+######################################################################
+# helper functions
+#
+get_proc_name_type()
+{
+	gawk -- '/^Name-Type:/ { print $2;}' /proc/net/vlan/config 2>/dev/null
+}
+map_proc_to_vconfig()
+{
+	case $1 in
+	VLAN_NAME_TYPE_RAW_PLUS_VID)        echo DEV_PLUS_VID         ;;
+	VLAN_NAME_TYPE_RAW_PLUS_VID_NO_PAD) echo DEV_PLUS_VID_NO_PAD  ;;
+	VLAN_NAME_TYPE_PLUS_VID)            echo VLAN_PLUS_VID        ;;
+	VLAN_NAME_TYPE_PLUS_VID_NO_PAD)     echo VLAN_PLUS_VID_NO_PAD ;;
+	esac
+}
+get_vlan_iface_name()
+{
+	gawk -v vid="$1" -v dev="$2" -- 'BEGIN{ nt=0; }
+		/^Name-Type:/   { nt=1; next; }
+		nt && $3 == vid && $5 == dev { print $1; }' \
+		/proc/net/vlan/config 2>/dev/null
+}
+del_pad()
+{
+	local no_pad rx_pad='^[0]+'
+	LANG=C ; LC_ALL=C
+	if [[ ${1} =~ ${rx_pad} ]] ; then
+		no_pad="${1#${BASH_REMATCH[0]}}"
+		echo "${no_pad:-0}"
+  	else
+		echo "${1}"
+	fi
+}
+get_num()
+{
+	local rx_num='[0-9]+$'
+	LANG=C ; LC_ALL=C
+	if [[ ${1} =~ ${rx_num} ]] ; then
+		echo "${BASH_REMATCH[0]}"
+	fi
+}
+
+######################################################################
+case $ACTION in
+start)
+	if test "$INTERFACE" = "$ETHERDEVICE" ; then
+		err_mesg "ERROR: vlan interface is same with ethernet interface"
+		exit $R_USAGE
+	elif test -d "/sys/class/net/$INTERFACE" ; then
+		exit $R_SUCCESS
+	fi
+
+	# load the module...
+	/sbin/modprobe 8021q
+
+	# get vlan id
+	id="$VLAN_ID"
+	nr=$(del_pad "$id")
+	if test "x$nr" = x ; then
+		case $INTERFACE in
+		*.*)	id=${INTERFACE##*.}
+		        nr=$(del_pad "$id")
+			test "x${id}" != "x${nr}" && \
+			name_type=DEV_PLUS_VID    || \
+			name_type=DEV_PLUS_VID_NO_PAD
+		;;
+		vlan*)	id=${INTERFACE#vlan}
+		        nr=$(del_pad "$id")
+			test "x${id}" != "x${nr}" && \
+			name_type=VLAN_PLUS_VID   || \
+			name_type=VLAN_PLUS_VID_NO_PAD
+		;;
+		*)	id=$(get_num "$INTERFACE")
+			nr=$(del_pad "$id")
+		;;
+		esac
+	fi
+
+	# Check vlan id we found
+	if test "$INTERFACE" = "$id" -o "x$id" = x -o "x$nr" = x ; then
+		err_mesg "ERROR: interface '$INTERFACE' is not in vlan<VID> or *.<VID> format"
+		exit $R_USAGE
+	fi
+
+	# Set the name type to avoid rename
+	if test "x$name_type" != x ; then
+		$vconfig set_name_type $name_type >/dev/null
+	fi
+
+	# Now create the VLAN interface
+	err=`$vconfig add $ETHERDEVICE $id 2>&1 1>/dev/null`
+	ret=$?
+	if test "$ret" != "0" ; then
+		err_mesg "$err"
+		exit $R_ERROR
+	fi
+
+	# Don't hurry too much
+	udevadm settle
+
+	viface=`get_vlan_iface_name "$nr" "$ETHERDEVICE"`
+	if test "x$viface" = x ; then
+		err_mesg "ERROR: unable to find create vlan $id interface '$INTERFACE'"
+		exit $R_ERROR
+	elif test "x$INTERFACE" != "x$viface" ; then
+		err=`ip link set dev "$viface" name "$INTERFACE" 2>&1` || {
+		  err_mesg "ERROR: unable to rename vlan interface '$viface' to '$INTERFACE': $err"
+		  $vconfig rem "$viface"
+		  exit $R_ERROR
+		}
+	fi
+;;
+stop)
+	if test -d "/sys/class/net/$INTERFACE" ; then
+		if test -f "/proc/net/vlan/$INTERFACE" ; then
+			vconfig rem $INTERFACE >/dev/null
+		else
+			err_mesg "ERROR: '$INTERFACE' is not a vlan interface"
+		fi
+	fi
+;;
+esac
+

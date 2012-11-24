@@ -1,0 +1,21 @@
+if ! type -p fcitx > /dev/null 2>&1 ; then
+   echo "fcitx is not available."
+   PATH=$OLD_PATH
+   return 1
+fi
+
+# Avoid relying on autolaunch to improvise D-Bus sessions for each process
+if test -z "$DBUS_SESSION_BUS_ADDRESS" ; then
+   eval `dbus-launch --sh-syntax --exit-with-session`
+fi
+
+export LC_CTYPE=$LANG
+# So you can use either zh_CN.UTF-8 or zh_CN.GB2312
+export XMODIFIERS="@im=fcitx"
+export GTK_IM_MODULE=fcitx
+export QT_IM_SWITCHER=imsw-multi
+export QT_IM_MODULE=fcitx
+fcitx -d
+
+# success:
+return 0

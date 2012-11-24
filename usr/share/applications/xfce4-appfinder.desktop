@@ -1,0 +1,13 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Version=1.0
+Exec=xfce4-appfinder
+Icon=edit-find
+StartupNotify=true
+Terminal=false
+Type=Application
+Categories=Utility;X-XFCE;Utility;X-SuSE-DesktopUtility;
+Name=应用查找器
+GenericName=Application Finder/
+Comment=Find and launch applications installed on your system
+

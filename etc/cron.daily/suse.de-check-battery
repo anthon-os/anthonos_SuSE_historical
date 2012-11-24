@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+#
+# Copyright (c) 2002 SuSE Linux AG, Nuernberg, Germany.   
+#
+# please send bugfixes or comments to http://www.suse.de/feedback.
+#
+
+
+#
+# paranoia settings
+#
+umask 022
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+export PATH
+
+#
+# check CMOS Battery
+#
+test -r /proc/driver/rtc && \
+    BATT_STATUS=$(awk '$1 == "batt_status" { print $3 }' /proc/driver/rtc)
+
+test -r /proc/rtc && \
+    BATT_STATUS=$(awk '$1 == "batt_status" { print $3 }' /proc/rtc)
+
+
+test -n "$BATT_STATUS" -a "$BATT_STATUS" != "okay" && \
+    echo "CMOS battery empty -- expect problems"
+
+exit 0

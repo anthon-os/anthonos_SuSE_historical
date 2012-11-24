@@ -1,0 +1,109 @@
+# Copyright (c) 1991 Bell Communications Research, Inc. (Bellcore)
+# 
+# Permission to use, copy, modify, and distribute this material 
+# for any purpose and without fee is hereby granted, provided 
+# that the above copyright notice and this permission notice 
+# appear in all copies, and that the name of Bellcore not be 
+# used in advertising or publicity pertaining to this 
+# material without the specific, prior written permission 
+# of an authorized representative of Bellcore.  BELLCORE 
+# MAKES NO REPRESENTATIONS ABOUT THE ACCURACY OR SUITABILITY 
+# OF THIS MATERIAL FOR ANY PURPOSE.  IT IS PROVIDED "AS IS", 
+# WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
+#
+# Prototype Mailcap file
+# Note that support for text & multipart are "built in" to metamail,
+# as are rudimentary support for message, and application.
+# However, any of these may be overridden in mailcap.
+#
+# Note that users may override or extend this with a .mailcap
+# file in their own directory.  However, there is NO NEED
+# for them to copy entries from this file, as metamail will
+# pick up entries from both the system and personal mailcap files.
+#
+
+# NOTE:  This file has been heavily modified for use as an example
+#        configuration file for Lynx
+
+# In the samples given   test=test -n "$DISPLAY"   is used to
+# determine if the current session is X capible by checking
+# for the existance of a DISPLAY environment variable.
+#
+# any system (VMS included) without the DISPLAY environment variable
+# will be assumed to be Non-X
+
+# The following line is for sites where xv understands jpeg but xloadimage 
+# is preferred.
+#
+# the test line specifies that this viewer should only be used if
+# the display variable is set.
+image/jpeg; display %s;  test=test -n "$DISPLAY"
+
+# The following sends all other image subtypes to xloadimage
+#image/*; xloadimage %s; ;  test=test -n "$DISPLAY"
+
+# The following sends all other image subtypes to xv
+image/*; display %s; ;  test=test -n "$DISPLAY"
+
+
+# If you have an interactive Postscript interpreter, you should think carefully 
+# before replacing lpr with it in the following line, because PostScript
+# can be an enormous security hole.  It is RELATIVELY harmless
+# when sent to the printer...
+
+# This one is for NON-X
+#application/postscript ; lpr %s \; echo SENT FILE TO PRINTER; ;test=test -z "$DISPLAY"
+
+# This one is for X
+#application/postscript ; ghostview %s; ;  test=test -n "$DISPLAY"
+
+# The following should be commented out if you do NOT have safe-tcl
+# and should be uncommented if you DO have safe-tcl
+#application/safe-tcl; swish -safe -messaging -f %s
+
+# A common problem with the mailcap mechanism is getting differential 
+# behavior from different programs.  This problem is compounded by the fact 
+# that some programs, notably Mosaic, do not implement the "test" clause in 
+# mailcap files.  If you are using Lynx and X Mosaic together you should
+# place all X-centric entries before non-X entries.  X Mosaic will use
+# whichever entry is defined first so further entries will be ignored.
+#
+# Lynx exports the environment variable LYNX_VERSION, so if you wish
+# to test if Lynx is running or not you can use 'test -n "LYNX_VERSION"'
+#
+# HTML
+#text/html; lynx -dump %s; copiousoutput; nametemplate=%s.html
+text/html; w3m -I %{charset} -T text/html -dump %s; copiousoutput
+# Compressed
+application/x-gunzip; gunzip -c %s; copiousoutput
+application/x-gzip; gunzip -c %s; copiousoutput
+application/x-bunzip2; bunzip2 -c %s; copiousoutput
+application/x-bzip2; bunzip2 -c %s; copiousoutput
+# Archive directory
+application/x-tar-gz; gunzip -c %s | tar -tf -; copiousoutput
+# Using gs to display postscript is dangerous as postscript may
+# contain statements which are not safe to execute in your
+# ps interpreter gs
+#application/postscript; gv %s
+# Real audio player
+video/*; xine %s
+#video/mpeg; xmpeg %s
+# PGP decoding in case your MUA is not clever enough by itself.
+# Commented out, as you might use a clever mailer or want to use gpg instead.
+#application/pgp; pgp -f < %s | metamail; needsterminal; test=test %{encapsulation}=entity
+#application/pgp; pgp %s; needsterminal
+#
+#application/x-uudecode; uudecode -o- %s; copiousoutput
+audio/x-pn-realaudio;/usr/bin/realplay "%u"
+audio/vnd.rn-realaudio;/usr/bin/realplay "%u"
+application/smil;/usr/bin/realplay "%u"
+text/vnd.rn-realtext;/usr/bin/realplay "%u"
+video/vnd.rn-realvideo;/usr/bin/realplay "%u"
+image/vnd.rn-realflash;/usr/bin/realplay "%u"
+application/x-shockwave-flash2-preview;/usr/bin/realplay "%u"
+application/sdp;/usr/bin/realplay "%u"
+application/x-sdp;/usr/bin/realplay "%u"
+application/vnd.rn-realmedia;/usr/bin/realplay "%u"
+image/vnd.rn-realpix;/usr/bin/realplay "%u"
+#
+application/x-java-jnlp-file;/usr/bin/javaws "%s"

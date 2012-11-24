@@ -1,0 +1,15 @@
+## Path:	Network/News
+## Description:	
+## Type:	string
+## Default:	""
+#
+# Used for News-Postings.
+#
+ORGANIZATION=""
+
+## Type:	string(news)
+## Default:	news
+#
+# News server.
+#
+NNTPSERVER="news"

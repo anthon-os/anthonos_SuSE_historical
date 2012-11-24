@@ -1,0 +1,10 @@
+# Postfix dynamic maps configuration file.
+#
+# The first match found is the one that is used.
+# Wildcards are not supported.
+#
+#type   location of .so file                open function   (mkmap func)
+#====   ================================    =============   ============
+pcre    /usr/lib/postfix/dict_pcre.so       dict_pcre_open
+ldap    /usr/lib/postfix/dict_ldap.so       dict_ldap_open
+tcp     /usr/lib/postfix/dict_tcp.so        dict_tcp_open

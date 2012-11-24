@@ -1,0 +1,15 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Version=1.0
+Name=命令行
+Comment=Terminal Emulator
+GenericName=Terminal Emulator
+Exec=Terminal
+Icon=utilities-terminal
+Terminal=false
+Type=Application
+Categories=GTK;System;TerminalEmulator;Utility;
+StartupNotify=true
+
+# vi:set encoding=UTF-8:
+

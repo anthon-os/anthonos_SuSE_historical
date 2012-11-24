@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<gconf>
+	<dir name="schemas">
+		<dir name="apps">
+			<dir name="aisleriot">
+				<entry name="recent_games_list">
+					<local_schema short_desc="මෑතකඳි තරග කළ තරග">
+						<longdesc>මෑතකඳි තරග කළ තරග ලැයිස්තුව</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="statistics">
+					<local_schema short_desc="තරග කළ තරග සංඛ්‍යාන්ක">
+					</local_schema>
+				</entry>
+				<entry name="sound">
+					<local_schema short_desc="ශබ්දය">
+					</local_schema>
+				</entry>
+				<entry name="card_style">
+					<local_schema short_desc="තේමා ගොනු නම">
+					</local_schema>
+				</entry>
+			</dir>
+		</dir>
+	</dir>
+</gconf>

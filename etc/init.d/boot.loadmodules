@@ -1,0 +1,51 @@
+#! /bin/sh
+#
+# Copyright (c) 2002 SuSE Linux AG, Nuernberg, Germany. All rights reserved.
+#
+# File: /etc/init.d/boot.loadmodules
+# Author: Jiri Srain <jsrain@suse.cz>
+#
+### BEGIN INIT INFO
+# Provides:          boot.loadmodules
+# Required-Start:    boot.udev
+# Required-Stop:     boot.udev
+# Default-Start:     B
+# Default-Stop:
+# Short-Description: load modules required to be loaded in specific order
+# Description:       load modules required to be loaded in specific order
+### END INIT INFO
+
+. /etc/rc.status
+
+rc_reset
+
+case "$1" in
+  start|restart)
+    # Read variable for sysconfig and load all mentioned modules
+    echo Loading required kernel modules
+    . /etc/sysconfig/kernel
+    for I in $MODULES_LOADED_ON_BOOT ; do
+	if ! modprobe -n $I > /dev/null 2>&1 ; then continue ; fi
+	modprobe $I;
+    done
+    rc_status -v1 -r
+   ;;
+  stop)
+    # skip / nothing to do
+    ;;
+  status)
+    echo -n "Checking if boot.loadmodules has run"
+    rc_reset
+    for I in $MODULES_LOADED_ON_BOOT ; do
+	lsmod | grep -q "^$I " || rc_failed 3
+    done
+    rc_status -v
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|status|restart}"
+    exit 1
+    ;;
+esac
+
+rc_exit
+

@@ -1,0 +1,792 @@
+<?xml version="1.0"?>
+<gconf>
+	<dir name="schemas">
+		<dir name="apps">
+			<dir name="aisleriot">
+				<entry name="recent_games_list">
+					<local_schema short_desc="Нядаўнія гульні">
+						<longdesc>Спіс нядаўніх гульняў.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="statistics">
+					<local_schema short_desc="Статыстыка аб згуляных партыях">
+						<longdesc>Спіс радкоў у форме пяцёркі: назва, колькасць перамог, колькасць гульняў, найлепшы час (у секундах) і найгоршы час (таксама ў секундах). Гульні, у якія не гулялі, могуць адсутнічаць.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="game_file">
+					<local_schema short_desc="Файл гульні">
+						<longdesc>Назва scheme-файла з пасьянснай гульнёй.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="animations">
+					<local_schema short_desc="Анімацыя">
+						<longdesc>Ці трэба анімаваць перакладванне картаў.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="sound">
+					<local_schema short_desc="Гук">
+						<longdesc>Ці трэба агучваць падзеі ў гульні.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="click_to_move">
+					<local_schema short_desc="Выбар спосабу кіравання">
+						<longdesc>Выбар спосабу перамяшчэння картаў: або перацягваючы іх, або пстрыкнуўшы спачатку ў патрэбную карту, а потым - у патрэбнае месца для яе.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="show_statusbar">
+					<local_schema short_desc="Ці трэба паказваць стужку стану">
+					</local_schema>
+				</entry>
+				<entry name="show_toolbar">
+					<local_schema short_desc="Ці трэба паказваць паліцу прылад">
+					</local_schema>
+				</entry>
+				<entry name="card_style">
+					<local_schema short_desc="Назва файла з матывам аздаблення">
+						<longdesc>Назва файла з графічным аздабленнем картаў.</longdesc>
+					</local_schema>
+				</entry>
+			</dir>
+			<dir name="nm-applet">
+				<entry name="disable-wifi-create">
+					<local_schema short_desc="Выключыць магчымасць стварэння WiFi-сеткі">
+						<longdesc>Выключыць для аплета магчымасць стварэння adhoc-сеткі.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="stamp">
+					<local_schema short_desc="Адбітак">
+						<longdesc>Выкарыстоўваецца для вызначэння патрэбы ў міграцыі настроек на новую версію.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="suppress-wireless-networks-available">
+					<local_schema short_desc="Блакіраваць апавяшчэнні аб наяўнасці сетак">
+						<longdesc>Выключыць апавяшчэнні аб наяўнасці бесправадных сетак.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="disable-disconnected-notifications">
+					<local_schema short_desc="Выключыць апавяшчэнні аб адлучэнні">
+						<longdesc>Выключыць апавяшчэнні пры адлучэнні ад сеткі.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="disable-connected-notifications">
+					<local_schema short_desc="Выключыць апавяшчэнні аб злучэнні">
+						<longdesc>Выключыць апавяшчэнні пры злучэнні з сеткай.</longdesc>
+					</local_schema>
+				</entry>
+			</dir>
+			<dir name="sound-juicer">
+				<entry name="volume">
+					<local_schema short_desc="Гучнасьць">
+					</local_schema>
+				</entry>
+				<entry name="musicbrainz_server">
+					<local_schema short_desc="Паслужнік MusicBrainz для выкарыстаньня">
+						<longdesc>Калі зададзена, гэтае значэньне перакрывае прадвызначаны MusicBrainz паслужнік.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="strip-special">
+					<local_schema short_desc="Ці выразаць адмысловыя знакі з назваў файлаў">
+						<longdesc>Калі ўключана, адмысловыя знакі такія, як прагалы, шаблёны й адваротныя скрывы будуць выдалены з назваў файлаў вываду.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="paranoia">
+					<local_schema short_desc="Рэжым paranoia для выкарыстаньня">
+						<longdesc>Рэжым Paranoia: 0) выключаны 2) фрагмэнты 4) перакрыцьцё 8) драпіны 16) аднаўленьне 255) поўны</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="file_pattern">
+					<local_schema short_desc="Шаблён назвы для гэтых файлаў">
+					</local_schema>
+				</entry>
+				<entry name="path_pattern">
+					<local_schema short_desc="Дрэва тэчак для гэтых файлаў">
+					</local_schema>
+				</entry>
+				<entry name="eject">
+					<local_schema short_desc="Ці вызваляць дыск па заканчэньні здабычы музыкі.">
+					</local_schema>
+				</entry>
+			</dir>
+		</dir>
+		<dir name="system">
+			<dir name="smb">
+				<entry name="workgroup">
+					<local_schema short_desc="Працоўная група SMB">
+						<longdesc>Працоўная група сетак Windows ці маёнтак да якіх належыць карыстальнік. Будзе мець эфэкт у выпадку новай працоўнай групы калі карыстальнік пакіне й вернецца назад.</longdesc>
+					</local_schema>
+				</entry>
+			</dir>
+			<dir name="proxy">
+				<entry name="autoconfig_url">
+					<local_schema short_desc="URL для аўтаматычнае наладкі паўнамоцнага (proxy) паслужніку">
+						<longdesc>URL, які пастаўляе значэньні наладкі паўнамоцнага (proxy) паслужніку.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="socks_port">
+					<local_schema short_desc="Порт паўнамоцнага па Socks">
+						<longdesc>Порт на машыне, якая вызначана ў /system/proxy/socks_host, якой належаць паўнамоцтвы.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="socks_host">
+					<local_schema short_desc="Назва вузлу, паўнамоцнага па Socks">
+						<longdesc>Назва машыны, якая зьяўляецца паўнамоцнай (proxy) па SOCKS.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="ftp_port">
+					<local_schema short_desc="Порт паўнамоцнага па FTP">
+						<longdesc>Порт на машыне, якая вызначана ў /system/proxy/ftp_host, якой належаць паўнамоцтвы.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="ftp_host">
+					<local_schema short_desc="Назва вузла, паўнамоцнага па FTP">
+						<longdesc>Назва машыны, якая зьяўляецца паўнамоцнай (proxy) па FTP.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="secure_port">
+					<local_schema short_desc="Порт паўнамоцнага па бясьпечнаму HTTP">
+						<longdesc>Порт на машыне, якая вызначана ў /system/proxy/secure_host, якой належаць паўнамоцтвы.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="secure_host">
+					<local_schema short_desc="Назва вузла, паўнамоцнага па бясьпечнаму HTTP">
+						<longdesc>Назва машыны, якая зьяўляецца паўнамоцнай (proxy) па HTTPS.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="mode">
+					<local_schema short_desc="Рэжым наладкі паўнамоцнага паслужніку">
+						<longdesc>Вылучыце рэжым наладкі паўнамоцнага паслужніку. Дапушчальнымі значэньнямі зьяўляюцца:  &quot;none&quot; (няма), &quot;manual&quot; (адмысловы), &quot;auto&quot; (аўтаматычны)</longdesc>
+					</local_schema>
+				</entry>
+			</dir>
+			<dir name="http_proxy">
+				<entry name="ignore_hosts">
+					<local_schema short_desc="Вузлы якім не патрэбны proxy паслужнік">
+						<longdesc>Гэты ключ зьмяшчае сьпіс вузлоў, якія далучаны наўпрост, а не праз паўнамоцны паслужнік (калі ён задзейнічаны). Гэтыя значэньні могуць быць назвамі вузлоў, маёнткаў (з выкарыстаньнем узораў; напрыклад, *.foo.com), IP адрасоў (вэрсыі 4 і 6) і сеткавых адрасоў з маскай сеткі (напрыклад, 192.168.0.0/24).</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="authentication_password">
+					<local_schema short_desc="Пароль для паўнамоцнага па HTTP">
+						<longdesc>Пароль для ідэнтыфікацыі ў часе перадачы паўнамоцтваў на HTTP.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="authentication_user">
+					<local_schema short_desc="Уліковы запіс для ідэнтыфікацыі на HTTP proxy">
+						<longdesc>Уліковае імя, каб прайсьці ідэнтыфікацыю на паўнамоцным (proxy) паслужніку па http.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="use_authentication">
+					<local_schema short_desc="Ідэнтыфікаваць далучэньні да паўнамоцнага (proxy) паслужніку">
+						<longdesc>Калі ісьціна, тады далучэньні да паўнамоцнага (proxy) паслужніку будуць патрабаваць ідэнтыфікацыі. Зьвяз уліковы_запіс/пароль вызначаецца ключамі /system/http_proxy/authentication_user і /system/http_proxy/authentication_password.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="port">
+					<local_schema short_desc="Порт паўнамоцнага па HTTP">
+						<longdesc>Порт на машыне, якая вызначана ў /system/http_proxy/host, якой належаць паўнамоцтвы.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="host">
+					<local_schema short_desc="Назва вузла, паўнамоцнага па HTTP">
+						<longdesc>Назва машыны, якая зьяўляецца паўнамоцнай па HTTP.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="use_http_proxy">
+					<local_schema short_desc="Выкарыстоўваць паўнамоцны (proxy) паслужнік HTTP">
+						<longdesc>Уключае ўсталёўкі паўнамоцнага (proxy) паслужніку, калі ідзе доступ да http праз інтэрнэт.</longdesc>
+					</local_schema>
+				</entry>
+			</dir>
+			<dir name="dns_sd">
+				<entry name="extra_domains">
+					<local_schema short_desc="Дадатковыя маёнткі для пошуку паслуг DNS-SD">
+						<longdesc>Падзелены коскамі сьпіс маёнткаў dns-sd, якія мусяць быць бачны ў сеткавым асяродзьдзі.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="display_local">
+					<local_schema short_desc="Як адлюстроўваць мясцовую паслугу DNS-SD">
+						<longdesc>Магчымыя значэньні &quot;merged&quot;, &quot;separate&quot; і &quot;disabled&quot;.</longdesc>
+					</local_schema>
+				</entry>
+			</dir>
+		</dir>
+		<dir name="desktop">
+			<dir name="gnome">
+				<dir name="typing_break">
+					<entry name="enabled">
+						<local_schema short_desc="Ці ўключана магчымасьць блякаваньня клявіятуры">
+							<longdesc>Ці ўключана магчымасьць блякаваньня клявіятуры.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="allow_postpone">
+						<local_schema short_desc="Дазволіць адтэрміноўку перапынкаў">
+							<longdesc>Ці можа перапынак у наборы тэксту быць адтэрмінаваны.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="break_time">
+						<local_schema short_desc="Час перапынку">
+							<longdesc>Працягласьць перапынку пры наборы тэксту (вымяраецца ў хвілінах).</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="type_time">
+						<local_schema short_desc="Час набору">
+							<longdesc>Колькасьць хвілін набору тэксту, перад пачаткам перапынку.</longdesc>
+						</local_schema>
+					</entry>
+				</dir>
+				<dir name="thumbnailers">
+					<entry name="disable_all">
+						<local_schema short_desc="Выключыць усе вонкавыя стваральнікі мініятураў">
+							<longdesc>Усталюйце ў &quot;Ісьціна&quot;, каб выключыць усе вонкавыя праграмы для стварэньня мініяцюраў; гэта не залежыць ад таго, ці ўключаны/выключаны яна паасобку.</longdesc>
+						</local_schema>
+					</entry>
+				</dir>
+				<dir name="sound">
+					<entry name="event_sounds">
+						<local_schema short_desc="Гукі для падзеяў">
+							<longdesc>Ці граюць гукі па падзеях.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="enable_esd">
+						<local_schema short_desc="Уключыць ESD">
+							<longdesc>Уключыць выкарыстаньне гукавога паслужніку.</longdesc>
+						</local_schema>
+					</entry>
+				</dir>
+				<dir name="peripherals">
+					<dir name="mouse">
+						<entry name="cursor_size">
+							<local_schema short_desc="Памер курсору">
+								<longdesc>Памер курсору рэкамэндаваны cursor_theme.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="cursor_theme">
+							<local_schema short_desc="Тэма курсору">
+								<longdesc>Назва тэмы курсораў. Выкарыстоўваецца толькі Х-паслужнікамі, здольнымі падтрымліваць пашырэньне Xcursor, як XFree86 4.3 і больш новыя.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="cursor_font">
+							<local_schema short_desc="Шрыфт курсору">
+								<longdesc>Назва шрыфту курсора. Калі ня ўсталяваная, будзе выкарыстоўвацца прадвызначаная. Значэньне перадаецца толькі на пачатку сэанса, таму зьмена ў часе бягучага сэансу не будзе мець вынікаў да наступнага ўваходу.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="locate_pointer">
+							<local_schema short_desc="Адшукаць указальнік">
+							</local_schema>
+						</entry>
+						<entry name="double_click">
+							<local_schema short_desc="Час падвойнага шчаўчку">
+							</local_schema>
+						</entry>
+						<entry name="drag_threshold">
+							<local_schema short_desc="Парог захопу">
+							</local_schema>
+						</entry>
+						<entry name="motion_threshold">
+							<local_schema short_desc="Парог руху">
+								<longdesc>Адлегласьць у піксэлях якую мусіць мінуць указальнік да актывацыі паскарэньня мышы. Прадвызначанае сыстэмнае значэньне -1.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="motion_acceleration">
+							<local_schema short_desc="Самотны шчаўчок">
+								<longdesc>Множнік паскарэньня для руху мышы. Прадвызначанае сыстэмнае значэньне -1.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="single_click">
+							<local_schema short_desc="Самотны шчаўчок">
+							</local_schema>
+						</entry>
+						<entry name="left_handed">
+							<local_schema short_desc="Арыентацыя кнопак мышы">
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="keyboard">
+						<entry name="remember_numlock_state">
+							<local_schema short_desc="Помніць стан NumLock">
+								<longdesc>Калі &quot;ІСЬЦІНА&quot;, GNOME запамінае стан NumLock паміж сэансамі.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="bell_custom_file">
+							<local_schema short_desc="Назва файлу сыгналу клявіятуры">
+							</local_schema>
+						</entry>
+						<entry name="bell_mode">
+							<local_schema>
+								<longdesc>магчымыя значэньні: &quot;on&quot;, &quot;off&quot; ці &quot;custom&quot;.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+				</dir>
+				<dir name="lockdown">
+					<entry name="disable_print_setup">
+						<local_schema short_desc="Выключыць наладкі друку">
+							<longdesc>Забараняе карыстальніку зьмяняць наладкі друку. Напрыклад, гэта забароніць доступ да дыялёга &quot;Наладкі друку&quot; усіх дастасаваньняў.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="disable_printing">
+						<local_schema short_desc="Выключыць друк">
+							<longdesc>Забараняе карыстальніку друкаваць. Напрыклад, гэта забароніць доступ да дыялёга &quot;Друк&quot; усіх дастасаваньняў.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="disable_save_to_disk">
+						<local_schema short_desc="Выключыць захаваньне файлаў на дыск">
+							<longdesc>Забараняе карыстальніку захоўваць файлы на дыск. Напрыклад, гэта забароніць доступ да дыялёга &quot;Захаваць як&quot; усіх дастасаваньняў.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="disable_command_line">
+						<local_schema short_desc="Выключыць загадны радок">
+							<longdesc>Забараняе карыстальніку доступ да тэрмінала й загаднага радка. Напрыклад, гэта забароніць дыялёг панэлі &quot;Выканаць дастасаваньне&quot;.</longdesc>
+						</local_schema>
+					</entry>
+				</dir>
+				<dir name="interface">
+					<entry name="show_unicode_menu">
+						<local_schema short_desc="Паказваць мэню  &quot;Кіруючы сымбаль Unicode&quot;">
+						</local_schema>
+					</entry>
+					<entry name="show_input_method_menu">
+						<local_schema short_desc="Паказваць мэню &quot;Мэтады ўводу&quot;">
+						</local_schema>
+					</entry>
+					<entry name="menubar_accel">
+						<local_schema short_desc="Паскаральнік панэлі мэню">
+							<longdesc>Клявіятурныя скарачэньні для адкрыцьця панэляў мэню.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="file_chooser_backend">
+						<local_schema short_desc="Модуль для GtkFileChooser">
+						</local_schema>
+					</entry>
+					<entry name="status_bar_meter_on_right">
+						<local_schema short_desc="Панэль стану з правага боку">
+						</local_schema>
+					</entry>
+					<entry name="use_custom_font">
+						<local_schema short_desc="Выкарыстоўваць свой шрыфт">
+							<longdesc>Ці мусіць выкарыстоўвацца ў gtk+ дастасаваньнях шрыфт вызначаны карыстальнікам.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="monospace_font_name">
+						<local_schema short_desc="Шрыфт фіксаванай шырыні">
+							<longdesc>Назва шрыфту фіксаванай шырыні для выкарыстаньня ў такіх месцах як тэрміналы.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="document_font_name">
+						<local_schema short_desc="Шрыфт дакумэнтаў">
+						</local_schema>
+					</entry>
+					<entry name="gtk-im-status-style">
+						<local_schema short_desc="GTK IM Status Style">
+							<longdesc>Назва мэтаду ўводу &quot;Status Style&quot; які выкарыстоўваецца gtk+.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="gtk-im-preedit-style">
+						<local_schema short_desc="GTK IM Preedit Style">
+							<longdesc>Назва мэтаду уводу GTK+ &quot;Preedit Style&quot; які выкарыстоўваецца gtk+.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="font_name">
+						<local_schema short_desc="Прадвызначаны шрыфт">
+							<longdesc>Назва прадвызначанага шрыфту які выкарыстоўваецца gtk+.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="gtk_key_theme">
+						<local_schema short_desc="Тэма Gtk+">
+							<longdesc>Назва прадвызначанай тэмы для gtk+.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="gtk_theme">
+						<local_schema short_desc="Тэма Gtk+">
+							<longdesc>Назва прадвызначанай тэмы для gtk+.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="icon_theme">
+						<local_schema short_desc="Тэма значак">
+							<longdesc>Тэма значак для выкарыстаньня ў панэлі, наўтылусе і г.д.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="cursor_blink_time">
+						<local_schema short_desc="Час мільганьня курсору">
+						</local_schema>
+					</entry>
+					<entry name="cursor_blink">
+						<local_schema short_desc="Мільганьне курсору">
+						</local_schema>
+					</entry>
+					<entry name="toolbar_icons_size">
+						<local_schema short_desc="Памер значак на панэлі інструмэнтаў">
+						</local_schema>
+					</entry>
+					<entry name="toolbar_detachable">
+						<local_schema short_desc="Панэль інструмэнтаў можа быць адчэпленая">
+						</local_schema>
+					</entry>
+					<entry name="menubar_detachable">
+						<local_schema short_desc="Панэль мэню можа быць адчэпленая">
+						</local_schema>
+					</entry>
+					<entry name="menus_have_icons">
+						<local_schema short_desc="Мэню мае значкі">
+						</local_schema>
+					</entry>
+					<entry name="toolbar_style">
+						<local_schema short_desc="Стыль панэлі інструмэнтаў">
+						</local_schema>
+					</entry>
+					<entry name="can_change_accels">
+						<local_schema short_desc="Паскаральнікі могуць быць зьмененыя">
+						</local_schema>
+					</entry>
+					<entry name="menus_have_tearoff">
+						<local_schema short_desc="Мэню мае лініі адрыву">
+						</local_schema>
+					</entry>
+					<entry name="enable_animations">
+						<local_schema short_desc="Уключыць анімацыю">
+							<longdesc>Ці мусіць адлюстроўвацца анімацыя. Заўвага: гэта глябальны ключ, гэта зьмяняе паводзіны кіраўніка вокнаў, панэляў і г.д.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="accessibility">
+						<local_schema short_desc="Уключыць тэхналёгію даступнасьці">
+						</local_schema>
+					</entry>
+				</dir>
+				<dir name="file-views">
+					<entry name="icon_theme">
+						<local_schema short_desc="Файл тэмы значак">
+						</local_schema>
+					</entry>
+				</dir>
+				<dir name="background">
+					<entry name="color_shading_type">
+						<local_schema short_desc="Тып адценьня колеру">
+						</local_schema>
+					</entry>
+					<entry name="secondary_color">
+						<local_schema short_desc="Другасны колер">
+							<longdesc>Правы ці ніжні колер калі выводзіцца градыент, не выкарыстоўваецца для суцэльнага колеру.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="primary_color">
+						<local_schema short_desc="Першасны колер">
+							<longdesc>Левы і верхні колер калі выводзіцца градыент, ці суцэльны колер.</longdesc>
+						</local_schema>
+					</entry>
+					<entry name="picture_opacity">
+						<local_schema short_desc="Празрыстасьць карцінкі">
+						</local_schema>
+					</entry>
+					<entry name="picture_filename">
+						<local_schema short_desc="Назва файла карцінкі">
+						</local_schema>
+					</entry>
+					<entry name="picture_options">
+						<local_schema short_desc="Можнасьці карцінкі">
+						</local_schema>
+					</entry>
+					<entry name="draw_background">
+						<local_schema short_desc="Рысаваць тло стальца">
+						</local_schema>
+					</entry>
+				</dir>
+				<dir name="accessibility">
+					<dir name="startup">
+						<entry name="exec_ats">
+							<local_schema short_desc="Запуск дастасаваньняў тэхналёгіі даступнасьці">
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="keyboard">
+						<entry name="stickykeys_two_key_off">
+							<local_schema>
+								<longdesc>Выключаць, калі дзьве кнопкі былі націснутыя адначасова.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="bouncekeys_delay">
+							<local_schema short_desc="найменшы прамежак у мілісэкундах">
+							</local_schema>
+						</entry>
+					</dir>
+				</dir>
+				<dir name="url-handlers">
+					<dir name="irc">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Выканаць загад у тэрмінале">
+								<longdesc>Ісьціна калі загад для апрацоўкі гэтага тыпу URL мусіць выконвацца ў тэрмінале.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Апрацоўшчык URL &quot;irc&quot;">
+								<longdesc>Загад для апрацоўкі URL &quot;irc&quot; (відэаканфэрэнцыя), калі уключанае.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="enabled">
+							<local_schema short_desc="Ці пазначаны загад апрацоўвае URL  &quot;irc&quot;">
+								<longdesc>Ісьціна калі загад пазначаны у ключы &quot;command&quot; мусіць апрацоўваць URL &quot;irc&quot;.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="ftp">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Выканаць загад у тэрмінале">
+								<longdesc>Ісьціна калі загад для апрацоўкі гэтага тыпу URL мусіць выконвацца ў тэрмінале.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Апрацоўшчык URL &quot;ftp&quot;">
+								<longdesc>Загад для апрацоўкі URL &quot;ftp&quot; (відэаканфэрэнцыя), калі уключанае.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="enabled">
+							<local_schema short_desc="Ці пазначаны загад апрацоўвае URL  &quot;ftp&quot;">
+								<longdesc>Ісьціна калі загад пазначаны у ключы &quot;command&quot; мусіць апрацоўваць URL &quot;ftp&quot;.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="news">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Выканаць загад у тэрмінале">
+								<longdesc>Ісьціна калі загад для апрацоўкі гэтага тыпу URL мусіць выконвацца ў тэрмінале.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Апрацоўшчык URL &quot;news&quot;">
+								<longdesc>Загад для апрацоўкі URL &quot;news&quot; (відэаканфэрэнцыя), калі уключанае.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="enabled">
+							<local_schema short_desc="Ці пазначаны загад апрацоўвае URL  &quot;news&quot;">
+								<longdesc>Ісьціна калі загад пазначаны у ключы &quot;command&quot; мусіць апрацоўваць URL &quot;news&quot;.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="h323">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Выканаць загад у тэрмінале">
+								<longdesc>Ісьціна калі загад для апрацоўкі гэтага тыпу URL мусіць выконвацца ў тэрмінале.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Апрацоўшчык URL &quot;h323&quot;">
+								<longdesc>Загад для апрацоўкі URL &quot;h323&quot; (відэаканфэрэнцыя), калі уключанае.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="enabled">
+							<local_schema short_desc="Ці пазначаны загад апрацоўвае URL  &quot;h323&quot;">
+								<longdesc>Ісьціна калі загад пазначаны у ключы &quot;command&quot; мусіць апрацоўваць URL &quot;h323&quot;.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="callto">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Выканаць загад у тэрмінале">
+								<longdesc>Ісьціна калі загад для апрацоўкі гэтага тыпу URL мусіць выконвацца ў тэрмінале.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Апрацоўшчык URL &quot;callto&quot;">
+								<longdesc>Загад для апрацоўкі URL &quot;callto&quot; (аддаленых выклікаў) , калі уключанае.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="enabled">
+							<local_schema short_desc="Ці пазначаны загад апрацоўвае URL &quot;callto&quot;">
+								<longdesc>Ісьціна калі загад пазначаны у ключы &quot;command&quot; мусіць апрацоўваць URL &quot;callto&quot;.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="aim">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Выканаць загад у тэрмінале">
+								<longdesc>Ісьціна калі загад для апрацоўкі гэтага тыпу URL мусіць выконвацца ў тэрмінале.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Апрацоўшчык URL &quot;aim&quot; (хуткіх паведамленьняў)">
+								<longdesc>Загад для апрацоўкі URL &quot;aim&quot; (хуткіх паведамленьняў), калі уключанае.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="enabled">
+							<local_schema short_desc="Ці пазначаны загад апрацоўвае URL &quot;aim&quot;">
+								<longdesc>Ісьціна калі загад пазначаны у ключы &quot;command&quot; мусіць апрацоўваць URL &quot;aim&quot; (хуткіх паведамленьняў).</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="mailto">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Выканаць загад у тэрмінале">
+								<longdesc>Ісьціна калі загад для апрацоўкі гэтага тыпу URL мусіць выконвацца ў тэрмінале.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Апрацоўшчык URL &quot;mailto&quot;">
+								<longdesc>Загад для апрацоўкі URL &quot;mailto&quot;, калі уключанае.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="enabled">
+							<local_schema short_desc="Ці пазначаны загад апрацоўвае URL &quot;mailto&quot;">
+								<longdesc>Ісьціна калі загад пазначаны у ключы &quot;command&quot; мусіць апрацоўваць URL &quot;mailto&quot;.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="https">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Выканаць загад у тэрмінале">
+								<longdesc>Ісьціна калі загад для апрацоўкі гэтага тыпу URL мусіць выконвацца ў тэрмінале.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Апрацоўшчык URL &quot;https&quot;">
+								<longdesc>Загад для апрацоўкі URL &quot;https&quot;, калі уключанае.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="enabled">
+							<local_schema short_desc="Ці пазначаны загад апрацоўвае URL  &quot;https&quot;">
+								<longdesc>Ісьціна калі загад пазначаны у ключы &quot;command&quot; мусіць апрацоўваць URL &quot;https&quot;.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="http">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Выканаць загад у тэрмінале">
+								<longdesc>Ісьціна калі загад для апрацоўкі гэтага тыпу URL мусіць выконвацца ў тэрмінале.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Апрацоўшчык URL &quot;http&quot;">
+								<longdesc>Загад для апрацоўкі URL &quot;http&quot;, калі уключанае.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="enabled">
+							<local_schema short_desc="Ці пазначаны загад апрацоўвае URL  &quot;http&quot;">
+								<longdesc>Ісьціна калі загад пазначаны у ключы &quot;command&quot; мусіць апрацоўваць URL &quot;http&quot;.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="man">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Выканаць загад у тэрмінале">
+								<longdesc>Ісьціна калі загад для апрацоўкі гэтага тыпу URL мусіць выконвацца ў тэрмінале.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Апрацоўшчык URL &quot;man&quot;">
+								<longdesc>Загад для апрацоўкі URL &quot;man&quot;, калі уключанае.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="enabled">
+							<local_schema short_desc="Ці пазначаны загад апрацоўвае URL &quot;man&quot;">
+								<longdesc>Ісьціна калі загад пазначаны у ключы &quot;command&quot; мусіць апрацоўваць URL &quot;man&quot;.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="info">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Выканаць загад у тэрмінале">
+								<longdesc>Ісьціна калі загад для апрацоўкі гэтага тыпу URL мусіць выконвацца ў тэрмінале.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Апрацоўшчык URL &quot;info&quot;">
+								<longdesc>Загад для апрацоўкі URL &quot;info&quot;, калі уключанае.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="enabled">
+							<local_schema short_desc="Ці пазначаны загад апрацоўвае URL  &quot;info&quot;">
+								<longdesc>Ісьціна калі загад пазначаны у ключы &quot;command&quot; мусіць апрацоўваць URL &quot;info&quot;.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="ghelp">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Выканаць загад у тэрмінале">
+								<longdesc>Ісьціна калі загад для апрацоўкі гэтага тыпу URL мусіць выконвацца ў тэрмінале.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Апрацоўшчык URL &quot;ghelp&quot;">
+								<longdesc>Загад для апрацоўкі URL &quot;ghelp&quot; (дапамога), калі уключанае.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="enabled">
+							<local_schema short_desc="Ці пазначаны загад апрацоўвае URL  &quot;ghelp&quot;">
+								<longdesc>Ісьціна калі загад пазначаны у ключы &quot;command&quot; мусіць апрацоўваць URL &quot;ghelp&quot;.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="trash">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Выканаць загад у тэрмінале">
+								<longdesc>Ісьціна калі загад для апрацоўкі гэтага тыпу URL мусіць выконвацца ў тэрмінале.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Апрацоўшчык URL &quot;trash&quot;">
+								<longdesc>Загад для апрацоўкі URL &quot;trash&quot;, калі уключанае.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="enabled">
+							<local_schema short_desc="Ці пазначаны загад апрацоўвае URL &quot;trash&quot;">
+								<longdesc>Ісьціна калі загад пазначаны у ключы &quot;command&quot; мусіць апрацоўваць URL &quot;trash&quot;.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+				</dir>
+				<dir name="applications">
+					<dir name="window_manager">
+						<entry name="workspace_names">
+							<local_schema short_desc="Назвы працоўных прастораў (асуджанае)">
+								<longdesc>Сьпіс з назвамі працоўных прастораў першага кіраўніка вокнаў. Гэты ключ асуджаны пачынаючы з вэрсіі GNOME 2.12.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="number_of_workspaces">
+							<local_schema short_desc="Колькасьць працоўных прастораў (асуджанае)">
+								<longdesc>Колькасьць працоўных прастораў якія будуць выкарыстоўвацца кіраўніком вокнаў. Гэты ключ асуджаны пачынаючы з вэрсіі GNOME 2.12.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="current">
+							<local_schema short_desc="Кіраўнік вокнаў абраны карыстальнікам (асуджанае)">
+								<longdesc>Кіраўнік вокнаў, які будзе паспрабаваны першым. Гэты ключ асуджаны пачынаючы з вэрсіі GNOME 2.12.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="default">
+							<local_schema short_desc="Аварыйны кіраўнік вокнаў (асуджанае)">
+								<longdesc>Аварыйны кіраўнік вокнаў, які будзе выкарыстоўвацца калі прадвызначаны адсутнічае. Гэты ключ асуджаны пачынаючы з вэрсіі GNOME 2.12.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="browser">
+						<entry name="nremote">
+							<local_schema short_desc="Вандроўнік разумее адлеглае">
+							</local_schema>
+						</entry>
+						<entry name="needs_term">
+							<local_schema short_desc="Вандроўніку патрэбны тэрмінал">
+							</local_schema>
+						</entry>
+						<entry name="exec">
+							<local_schema short_desc="Прадвызначаны вандроўнік">
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="component_viewer">
+						<entry name="exec">
+							<local_schema short_desc="Прадвызначанае дастасаваньне прагляду кампанэнта">
+								<longdesc>Дастасаваньне для прагляду файлаў, якія патрабуюць кампанэнт, каб прагледзіць іх. Парамэтар %s будзе заменены на URI файлаў, парамэтар %c будзе заменены IID кампанэнту.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="terminal">
+						<entry name="exec_arg">
+							<local_schema short_desc="Аргумэнты пуску">
+								<longdesc>Аргумэнт, які выкарыстоўваецца ў часе загрузкі праграмаў у тэрмінале па ключу &quot;exec&quot;.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="exec">
+							<local_schema short_desc="Дастасаваньне тэрміналу">
+							</local_schema>
+						</entry>
+					</dir>
+				</dir>
+			</dir>
+		</dir>
+	</dir>
+</gconf>

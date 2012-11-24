@@ -1,0 +1,98 @@
+#! /bin/sh
+# Copyright (c) 1996-2002 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# Author: Florian La Roche, 1996
+#	  Werner Fink <werner@suse.de>, 1996,2000
+#
+# Please send feedback to http://www.suse.de/feedback
+#
+# /etc/init.d/powerfail
+#
+# This script is run when the UPS tells the system
+# the power has gone. Tell everybody, sync the disks
+# and drop into single user mode within two minutes.
+# This script is also being run when the power comes
+# up again (if it does in time!)
+#
+
+trap "echo" SIGINT SIGSEGV SIGTERM
+
+POWERFAIL='THE POWER IS FAILED! SYSTEM GOING DOWN! PLEASE LOG OFF NOW!'
+POWERFAILNOW='THE POWER IS FAILED! LOW BATTERY - EMERGENCY SYSTEM SHUTDOWN!'
+POWERISBACK='THE POWER IS BACK'
+
+case "$1" in
+    start)
+	# don't allow users to login and go into single-user
+	shutdown    +2  "$POWERFAIL"    <> /dev/console 1>&0 2>&0  &
+	sync &
+	;;
+    now)
+	# tell init to immediatelly halt the system
+	shutdown -h now "$POWERFAILNOW" <> /dev/console 1>&0 2>&0  &
+	sync &
+	;;
+    stop)
+	# Stop any running shutdown
+	shutdown -c now "$POWERISBACK"  <> /dev/console 1>&0 2>&0
+
+	# allow users to log in
+	rm -f /etc/nologin
+
+	# if we're not single user, don't try to restore
+	test "$RUNLEVEL" != "S" && exit 0
+
+	# go back to previous runlevel
+	if test -n "$PREVLEVEL" -a \
+		   "$PREVLEVEL" != 0 -a "$PREVLEVEL" != 6
+	then
+	    init $PREVLEVEL
+	else
+	    # may not happen, but...
+	    init -t5 S
+	fi
+
+	# allow users to log in
+	rm -f /etc/nologin
+	;;
+    killups)
+	POWERD_UPSPORT=""
+	KILL_UPS_CMD=""
+	if test -r /etc/powerd.conf -a -x /sbin/genpowerd ; then
+	    while read key value ; do
+		case "$key" in
+		\#*|"")     ;;
+		disabled)   echo 'powerd is disabled in /etc/powerd.conf!' | wall
+			    break ;;
+		serialline) POWERD_UPSPORT=${value} ; break ;;
+		esac
+	    done < /etc/powerd.conf
+	    test -c $POWERD_UPSPORT || POWERD_UPSPORT=""
+	    if test -n "$POWERD_UPSPORT" ; then
+		KILL_UPS_CMD="/sbin/genpowerd -k $POWERD_UPSPORT eff-shutup"
+	    fi
+	    POWER_STATUS=/var/run/powerstatus
+	fi
+	#
+	# Kill UPS inverter (in the case of genpowerd)
+	#
+	if test -n "$KILL_UPS_CMD" -a -r $POWER_STATUS ; then
+	    read STATUS < $POWER_STATUS
+	    case "$STATUS" in
+		F|FAIL)
+		    echo "Trying to kill UPS inverter"
+		    $KILL_UPS_CMD
+		    ;;
+	    esac
+	else
+	    echo "Not implemented"
+	fi
+	;;
+    *)
+	echo "Usage: $0 {start|now|killups|stop}"
+	exit 1
+	;;
+esac
+
+exit 0

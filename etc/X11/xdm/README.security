@@ -1,0 +1,28 @@
+
+     XDMCP and Security (or how use Xterminals with XDM)
+     ===================================================
+
+By default XDMCP is disabled,  this means that a remote Xterminal
+can not contact this XDM. In order to use XDMCP the resource line
+with DisplayManager.requestPort in the file  xdm-config should be
+commented out.  This enables the XDMCP port with the default port
+number 177 (see /etc/services).
+
+Please configure access rules  within the file  Xaccess  for your
+Xterminals.  These  rules  are host based and/or  domain based to
+allow or deny contact  on  the XDMCP port.   For some example see
+the manual page of xdm(1), section `XDMCP ACCESS CONTROL' and the
+section `CHOOSER'.
+
+To force a rescan of  Xaccess and xdm-config within a running XDM
+the signal SIGHUP can be used:
+
+     kill -HUP `cat /var/run/xdm.pid`
+
+The change of DisplayManager.requestPort requires a restart of XDM.
+
+--
+      Have a lot of fun...
+
+               Your SuSE Team
+

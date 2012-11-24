@@ -1,0 +1,12 @@
+# default: off
+# description: rsync file transfer daemon
+service rsync
+{
+	socket_type	= stream
+	protocol	= tcp
+	wait		= no
+	user		= root
+	server		= /usr/sbin/rsyncd
+	server_args	= --daemon
+	disable		= yes
+}

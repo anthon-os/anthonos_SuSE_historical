@@ -1,0 +1,14 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Version=1.0
+Name=远程桌面连接
+Comment=Connect to remote desktops
+TryExec=remmina
+Exec=remmina
+Icon=remmina
+Terminal=false
+Type=Application
+Actions=
+Categories=GTK;GNOME;X-GNOME-NetworkSettings;Network;RemoteAccess;GTK;
+
+

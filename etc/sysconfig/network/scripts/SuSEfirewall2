@@ -1,0 +1,109 @@
+#!/bin/bash
+#
+# SuSEfirewall2 - stateful packetfilter rules generator
+# Copyright (C) 2007 SUSE LINUX Products GmbH
+#
+# Please send feedback via http://www.suse.de/feedback
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# version 2 as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+set -e
+
+unset ${!LC_*} LANGUAGE
+export LANG=POSIX
+
+export PATH=/sbin:/usr/sbin:/usr/bin:/bin
+
+. /etc/sysconfig/network/config
+
+sfw2_active()
+{
+	{ test -e /proc/net/ip_tables_names && iptables -nL reject_func >/dev/null 2>&1; } || return 1
+}
+
+case "$0" in
+	#
+	# network firewall actions executed via the link
+	#   /etc/sysconfig/network/scripts/firewall
+	# by /etc/init.d/network and /sbin/ifstatus.
+	#
+	# Currently the following actions are available:
+	#  - net-reconfig-init:
+	#    /etc/init.d/network signals a manual restart
+	#    to avoid firewall refresh on "up" and "down"
+	#    of every single interface.
+	#
+	#  - net-reconfig-done:
+	#    /etc/init.d/network signals a restart end to
+	#    reenable restarting and refresh the rules.
+	#
+	#  - running:
+	#    reports if the firewall script is running i.e.
+	#    applying rules at the moment.
+	#    Queried by ifstatus if the interface setup is
+	#    still in progress; reports 'in background' then.
+	#
+	#  - status:
+	#    reports status if the firewall is active
+	#
+	#  - try-restart:
+	#    restarts the firewall when enabled and active
+	#
+	*scripts/firewall)
+		case $1 in
+		net-reconfig-init)
+			[ "$FIREWALL" = 'yes' ] || exit 2
+			sfw2_active || exit 3
+			/sbin/SuSEfirewall2 bootlock
+		;;
+		net-reconfig-done)
+			[ "$FIREWALL" = 'yes' ] || exit 2
+			sfw2_active || exit 3
+			/sbin/SuSEfirewall2 --bootunlock start
+		;;
+		running)
+			test -f /var/lock/SuSEfirewall2.pid
+		;;
+
+		status)
+			sfw2_active
+		;;
+		try-restart)
+			if sfw2_active; then
+				/sbin/SuSEfirewall2 start
+			fi
+		;;
+		esac
+	;;
+	#
+	# ifup /etc/sysconfig/network/if-{up,down}.d/ script part;
+	# refresh the firewall rules on interface "up" and "down".
+	#
+	(*if-up.d*|*if-down.d*)
+
+		config="$1"
+		iface="$2"
+
+		. /etc/sysconfig/network/ifcfg-"$config" 2>/dev/null || true
+
+		[ "$FIREWALL" = 'yes' ] || exit 0
+
+		if sfw2_active; then
+			/sbin/SuSEfirewall2 -q start
+		fi
+	;;
+	*) echo "don't know what to do" >&2 ;;
+esac
+

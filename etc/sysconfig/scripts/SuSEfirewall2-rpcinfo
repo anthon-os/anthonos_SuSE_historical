@@ -1,0 +1,178 @@
+#!/usr/bin/perl -w
+# SuSEfirewall2-rpcinfo - helper script for SuSEfirewall2
+# Copyright (C) 2004 SUSE Linux AG
+# Copyright (C) 2005-2011 SUSE LINUX Products GmbH
+#
+# Author: Ludwig Nussel
+# 
+# Please send feedback via http://www.suse.de/feedback
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# version 2 as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# determine ports of RPC services specified on the command line and print them
+# as iptables command line parameters. Only services that are actually running
+# and are running as root are printed.
+
+use strict;
+#use Data::Dumper;
+
+if ($#ARGV < 0)
+{
+    print STDERR "Usage: $0 <service ...>\n\n";
+    exit 1;
+}
+
+# {
+#           'ypbind' => [
+#                        {
+#                          'udp' => [
+#                                     979
+#                                   ],
+#                          'tcp' => [
+#                                     982
+#                                   ],
+#                          'sport' => '666:777',
+#                          'net' => '10.10.0.1/32'
+#                        },
+# }
+my %services;
+foreach my $service (@ARGV)
+{
+    my @a = split(/,/,$service);
+    if( $#a == 0)
+    {
+	push @{$services{$service}}, {};
+    }
+    elsif ($#a >= 2 && $a[1] eq '_rpc_')
+    {
+	my %h = ();
+	$h{'net'} = $a[0] if($a[0] && length($a[0]));
+	$h{'sport'} = $a[3] if($a[3] && length($a[3]));
+	push @{$services{$a[2]}}, \%h;
+    }
+}
+
+# {
+#    'status' => 104,
+# }
+my %rpcusers;
+for my $file (qw(/usr/share/SuSEfirewall2/rpcusers /etc/sysconfig/SuSEfirewall2.d/rpcusers)) {
+    next unless open(F, '<', $file);
+    while (<F>) {
+	chomp;
+	s/#.*//;
+	next if /^ *$/;
+	my $uid;
+	my ($service, $user) = split(/\s+/, $_, 2);
+	unless (defined $service && defined $user) {
+	    print STDERR "$file:$. syntax error\n";
+	    next;
+	}
+	$uid = getpwnam($user);
+	unless (defined $uid) {
+	    print STDERR "$file:$. invalid user name: $user\n";
+	    next;
+	}
+	$rpcusers{$service} = $uid;
+    }
+}
+
+my %udpports = ();
+my %tcpports = ();
+
+# collect registered rpc services
+open (RPCINFO, '/sbin/rpcinfo -p localhost|') or die;
+<RPCINFO>; # header line
+while(<RPCINFO>)
+{
+    chomp;
+    my @line = split;
+    next if($#line < 4);
+    next unless (exists $services{$line[4]});
+    if($line[2] eq 'udp')
+    {
+	$udpports{$line[3]} = $line[4];
+    }
+    elsif($line[2] eq 'tcp')
+    {
+	$tcpports{$line[3]} = $line[4];
+    }
+}
+close RPCINFO;
+
+# @param file
+# @param hashref
+sub getportsfor($$)
+{
+    my ($proto, $href) = @_;
+    # check if the registered ports are actually used and whether they are
+    # owned by a process running as root
+    open (FILE, '<', "/proc/net/$proto") or die;
+    <FILE>; # header line
+    my $ret = 0;
+    while(<FILE>)
+    {
+	chomp;
+	my @line = split;
+	my ($addr, $port) = split(/:/, $line[1], 2);
+	$port = pack('H*', $port); # "007B" => "\x00\x7B"
+	$port = unpack('n', $port); # "\x00\x7B" => 0x007B
+	my $service = $href->{$port} || undef;
+	next unless $service;
+
+	my $uid = $line[7];
+	if ($uid && !($rpcusers{$service} && $uid == $rpcusers{$service})) {
+	    print STDERR "$service/$proto doesn't run as root, ignored.\n";
+	    next;
+	}
+
+	++$ret;
+	foreach my $h (@{$services{$service}})
+	{
+	    push @{$h->{$proto}}, $port;
+	}
+    }
+    close FILE;
+
+    # always also add portmapper
+    if($ret && !exists $services{'portmapper'})
+    {
+	push @{$services{'portmapper'}}, { tcp => [111], udp => [111] };
+    }
+}
+
+getportsfor('udp', \%udpports);
+getportsfor('tcp', \%tcpports);
+
+#print Dumper(\%services);
+
+foreach my $l (values %services)
+{
+    foreach my $h (@$l)
+    {
+	foreach my $proto (('udp', 'tcp'))
+	{
+	    if(exists($h->{$proto}))
+	    {
+		foreach my $port (@{$h->{$proto}})
+		{
+		    print "-p $proto --dport $port";
+		    print " --sport ".$h->{'sport'} if exists $h->{'sport'};
+		    print " -s ".$h->{'net'} if exists $h->{'net'};
+		    print "\n";
+		}
+	    }
+	}
+    }
+}

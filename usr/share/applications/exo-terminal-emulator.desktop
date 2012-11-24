@@ -1,0 +1,13 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Version=1.0
+Type=Application
+Exec=exo-open --launch TerminalEmulator
+Icon=utilities-terminal
+StartupNotify=true
+Terminal=false
+Categories=Utility;X-XFCE;X-Xfce-Toplevel;
+OnlyShowIn=XFCE;
+Name=终端模拟器
+Comment=Use the command line
+

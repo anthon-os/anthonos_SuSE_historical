@@ -1,0 +1,8 @@
+[UpdateMain]
+name=UpdateMain
+enabled=1
+autorefresh=1
+baseurl=http://mirrors.ustc.edu.cn/opensuse/update/12.2/
+path=/
+type=rpm-md
+keeppackages=0

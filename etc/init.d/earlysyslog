@@ -1,0 +1,112 @@
+#! /bin/sh
+#
+# Copyright (c) 1996-2001 SuSE GmbH Nuernberg, Germany.
+# Copyright (c) 2002-2003 SuSE Linux AG, Nuernberg, Germany.
+# Copyright (c) 2004-2008 SUSE LINUX Products GmbH, Nuernberg, Germany.
+#
+# Author: Florian La Roche <florian@suse.de>, 1996
+#         Werner Fink <werner@suse.de>, 1998-2008
+#         Stephan Kulow <coolo@suse.de>, 2005-2008
+#         Marius Tomaschewski <mt@suse.de>, 2001-2008
+#
+# /etc/init.d/syslog
+#
+### BEGIN INIT INFO
+# Provides:       earlysyslog
+# Required-Start: 
+# Required-Stop:  
+# Default-Start:  2 3 5
+# Default-Stop:
+# Description:    Start the system logging daemons
+### END INIT INFO
+
+. /etc/sysconfig/syslog
+
+BINDIR=/sbin
+
+if type -t rc_readonlyroot > /dev/null 2>&1 && rc_readonlyroot ; then
+    echo "Disabling early syslog on read-only root filesystem."
+    exit 0
+fi
+
+# update $SYSLOG_DAEMON if not up-to-date
+test -n "$SYSLOG_DAEMON" && \
+test -x "${BINDIR}/$SYSLOG_DAEMON" || {
+     for SYSLOG_DAEMON in rsyslogd syslog-ng syslogd ; do
+         test -x "${BINDIR}/$SYSLOG_DAEMON" && break
+     done
+}
+
+# set daemon dependent variables
+case "$SYSLOG_DAEMON" in
+    rsyslogd)
+	syslog=rsyslogd
+	config=/etc/rsyslog.conf
+	;;
+    syslog-ng)
+	syslog=syslog-ng
+	config=/etc/syslog-ng/syslog-ng.conf
+	;;
+    *)
+	syslog=syslogd
+	config=/etc/syslog.conf
+	;;
+esac
+syslog_bin=${BINDIR}/$syslog
+  klog_bin=${BINDIR}/klogd
+
+# check config and programs
+test -s ${config}	  || {
+    echo 1>&2 "${config} does not exist"
+    if test "$1" == "stop" ; then exit 0 ; else exit 6 ; fi
+}
+test -x ${syslog_bin} || {
+    echo 1>&2 "${syslog_bin} is not installed"
+    if test "$1" == "stop" ; then exit 0 ; else exit 5 ; fi
+}
+test -x ${klog_bin}   || {
+    echo 1>&2 "${klog_bin} is not installed"
+    if test "$1" == "stop" ; then exit 0 ; else exit 5 ; fi
+}
+
+case "$SYSLOG_DAEMON" in
+    syslog-ng)
+    	case ${SYSLOG_REQUIRES_NETWORK} in
+	yes)	exit 0 ;;
+	no)            ;;
+	"")
+	    while read line ; do
+		case "$line" in
+		    \#*|"")	continue ;;
+		    *udp\ *|*udp\(*) exit 0 ;;
+		    *tcp\ *|*tcp\(*) exit 0 ;;
+		esac
+	    done < ${config}
+	    ;;
+	esac
+	;;
+    rsyslogd)
+	# Network is usually not required for properly configured
+	# rsyslogd with enabled on-disk queues for remote logging,
+	# so we just start it with its normal configuration.
+	# "yes" allows the user to disable the early start.
+	case ${SYSLOG_REQUIRES_NETWORK} in
+	yes)	exit 0 ;;
+	no|"")         ;;
+	esac
+	;;
+    *)
+    	case ${SYSLOG_REQUIRES_NETWORK} in
+	yes)	exit 0 ;;
+	no)            ;;
+	"")
+	    while read select action ; do
+		case "$select" in \#*|"") continue ;; esac
+	        case "$action" in *@*)    exit 0   ;; esac
+	    done < ${config}
+	    ;;
+	esac
+	;;
+esac
+
+exec /etc/init.d/syslog $1 early

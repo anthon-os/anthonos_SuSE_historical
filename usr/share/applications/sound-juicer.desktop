@@ -1,0 +1,35 @@
+[Desktop Entry]
+X-SuSE-translate=true
+DocPath=sound-juicer
+Name=音乐提取
+GenericName=Audio CD Extractor
+X-GNOME-FullName=Sound Juicer Audio CD Extractor
+X-GNOME-FullName[cs]=Extraktor zvukových CD Sound Juicer
+X-GNOME-FullName[da]=Sound Juicer cd-lydudtrækker
+X-GNOME-FullName[de]=Sound Juicer Audio-CD-Ausleser
+X-GNOME-FullName[es]=Extractor de sonido de CD Sound Juicer
+X-GNOME-FullName[fr]=Extracteur de CD audio Sound Juicer
+X-GNOME-FullName[gl]=Extractor de Audio CD Sound Juicer
+X-GNOME-FullName[gu]=સાઉન્ડ જ્યુસર ઓડિયો CD નો અર્ક કાઢનાર
+X-GNOME-FullName[ja]=Sound Juicer 音楽 CD 取り込みツール
+X-GNOME-FullName[lv]=Sound Juicer audio CD ekstraktors
+X-GNOME-FullName[nb]=Sound Juicer henter ut sanger fra CDer
+X-GNOME-FullName[pl]=Zgrywanie płyt CD-Audio Sound Juicer
+X-GNOME-FullName[ru]=Программа копирования звуковых дисков
+X-GNOME-FullName[sl]=Pretvornik zvočnih nosilcev Sound Juicer
+X-GNOME-FullName[sr]=Звуковник извлакивач звучних дискова
+X-GNOME-FullName[sr@latin]=Zvukovnik izvlakivač zvučnih diskova
+X-GNOME-FullName[sv]=Ljud-cd-extraheraren Sound Juicer
+Comment=Copy music from your CDs
+Exec=sound-juicer %u
+Icon=sound-juicer
+StartupNotify=true
+MimeType=x-content/audio-cdda;
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;AudioVideo;Player;
+X-GNOME-Bugzilla-Bugzilla=GNOME
+X-GNOME-Bugzilla-Product=sound-juicer
+X-GNOME-Bugzilla-Component=general
+X-GNOME-Bugzilla-Version=3.4.0
+

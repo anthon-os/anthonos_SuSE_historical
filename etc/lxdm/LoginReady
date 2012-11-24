@@ -1,0 +1,2 @@
+#!/bin/sh
+test -x /etc/X11/xdm/Xsetup && exec /etc/X11/xdm/Xsetup

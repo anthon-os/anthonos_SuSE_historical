@@ -1,0 +1,39 @@
+## Path:	  Applications/SuSEhelp
+## Description:	  SuSE help system configuration
+## Type:	  string(localhost)
+## Default:	  localhost
+## Config:
+## ServiceRestart:
+## Command:
+#
+# The name of the central server for the Online documentation
+# This should be a fully qualified host name, e.g. host.domain.top
+# To act as a server give here your own FQHOSTNAME
+# To act as client, set DOC_HOST to the name of the used server.
+#
+DOC_HOST="localhost"
+
+## Type:           string(localhost)
+## Default:        localhost
+## Config:         susehelp, apache
+## ServiceRestart: apache
+## Command:
+#
+# List of host/domain patterns for use with access restrictions for
+# apache, e.g. ".mydomain.top" to allow access from all hosts of domain
+# mydomain.top
+#
+DOC_ALLOW="localhost"
+
+## Type:	   yesno
+## Default:	   no
+## Config:         susehelp
+## ServiceRestart:
+## Command:
+#
+# Set this to yes if you want SuSEconfig to take care of refreshing the 
+# index database for susehelp searching. This will be done after 
+# installation of new packages and after changes of the DOC_* variables.
+# If set to no, you have to rebuild the databases yourself.
+#
+DOC_AUTOINDEX="no"

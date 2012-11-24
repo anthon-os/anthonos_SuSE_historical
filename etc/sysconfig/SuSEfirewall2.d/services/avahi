@@ -1,0 +1,7 @@
+## Name: Zeroconf/Bonjour Multicast DNS
+## Description: Zeroconf/Bonjour Multicast DNS (mDNS) ports for Service Discovery (DNS-SD)
+
+# Allow broadcasting on UDP port 5353.
+# mdnsresponder (5354) port is not used by Avahi
+UDP="mdns"
+BROADCAST="mdns"

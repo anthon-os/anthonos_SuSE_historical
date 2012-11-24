@@ -1,0 +1,95 @@
+#!/bin/sh
+#
+# SuSEfirewall2-oldbroadcast - helper script for SuSEfirewall2
+# Copyright (C) 2005 SUSE LINUX Products GmbH
+#
+# Author: Ludwig Nussel
+# 
+# Please send feedback via http://www.suse.de/feedback
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# version 2 as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# 
+# Convert obsolete FW_ALLOW_FW_BROADCAST and FW_IGNORE_FW_BROADCAST into new
+# variables. Attention: do not use any special functions as this script is also
+# used in post-install of SuSEfirewall2!
+#
+convert_old_broadcast()
+{
+    local i zone
+
+    for i in $FW_ALLOW_FW_BROADCAST; do
+	case "$i" in
+	    no) ;;
+	    yes)
+		warning "FW_ALLOW_FW_BROADCAST=yes is obsolete, use FW_ALLOW_FW_BROADCAST_{INT,EXT,DMZ}=yes instead"
+		for zone in INT EXT DMZ; do
+		    eval FW_ALLOW_FW_BROADCAST_$zone=yes
+		done
+		;;
+	    int)
+		    warning "FW_ALLOW_FW_BROADCAST=$i is obsolete, use FW_ALLOW_FW_BROADCAST_INT=yes instead"
+		    FW_ALLOW_FW_BROADCAST_INT=yes
+		;;
+	    ext)
+		    warning "FW_ALLOW_FW_BROADCAST=$i is obsolete, use FW_ALLOW_FW_BROADCAST_EXT=yes instead"
+		    FW_ALLOW_FW_BROADCAST_EXT=yes
+		;;
+	    dmz)
+		    warning "FW_ALLOW_FW_BROADCAST=$i is obsolete, use FW_ALLOW_FW_BROADCAST_DMZ=yes instead"
+		    FW_ALLOW_FW_BROADCAST_DMZ=yes
+		;;
+	    *)
+		warning "FW_ALLOW_FW_BROADCAST=$i is obsolete, use FW_ALLOW_FW_BROADCAST_{INT,EXT,DMZ}=$i instead"
+		for zone in INT EXT DMZ; do
+		    eval FW_ALLOW_FW_BROADCAST_$zone="$i"
+		done
+		;;
+	esac
+    done
+    unset FW_ALLOW_FW_BROADCAST
+
+    # backward compat
+    for i in $FW_IGNORE_FW_BROADCAST; do
+	case "$i" in
+	    no) ;;
+	    yes)
+		warning "FW_IGNORE_FW_BROADCAST=yes is obsolete, use FW_IGNORE_FW_BROADCAST_{INT,EXT,DMZ}=yes instead"
+		for zone in INT EXT DMZ; do
+		    eval FW_IGNORE_FW_BROADCAST_$zone=yes
+		done
+		;;
+	    int)
+		    warning "FW_IGNORE_FW_BROADCAST=$i is obsolete, use FW_IGNORE_FW_BROADCAST_INT=yes instead"
+		    FW_IGNORE_FW_BROADCAST_INT=yes
+		;;
+	    ext)
+		    warning "FW_IGNORE_FW_BROADCAST=$i is obsolete, use FW_IGNORE_FW_BROADCAST_EXT=yes instead"
+		    FW_IGNORE_FW_BROADCAST_EXT=yes
+		;;
+	    dmz)
+		    warning "FW_IGNORE_FW_BROADCAST=$i is obsolete, use FW_IGNORE_FW_BROADCAST_DMZ=yes instead"
+		    FW_IGNORE_FW_BROADCAST_DMZ=yes
+		;;
+	    *)
+		warning "FW_IGNORE_FW_BROADCAST=$i is obsolete, use FW_IGNORE_FW_BROADCAST_{INT,EXT,DMZ}=$i instead"
+		for zone in INT EXT DMZ; do
+		    eval FW_IGNORE_FW_BROADCAST_$zone="$i"
+		done
+		;;
+	esac
+    done
+    unset FW_IGNORE_FW_BROADCAST
+}
+

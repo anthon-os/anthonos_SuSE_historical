@@ -1,0 +1,335 @@
+<?xml version="1.0"?>
+<gconf>
+	<dir name="schemas">
+		<dir name="apps">
+			<dir name="aisleriot">
+				<entry name="recent_games_list">
+					<local_schema short_desc="Onlangs gespeelde speletjies">
+						<longdesc>&apos;n Lys van onlangs gespeelde speletjies.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="statistics">
+					<local_schema short_desc="Statistiek van speletjies gespeel">
+						<longdesc>&apos;n Lys stringe wat as vyftal aangegee word, naamlik naam, wenne, totale speletjies gespeel, beste tyd (in sekondes) en swakste tyd (ook in sekondes). Ongespeelde speletjies hoef nie aangegee te word nie.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="game_file">
+					<local_schema short_desc="Die speletjielêer om te gebruik">
+						<longdesc>Die naam van die skemalêer met die patience-speletjie om te speel.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="animations">
+					<local_schema short_desc="Animasies">
+						<longdesc>Of die kaartbewegings geanimeer moet word of nie.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="sound">
+					<local_schema short_desc="Klank">
+						<longdesc>Of gebeureklanke gespeel moet word of nie.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="click_to_move">
+					<local_schema short_desc="Kies die kontrolestyl">
+						<longdesc>Kies of die kaarte beweeg word deur te sleep, of deur te kliek op die bron en dan die bestemming.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="show_statusbar">
+					<local_schema short_desc="Of die statusbalk getoon moet word of nie">
+					</local_schema>
+				</entry>
+				<entry name="show_toolbar">
+					<local_schema short_desc="Of die nutsbalk gewys moet word of nie">
+					</local_schema>
+				</entry>
+				<entry name="card_style">
+					<local_schema short_desc="Temalêernaam">
+						<longdesc>Die naam van die lêer met die grafika vir die kaarte.</longdesc>
+					</local_schema>
+				</entry>
+			</dir>
+			<dir name="nm-applet">
+				<entry name="disable-wifi-create">
+					<local_schema short_desc="Deaktiveer Wi-Fi-skep">
+						<longdesc>Stel na WAAR om skep van ad hoc-netwerke te deaktiveer wanneer die miniprogram gebruik word.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="stamp">
+					<local_schema short_desc="Stempel">
+						<longdesc>Word gebruik om te bepaal of instellings na &apos;n nuwe weergawe migreer moet word.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="suppress-wireless-networks-available">
+					<local_schema short_desc="Onderdruk netwerkebeskikbaar-kennisgewings">
+						<longdesc>Stel dit na WAAR om kennisgewings wanneer draadlose netwerke beskikbaar is te deaktiveer.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="disable-disconnected-notifications">
+					<local_schema short_desc="Deaktiveer ontkoppel-kennisgewings">
+						<longdesc>Stel dit na WAAR om kennisgewings wanneer van &apos;n netwerk ontkoppel word te deaktiveer.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="disable-connected-notifications">
+					<local_schema short_desc="Deaktiveer koppel-kennisgewings">
+						<longdesc>Stel dit na WAAR om kennisgewings wanneer aan &apos;n netwerk gekoppel word te deaktiveer.</longdesc>
+					</local_schema>
+				</entry>
+			</dir>
+		</dir>
+		<dir name="system">
+			<dir name="smb">
+				<entry name="workgroup">
+					<local_schema short_desc="SMB-werkgroep">
+					</local_schema>
+				</entry>
+			</dir>
+			<dir name="proxy">
+				<entry name="autoconfig_url">
+					<local_schema short_desc="Outomatiese instaanopstelling-URL">
+						<longdesc>URL wat instaanopstellingswaardes verskaf.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="socks_port">
+					<local_schema short_desc="SOCKS-instaanpoort">
+						<longdesc>Die poort op die masjien gedefinieer deur &quot;/system/proxy/socks_host&quot; waardeur jy &apos;n instaanverbinding kry.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="socks_host">
+					<local_schema short_desc="SOCKS-instaangasheernaam">
+						<longdesc>Die masjiennaam waardeur SOCKS ingestaan moet word.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="ftp_port">
+					<local_schema short_desc="FTP-instaanpoort">
+						<longdesc>Die poort op die masjien gedefinieer deur &quot;/system/proxy/ftp_host&quot; waardeur jy &apos;n instaanverbinding kry.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="ftp_host">
+					<local_schema short_desc="FTP-instaangasheernaam">
+						<longdesc>Die masjiennaam waardeur FTP ingestaan moet word.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="secure_port">
+					<local_schema short_desc="Veilige-HTTP-instaanpoort">
+						<longdesc>Die poort op die masjien gedefinieer deur &quot;/system/proxy/secure_host&quot; waardeur jy &apos;n instaanverbinding kry.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="secure_host">
+					<local_schema short_desc="Veilige-HTTP-instaangasheernaam">
+						<longdesc>Die masjiennaam waardeur veilige HTTP ingestaan moet word.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="mode">
+					<local_schema short_desc="Instaanopstelling-modus">
+						<longdesc>Selekteer die instaanopstelling-modus. Waardes wat werk is &quot;geen&quot;, &quot;handmatig&quot;, &quot;outo&quot;.</longdesc>
+					</local_schema>
+				</entry>
+			</dir>
+			<dir name="http_proxy">
+				<entry name="ignore_hosts">
+					<local_schema short_desc="Nie-instaangashere">
+						<longdesc>Hierdie sleutel bevat &apos;n lys gashere wat direk in plaas van deur die instaanbediener (indien dit aktief is) gekoppel is. Die waardes kan gasheername, domeine (met &apos;n aanvanklike instaankarakter soos *.foo.com), IP-gasheeradresse (beide IPv4 en IPv6) en netwerkadresse met &apos;n netmasker (iets soos 192.168.0.0/24) wees.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="authentication_password">
+					<local_schema short_desc="HTTP-instaanwagwoord">
+						<longdesc>Wagwoord wat as geldigheidsvasstelling gevoer moet word wanneer HTTP-instanery gedoen word.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="authentication_user">
+					<local_schema short_desc="HTTP-instaangebruikernaam">
+						<longdesc>Gebruikernaam wat as geldigheidsvasstelling gevoer moet word wanneer HTTP-instanery gedoen word.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="use_authentication">
+					<local_schema short_desc="Verifieer instaanbedienerverbindings">
+					</local_schema>
+				</entry>
+				<entry name="port">
+					<local_schema short_desc="HTTP-instaanpoort">
+						<longdesc>Die poort op die masjien gedefinieer deur &quot;/system/http_proxy/host&quot; waardeur jy &apos;n instaanverbinding kry.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="host">
+					<local_schema short_desc="HTTP-instaangasheernaam">
+						<longdesc>Die masjiennaam waardeur HTTP ingestaan moet word.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="use_http_proxy">
+					<local_schema short_desc="Gebruik HTTP-instaanbediener">
+						<longdesc>Aktiveer die instaanopstelling wanneer toegang tot HTTP oor die internet verkry word.</longdesc>
+					</local_schema>
+				</entry>
+			</dir>
+		</dir>
+		<dir name="desktop">
+			<dir name="gnome">
+				<dir name="url-handlers">
+					<dir name="irc">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Laat die program in &apos;n terminaal loop">
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Die hanteerder vir &quot;irc&quot;-URL&apos;e">
+								<longdesc>Die opdrag vir hantering van &quot;irc&quot;-URL&apos;e, indien geaktiveer.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="ftp">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Laat die program in &apos;n terminaal loop">
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Die hanteerder vir &quot;ftp&quot;-URL&apos;e">
+								<longdesc>Die opdrag vir hantering van &quot;ftp&quot;-URL&apos;e, indien geaktiveer.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="news">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Laat die program in &apos;n terminaal loop">
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Die hanteerder vir &quot;news&quot;-URL&apos;e">
+								<longdesc>Die opdrag vir hantering van &quot;news&quot;-URL&apos;e, indien geaktiveer.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="h323">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Laat die program in &apos;n terminaal loop">
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Die hanteerder vir &quot;h323&quot;-URL&apos;e">
+								<longdesc>Die opdrag vir hantering van &quot;h323&quot;-URL&apos;e, indien geaktiveer.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="callto">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Laat die program in &apos;n terminaal loop">
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Die hanteerder vir &quot;callto&quot;-URL&apos;e">
+								<longdesc>Die opdrag vir hantering van &quot;callto&quot;-URL&apos;e, indien geaktiveer.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="aim">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Laat die program in &apos;n terminaal loop">
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Die hanteerder vir &quot;aim&quot;-URL&apos;e">
+								<longdesc>Die opdrag vir hantering van &quot;aim&quot;-URL&apos;e, indien geaktiveer.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="mailto">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Laat die program in &apos;n terminaal loop">
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Die hanteerder vir &quot;mailto&quot;-URL&apos;e">
+								<longdesc>Die opdrag vir hantering van &quot;mailto&quot;-URL&apos;e, indien geaktiveer.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="https">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Laat die program in &apos;n terminaal loop">
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Die hanteerder vir &quot;https&quot;-URL&apos;e">
+								<longdesc>Die opdrag vir hantering van &quot;https&quot;-URL&apos;e, indien geaktiveer.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="http">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Laat die program in &apos;n terminaal loop">
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Die hanteerder vir &quot;http&quot;-URL&apos;e">
+								<longdesc>Die opdrag vir hantering van &quot;http&quot;-URL&apos;e, indien geaktiveer.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="man">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Laat die program in &apos;n terminaal loop">
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Die hanteerder vir &quot;man&quot;-URL&apos;e">
+								<longdesc>Die opdrag vir hantering van &quot;man&quot;-URL&apos;e, indien geaktiveer.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="info">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Laat die program in &apos;n terminaal loop">
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Die hanteerder vir &quot;info&quot;-URL&apos;e">
+								<longdesc>Die opdrag vir hantering van &quot;info&quot;-URL&apos;e, indien geaktiveer.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="ghelp">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Laat die program in &apos;n terminaal loop">
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Die hanteerder vir &quot;ghelp&quot;-URL&apos;e">
+								<longdesc>Die opdrag vir hantering van &quot;ghelp&quot;-URL&apos;e, indien geaktiveer.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="trash">
+						<entry name="needs_terminal">
+							<local_schema short_desc="Laat die program in &apos;n terminaal loop">
+							</local_schema>
+						</entry>
+						<entry name="command">
+							<local_schema short_desc="Die hanteerder vir &quot;trash&quot;-URL&apos;e">
+								<longdesc>Die opdrag vir hantering van &quot;trash&quot;-URL&apos;e, indien geaktiveer.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+				</dir>
+				<dir name="applications">
+					<dir name="component_viewer">
+						<entry name="exec">
+							<local_schema short_desc="Verstekkomponentbekyker-toepassing">
+								<longdesc>Die toepassing waarmee lêers bekyk wat &apos;n komponent vereis om hulle te bekyk. Die parameter %s sal deur die lêer se URI&apos;s vervang word, die parameter %c sal deur die komponent-IID vervang word.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+					<dir name="terminal">
+						<entry name="exec_arg">
+							<local_schema short_desc="Exec-argument vir verstekterminaal">
+								<longdesc>Die exec-argument wat gebruik moet word vir die verstekterminaaltoepassing.</longdesc>
+							</local_schema>
+						</entry>
+						<entry name="exec">
+							<local_schema short_desc="Verstekterminaaltoepassing">
+								<longdesc>Die verstekterminaaltoepassing wat gebruik moet word vir toepassings wat &apos;n terminaal vereis.</longdesc>
+							</local_schema>
+						</entry>
+					</dir>
+				</dir>
+			</dir>
+		</dir>
+	</dir>
+</gconf>

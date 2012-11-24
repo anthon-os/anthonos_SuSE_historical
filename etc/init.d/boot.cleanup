@@ -1,0 +1,83 @@
+#! /bin/bash
+#
+# Copyright (c) 2001-2005 SuSE Linux AG, Nuernberg, Germany.
+# Copyright (c) 2011 SUSE Linux Products GmbH, Nuernberg, Germany.
+#
+# /etc/init.d/boot.cleanup
+#
+### BEGIN INIT INFO
+# Provides:          boot.cleanup
+# Required-Start:    boot.rootfsck
+# Should-Start:      $local_fs boot.quota
+# Required-Stop:     $null
+# Should-Stop:       $null
+# Default-Start:     B
+# Default-Stop:
+# Short-Description: do cleanup
+# Description: Cleanup left over tempfiles from 
+#	last run: screen sockets, temporary rpm-database files,
+#	ssh agent infos, various lockfiles, utmp and some more.
+### END INIT INFO
+
+. /etc/rc.status
+. /etc/sysconfig/cron
+
+: ${TMP_DIRS_TO_CLEAR:=/tmp}
+: ${CLEAR_TMP_DIRS_AT_BOOTUP:=no}
+
+rc_reset
+
+case "$1" in
+  start|stop)
+	if test "$1" = "start" -o "$RUNLEVEL" = "6" ; then
+		#
+		# some legacy clean up
+		#
+		rm -f /var/lib/rpm/__db*
+		rm -f /tmp/.X*lock /var/spool/uucp/LCK* /var/log/sa/sadc.LOCK /fsck_corrected_errors
+		rm -rf /tmp/ssh-*
+		rm -rf /tmp/gpg-*
+
+		touch /var/run/utmp
+		chmod 664 /var/run/utmp
+		chown root:utmp /var/run/utmp
+
+		# Re-read inittab for jobs and redo utmp records if required
+		test "$PREVLEVEL" = "S" && telinit q
+
+		# delete temp files
+		# If $CLEAR_TMP_DIRS_AT_BOOTUP = yes, delete files in
+		# $TMP_DIRS_TO_CLEAR, if $CLEAR_TMP_DIRS_AT_BOOTUP starts with a "/"
+		# delete files in those dirs instead.
+		CLEAR_DIRS="$TMP_DIRS_TO_CLEAR"
+		if [ "${CLEAR_TMP_DIRS_AT_BOOTUP:0:1}" = "/" ]; then
+		  CLEAR_DIRS="$CLEAR_TMP_DIRS_AT_BOOTUP"
+		  CLEAR_TMP_DIRS_AT_BOOTUP=yes
+		fi
+		if test -x /usr/bin/find -a -x /usr/bin/xargs ; then
+		    if test "$CLEAR_TMP_DIRS_AT_BOOTUP" = yes; then
+			echo -n "Cleaning temporary directories $CLEAR_DIRS"
+			find $CLEAR_DIRS -mindepth 1 -maxdepth 1 -print0 2>/dev/null | xargs -0r rm -rf
+			rc_status -v -r
+		    fi
+		fi
+		/bin/systemd-tmpfiles --create --remove
+	fi
+	;;
+
+    restart|reload)
+	rc_failed 3
+	rc_status -v
+	;;
+    status)
+	# assume we have been run
+	rc_reset
+	rc_status -v
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status}"
+	exit 1
+	;;
+esac
+
+rc_exit

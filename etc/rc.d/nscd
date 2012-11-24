@@ -1,0 +1,123 @@
+#! /bin/sh
+# Copyright (c) 1995-2004 SuSE Linux AG, Nuernberg, Germany.
+# Copyright (c) 2005 SUSE LINUX Products GmbH, Nuernberg, Germany.
+# All rights reserved.
+#
+# Author: Ruediger Oertel
+#         Thorsten Kukuk
+#
+# Please send feedback to http://www.suse.de/feedback
+#
+# init.d/nscd
+#
+#   and symbolic its link
+#
+# /usr/sbin/rcnscd
+#
+# System startup script for the NIS daemon
+#
+### BEGIN INIT INFO
+# Provides: nscd
+# Required-Start: $remote_fs $time
+# Required-Stop: $remote_fs
+# Should-Start: $syslog $named winbind
+# Should-Stop: $syslog $named winbind $time
+# Default-Start:  3 5
+# Default-Stop:   0 1 2 6
+# Short-Description: Start Name Service Cache Daemon
+# Description:    Start Name Service Cache Daemon
+### END INIT INFO
+
+# Source SuSE config
+. /etc/rc.status
+
+NSCD_BIN=/usr/sbin/nscd
+test -x $NSCD_BIN || { echo "$NSCD_BIN not installed";
+    if [ "$1" = "stop" ]; then exit 0; else exit 5; fi; }
+
+NSCD_CONFIG=/etc/nscd.conf
+test -r $NSCD_CONFIG || { echo "$NSCD_CONFIG not existing";
+    if [ "$1" = "stop" ]; then exit 0; else exit 6; fi; }
+
+NSCD_PID=/var/run/nscd/nscd.pid
+
+# Shell functions sourced from /etc/rc.status:
+#      rc_check         check and set local and overall rc status
+#      rc_status        check and set local and overall rc status
+#      rc_status -v     ditto but be verbose in local rc status
+#      rc_status -v -r  ditto and clear the local rc status
+#      rc_failed        set local and overall rc status to failed
+#      rc_reset         clear local rc status (overall remains)
+#      rc_exit          exit appropriate to overall rc status
+
+# First reset status of this service
+rc_reset
+
+# Return values acc. to LSB for all commands but status:
+# 0 - success
+# 1 - misc error
+# 2 - invalid or excess args
+# 3 - unimplemented feature (e.g. reload)
+# 4 - insufficient privilege
+# 5 - program not installed
+# 6 - program not configured
+#
+
+case "$1" in
+    start)
+	echo -n "Starting Name Service Cache Daemon"
+	/sbin/startproc -p $NSCD_PID $NSCD_BIN
+	rc_status -v
+	;;
+    stop)
+	echo -n "Shutting down Name Service Cache Daemon"
+	/sbin/killproc -p $NSCD_PID -TERM $NSCD_BIN
+	# if nscd does not run as root, it cannot remove this files:
+	rm -f /var/run/nscd/socket $NSCD_PID
+	rc_status -v
+	;;
+    try-restart|condrestart)
+	## RH has a similar command named condrestart.
+	if test "$1" = "condrestart"; then
+            echo "${attn} Use try-restart ${done}(LSB)${attn} rather than condrestart ${warn}(RH)${norm}"
+	fi
+        $0 status
+        if test $? = 0; then
+                $0 restart
+        else
+                rc_reset        # Not running is not a failure.
+        fi
+        rc_status
+        ;;
+    restart)
+	## Stop the service and regardless of whether it was
+	## running or not, start it again.
+	$0 stop
+	$0 start
+	rc_status
+	;;
+    force-reload)
+	echo "Reload Name Service Cache Daemon"
+	$0 try-restart
+	rc_status
+	;;
+    reload)
+	# nscd does not support SIGHUP, so fail.
+	echo -n "Reload Name Service Cache Daemon"
+	rc_failed 3
+	rc_status -v
+	;;
+    status)
+	echo -n "Checking for Name Service Cache Daemon: "
+	/sbin/checkproc -p $NSCD_PID $NSCD_BIN
+	rc_status -v
+	;;
+    probe)
+	test $NSCD_CONFIG -nt $NSCD_PID && echo restart
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload|probe}"
+	exit 1
+	;;
+esac
+rc_exit

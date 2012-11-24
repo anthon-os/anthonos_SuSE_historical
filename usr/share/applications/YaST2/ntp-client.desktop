@@ -1,0 +1,29 @@
+[Desktop Entry]
+X-SuSE-translate=true
+X-SuSE-DocTeamID=ycc_ntp-client
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Net_advanced;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+X-SuSE-YaST-Call=ntp-client
+
+X-SuSE-YaST-Group=Net_advanced
+X-SuSE-YaST-Argument=
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-AutoInst=all
+X-SuSE-YaST-Geometry=
+X-SuSE-YaST-SortKey=
+X-SuSE-YaST-AutoInstResource=ntp-client
+X-SuSE-YaST-AutoInstClonable=true
+X-SuSE-YaST-AutoInstSchema=ntpclient.rnc
+X-SuSE-YaST-Keywords=time,sync,synchronization,NTP
+
+Icon=yast-ntp-client
+Exec=xdg-su -c "/sbin/yast2 ntp-client"
+
+Name=NTP Configuration
+GenericName=Configure an NTP client or server
+StartupNotify=true
+

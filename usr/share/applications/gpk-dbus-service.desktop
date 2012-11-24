@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Name=软件安装
+Comment=Install selected software on the system
+Categories=System;
+Exec=gpk-dbus-service
+Terminal=false
+Type=Application
+Icon=system-software-install
+StartupNotify=true
+NoDisplay=true
+

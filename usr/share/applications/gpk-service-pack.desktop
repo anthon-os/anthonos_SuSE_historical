@@ -1,0 +1,14 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Name=服务包创建器
+Comment=Create service packs for sharing with other computers
+Icon=gpk-service-pack
+Exec=gpk-service-pack
+Terminal=false
+Type=Application
+NoDisplay=true
+Categories=GNOME;GTK;System;
+StartupNotify=true
+OnlyShowIn=GNOME;
+
+

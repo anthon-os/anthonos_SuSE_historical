@@ -1,0 +1,21 @@
+/var/log/samba/log.nmbd {
+    compress
+    dateext
+    maxage 365
+    rotate 99
+    size=+1024k
+    notifempty
+    missingok
+    copytruncate
+}
+
+/var/log/samba/log.smbd {
+    compress
+    dateext
+    maxage 365
+    rotate 99
+    size=+1024k
+    notifempty
+    missingok
+    copytruncate
+}

@@ -1,0 +1,75 @@
+#! /bin/bash
+# Copyright (c) 2000-2002 SuSE GmbH Nuernberg, Germany.
+# Copyright (C) 2003,2004 SUSE Linux AG
+# Copyright (C) 2005-2008 SUSE LINUX Products GmbH
+#
+# Author: Marc Heuse
+# Maintainer: Ludwig Nussel
+#
+# /etc/init.d/SuSEfirewall2_init
+#
+### BEGIN INIT INFO
+# Provides: SuSEfirewall2_init
+# Required-Start: $local_fs
+# Required-Stop:  $local_fs
+# Default-Start:  3 5
+# Default-Stop:   0 1 2 6
+# Short-Description: SuSEfirewall2 phase 1
+# Description: SuSEfirewall2_init does some basic setup and is the
+#	phase 1 of 2 of the SuSEfirewall initialization
+### END INIT INFO
+
+SUSEFWALL="/sbin/SuSEfirewall2"
+BOOTLOCKFILE="/var/lock/SuSEfirewall2.booting"
+
+test -x $SUSEFWALL || exit 5
+test -r /etc/sysconfig/SuSEfirewall2 || exit 6
+
+startmode=close
+if (. /etc/sysconfig/SuSEfirewall2; test "$FW_BOOT_FULL_INIT" = yes); then
+	startmode=start
+fi >/dev/null 2>&1
+
+. /etc/rc.status
+
+rc_reset
+
+case "$1" in
+    start)
+	echo -n "Loading basic firewall rules "
+	if test -x /usr/sbin/iptables; then
+		/bin/rm -rf /var/run/SuSEfirewall2
+		$SUSEFWALL --bootlock -q $startmode
+	else
+		echo -n "${extd}iptables not available (yet)${norm}"
+		rc_failed 5
+	fi
+	rc_status -v
+	;;
+    stop)
+	rc_failed 0
+	rc_status
+	;;
+    restart|force-reload)
+	$0 start
+	;;
+    try-restart|reload)
+	if ($0 status) >/dev/null 2>&1; then
+	    $0 start
+	else
+	    rc_reset
+	fi
+	;;
+    status)
+	echo -n "Checking the status of SuSEfirewall2 "
+	{ test -e /proc/net/ip_tables_names && iptables -nL reject_func >/dev/null 2>&1; } || rc_failed 3
+	rc_status -v
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|restart|reload|force-reload}"
+	exit 1
+	;;
+esac
+
+# Set exit status
+rc_exit

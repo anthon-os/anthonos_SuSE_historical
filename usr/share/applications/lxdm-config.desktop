@@ -1,0 +1,14 @@
+
+[Desktop Entry]
+X-SuSE-translate=true
+Version=1.0
+Type=Application
+Terminal=false
+Exec=xdg-su -c "lxdm-config"
+Name=登录界面
+GenericName=lxdm-config
+Comment=LXDM configurator
+Icon=config-users
+Categories=GTK;Settings;HardwareSettings;
+
+

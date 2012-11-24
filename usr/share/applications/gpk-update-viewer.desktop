@@ -1,0 +1,13 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Name=软件更新
+Comment=Update software installed on the system
+Icon=system-software-update
+Exec=gpk-update-viewer
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;System;
+OnlyShowIn=GNOME;
+StartupNotify=true
+
+

@@ -1,0 +1,26 @@
+#! /bin/sh
+#
+# nfs - start NFS in response to interface change
+#
+# Robert Love
+
+RL=$(/sbin/runlevel); RL=${RL#* }
+test -z "$RL" && RL=`sed -n 's=^id:\(.\):initdefault.*$=\1=p' /etc/inittab`
+
+case "$2" in
+	up)
+		ls /etc/init.d/rc${RL}.d/S*nfs &>/dev/null || exit 2
+		# Don't use the restart any more, when one mounts nfs filesystems manually before NM start,
+		# and then swith from ifup to NM, the nfs connection will lose(bnc#559021).
+		# Bin Li (bili@novell.com).
+		#/etc/init.d/nfs restart
+		/bin/mount -alt nfs,nfs4
+		;;
+	down)
+		/bin/umount -alt nfs,nfs4
+		exit 0
+		;;
+	*)
+		exit 0
+		;;
+esac

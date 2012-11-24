@@ -1,0 +1,173 @@
+#! /bin/sh
+# Copyright (c) 1997 - 2001 S.u.S.E. GmbH Nuernberg, Germany.  All rights reserved.
+# Copyright (c) 2002 SuSE Linux AG, Nuernberg, Germany.
+#
+# Author: Carsten Hoeger <choeger@suse.de>, 1997, 1998
+#
+# init.d/xinetd
+#
+#   and symbolic its link
+#
+# /usr/sbin/rcxinetd
+#
+# System startup script for the inet daemon
+#
+### BEGIN INIT INFO
+# Provides: xinetd
+# Required-Start: $network $remote_fs
+# Required-Stop: $network
+# Should-Start: $portmap autofs
+# Should-Stop: $null
+# Default-Start: 3 5
+# Default-Stop: 0 1 2 6
+# Description: Starts the xinet daemon. Be aware that xinetd doesn't start if no service is configured to run under it. To enable xinetd services go to YaST Network Services (xinetd) section.
+### END INIT INFO
+
+XINETD_BIN=/usr/sbin/xinetd
+test -x $XINETD_BIN || exit 5
+XINETD_PIDFILE=/var/run/xinetd.init.pid
+
+# Shell functions sourced from /etc/rc.status:
+#      rc_check         check and set local and overall rc status
+#      rc_status        check and set local and overall rc status
+#      rc_status -v     ditto but be verbose in local rc status
+#      rc_status -v -r  ditto and clear the local rc status
+#      rc_failed        set local and overall rc status to failed
+#      rc_reset         clear local rc status (overall remains)
+#      rc_exit          exit appropriate to overall rc status
+. /etc/rc.status
+
+# First reset status of this service
+rc_reset
+
+# Return values acc. to LSB for all commands but status:
+# 0 - success
+# 1 - misc error
+# 2 - invalid or excess args
+# 3 - unimplemented feature (e.g. reload)
+# 4 - insufficient privilege
+# 5 - program not installed
+# 6 - program not configured
+#
+# Note that starting an already running service, stopping
+# or restarting a not-running service as well as the restart
+# with force-reload (in case signalling is not supported) are
+# considered a success.
+
+case "$1" in
+    start)
+        if [ -e $XINETD_PIDFILE ]; then
+                $0 status &>/dev/null
+                ret=$?
+                if [ $ret = 1 ]; then
+                                echo "Warning: found stale pidfile (unclean shutdown?)"
+                elif [ $ret = 0 ]; then
+                                echo "Xinetd is already running ($XINETD_PIDFILE)"
+                                rc_failed $ret
+                                rc_status -v1
+                                rc_exit
+                fi
+        fi
+
+        echo -n "Starting INET services. (xinetd)"
+        ## Start daemon with startproc(8). If this fails
+        ## the echo return value is set appropriate.
+
+        # startproc should return 0, even if service is
+        # already running to match LSB spec.
+        startproc -p $XINETD_PIDFILE -t 1 $XINETD_BIN -pidfile $XINETD_PIDFILE
+
+        # Remember status and be verbose
+        rc_status -v
+        ;;
+    stop)
+        echo -n "Shutting down xinetd: "
+        if ! [ -f $XINETD_PIDFILE ]; then
+                echo -n "(not running)"
+        else
+                pid=$(<$XINETD_PIDFILE)
+                kill -QUIT $pid 2>/dev/null
+                case $? in
+                    1)  echo -n "(not running)";;
+                    0)  # wait until the processes are gone (the parent is the last one)
+                        echo -n "(waiting for all children to terminate) "
+                        for ((wait=0; wait<120; wait++)); do
+                                if test -f $XINETD_PIDFILE; then 
+                                        usleep 500000
+                                        continue
+                                fi
+                                if ! test -f /proc/$pid/exe; then
+                                        break
+                                fi
+                                if test "$(readlink /proc/$pid/exe 2>/dev/null)" = $XINETD_BIN; then 
+                                        usleep 500000
+                                else
+                                        break
+                                fi
+
+                        done
+                        ;;
+                esac
+        fi
+
+        # Remember status and be verbose
+        rc_status -v
+        ;;
+    try-restart)
+        ## Restart the service if the service is already running
+        $0 status
+        if test $? = 0; then
+                $0 restart
+        fi
+
+        # Remember status and be quiet
+        rc_status
+        ;;
+    restart)
+        ## Stop the service and regardless of whether it was
+        ## running or not, start it again.
+        $0 stop
+        $0 start
+
+        # Remember status and be quiet
+        rc_status
+        ;;
+    force-reload)
+        ## Signal the daemon to reload its config. Most daemons
+        ## do this on signal 1 (SIGHUP).
+        ## If it does not support it, restart.
+
+        echo -n "Reload service xinetd"
+        ## if it supports it:
+        killproc -p $XINETD_PIDFILE -HUP $XINETD_BIN
+        rc_status -v
+        ;;
+    reload)
+        ## Like force-reload, but if daemon does not support
+        ## signalling, do nothing (!)
+
+        # If it supports signalling:
+        echo -n "Reload INET services (xinetd)."
+        killproc -p $XINETD_PIDFILE -HUP  $XINETD_BIN
+        rc_status -v
+        ;;
+    status)
+        echo -n "Checking for service xinetd: "
+        ## Check status with checkproc(8), if process is running
+        ## checkproc will return with exit status 0.
+
+        # Status has a slightly different for the status command:
+        # 0 - service running
+        # 1 - service dead, but /var/run/  pid  file exists
+        # 2 - service dead, but /var/lock/ lock file exists
+        # 3 - service not running
+
+        # NOTE: checkproc returns LSB compliant status values.
+        checkproc -p $XINETD_PIDFILE $XINETD_BIN
+        rc_status -v
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload}"
+        exit 1
+esac
+rc_exit

@@ -1,0 +1,64 @@
+#! /bin/sh
+#
+# Copyright (c) 2007 SuSE GmbH Nuernberg, Germany.  All rights reserved.
+#
+# /etc/init.d/boot.dmraid
+#
+### BEGIN INIT INFO
+# Provides:          boot.dmraid
+# Required-Start:    boot.udev boot.rootfsck
+# Should-Start:      boot.device-mapper boot.multipath boot.md boot.scsidev
+# X-Start-Before:    boot.localfs
+# Required-Stop:     boot.udev boot.rootfsck
+# Should-Stop:	     boot.multipath boot.md boot.scsidev
+# X-Stop-Before:     boot.localfs
+# Default-Start:     B
+# Default-Stop:
+# Short-Description: start dmraid
+# Description:       start dmraid
+### END INIT INFO
+
+. /etc/rc.status
+. /etc/sysconfig/dmraid
+
+DMRAID=/sbin/dmraid
+test -x $DMRAID || { echo "dmraid not installed"; 
+    if [ "$1" = "stop" ]; then exit 0;
+    else exit 5; fi; }
+
+# udev interaction
+if [ -x /sbin/udevadm ]; then
+    [ -z "$DMRAID_DEVICE_TIMEOUT" ] && DMRAID_DEVICE_TIMEOUT=60
+else
+    DMRAID_DEVICE_TIMEOUT=0
+fi
+
+rc_reset
+
+case "$1" in
+    start)
+        # Waiting for udev to settle
+	if [ "$DMRAID_DEVICE_TIMEOUT" -gt 0 ] ; then
+	    echo "Waiting for udev to settle..."
+	    /sbin/udevadm settle --timeout=$DMRAID_DEVICE_TIMEOUT
+	fi
+	echo "Activating dmraid..."
+	$DMRAID -ay -p $DMRAID_START_OPTIONS
+
+	rc_status -v -r
+	;;
+    stop)
+	$DMRAID -an $DMRAID_STOP_OPTIONS
+	rc_status -v
+	;;
+    status)
+	rc_failed 4
+	rc_status -v
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status}"
+	exit 1
+	;;
+esac
+
+rc_exit

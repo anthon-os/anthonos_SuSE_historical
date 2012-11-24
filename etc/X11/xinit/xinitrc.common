@@ -1,0 +1,143 @@
+# /etc/X11/xinit/xinitrc.common
+#
+# Common code used in X session and X init scripts.
+# File shall be sourced but not executed by the scripts.
+#
+
+#
+# Source this file only once
+#
+test "$XSESSION_IS_UP" != "yes" || return
+XSESSION_IS_UP=yes
+export XSESSION_IS_UP
+
+#
+# Some common user and system files,
+#
+    XETCDIR=/etc/X11
+  xdefaults=$HOME/.Xdefaults
+ xresources=$HOME/.Xresources
+    xmodmap=$HOME/.Xmodmap
+     xkbmap=$HOME/.Xkbmap
+
+#
+# This should be the default
+#
+TERM=xterm
+export TERM
+
+#
+# Check for X11R6 in execution path
+#
+case ":${PATH}:" in
+    *:/usr/X11R6/bin:*) ;;
+    *)	PATH="${PATH}:/usr/X11R6/bin"
+esac
+
+#
+# Choose a window manager
+#
+test -n "$WINDOWMANAGER" && WINDOWMANAGER="$(type -p $WINDOWMANAGER 2>/dev/null)"
+if test -z "$WINDOWMANAGER" ; then
+    if test -x /usr/X11R6/bin/kde -o -x /usr/bin/kde; then
+	WINDOWMANAGER=$(type -p kde)
+    elif test -x /usr/X11R6/bin/startkde -o -x /usr/bin/startkde; then
+	WINDOWMANAGER=$(type -p startkde)
+    elif test -x /usr/X11R6/bin/fvwm2 -o -x /usr/bin/fvwm2; then
+	WINDOWMANAGER=$(type -p fvwm2)
+    elif test -x /usr/X11R6/bin/wmlist -o -x /usr/bin/wmlist ; then
+	for i in $($(type -p wmlist)) ; do
+	    WINDOWMANAGER="$(type -p $i 2>/dev/null)"
+	    test -n "$WINDOWMANAGER" && break
+	done
+    fi
+fi
+
+#
+# Error, no Window Manager found.  Normally the exit
+# raise the fallback trap of the sourcing script.
+#
+if test -z "$WINDOWMANAGER" ; then
+    if test -t 1 ; then
+	echo "Error: Unable to find a window manager. Please make sure you installed one!"
+	echo "Exiting..."
+    fi
+    xmessage -timeout 10 -default okay -center -file - <<-EOF
+	Error: Unable to find a window manager. Please make sure you installed one!
+	Exiting...
+	EOF
+    exit 1
+fi
+
+#
+# Foreign X session scripts may use an other variable name
+#
+WINDOW_MANAGER=$WINDOWMANAGER
+STARTUP=$WINDOWMANAGER
+export WINDOWMANAGER WINDOW_MANAGER STARTUP
+
+#
+# Start the XIM server
+#
+XIMFILE=/etc/X11/xim
+test -r $HOME/.xim && XIMFILE=$HOME/.xim
+test -r $XIMFILE   && source $XIMFILE
+
+#
+# Enable Numlock if set
+#
+if test -r /var/run/numlock-on && type -p numlockx > /dev/null ; then
+    numlockx
+fi
+
+#
+# Load nvidia settings
+#
+if test -r $HOME/.nvidia-settings-rc && type -p nvidia-settings > /dev/null ; then
+    nvidia-settings --load-config-only > /dev/null 2>&1 &
+fi
+
+#
+# Handle the the users Xmodmap or Xkbmap.
+# Note that xkb and xmodmap should not be mixed.
+#
+if test -s $XETCDIR/Xkbmap ; then
+    test -r "$xkbmap"  && cat "$xkbmap" | setxkbmap
+else
+    test -r "$xmodmap" && xmodmap "$xmodmap"
+fi
+
+#
+# Handle the system and the users Xresources
+#
+if test -r "$xdefaults"  ; then
+    if test -r $XETCDIR/Xresources ; then
+	xrdb -nocpp -load   -retain $XETCDIR/Xresources
+	xrdb -I$HOME -merge "$xdefaults"
+    else
+	xrdb -I$HOME -load -retain "$xdefaults"
+    fi
+    if test -r "$xresources" ; then
+	xrdb -I$HOME -merge "$xresources"
+    fi
+elif test -r "$xresources" ; then
+    if test -r $XETCDIR/Xresources ; then
+	xrdb -nocpp -load  -retain $XETCDIR/Xresources
+	xrdb -I$HOME -merge "$xresources"
+    else
+	xrdb -I$HOME -load -retain "$xresources"
+    fi
+elif test -r $XETCDIR/Xresources ; then
+    xrdb -nocpp -load -retain $XETCDIR/Xresources
+fi
+
+#
+# Disable new Xcursor themes if none is specified resp. located
+# in $HOME (use "unset XCURSOR_CORE" to enable them again later)
+#
+#if test -z "$XCURSOR_THEME" -a ! -d $HOME/.icons ; then 
+#    XCURSOR_CORE=true
+#    export XCURSOR_CORE
+#else
+#    unset XCURSOR_CORE
+#fi

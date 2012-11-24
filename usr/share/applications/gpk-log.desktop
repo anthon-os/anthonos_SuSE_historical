@@ -1,0 +1,13 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Name=软件记录查看器
+Comment=View past package management tasks
+Icon=gpk-log
+Exec=gpk-log
+Terminal=false
+Type=Application
+NoDisplay=true
+Categories=GNOME;GTK;System;Settings;
+StartupNotify=true
+OnlyShowIn=GNOME;
+

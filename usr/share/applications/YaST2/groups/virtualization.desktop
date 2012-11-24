@@ -1,0 +1,19 @@
+[Desktop Entry]
+X-SuSE-DocTeamID=ycc_virtualization
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST-Virtualization;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+
+X-SuSE-YaST-Group=Virtualization
+X-SuSE-YaST-SortKey=60
+
+OnlyShowIn=X-SuSE-YaST;
+Icon=yast-host
+
+Name=Virtualization
+
+Exec=yast2
+
+

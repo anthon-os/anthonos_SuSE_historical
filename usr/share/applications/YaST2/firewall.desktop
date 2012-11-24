@@ -1,0 +1,28 @@
+[Desktop Entry]
+X-SuSE-translate=true
+X-SuSE-DocTeamID=ycc_firewall
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Security;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+X-SuSE-YaST-Call=firewall
+
+X-SuSE-YaST-Group=Security
+X-SuSE-YaST-Argument=
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-AutoInst=all
+X-SuSE-YaST-Geometry=
+X-SuSE-YaST-SortKey=
+X-SuSE-YaST-AutoInstClonable=true
+X-SuSE-YaST-AutoInstRequires=lan
+X-SuSE-YaST-AutoInstSchema=firewall.rnc
+
+Icon=yast-firewall
+Exec=xdg-su -c "/sbin/yast2 firewall"
+
+Name=Firewall
+GenericName=Configure a firewall
+StartupNotify=true
+

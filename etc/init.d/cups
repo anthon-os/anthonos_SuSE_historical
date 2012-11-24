@@ -1,0 +1,169 @@
+#! /bin/bash
+#
+# Copyright (C) 1995-2001 SuSE GmbH Nuernberg, Germany.
+# Copyright (C) 2002 SuSE Linux AG, Nuernberg, Germany.
+# Copyright (C) 2002--2008  Klaus Singvogel, SUSE / Novell Inc.
+# Copyright (C) 2010 Johannes Meixner, SUSE LINUX Products GmbH
+#
+# Author: Kurt Garloff, 2000
+#	  Klaus Singvogel, 2002--2008
+#	  Johannes Meixner, 2010
+#
+# /etc/init.d/cups
+#   and its symbolic link
+# /usr/sbin/rccups
+#
+# System startup script for the CUPS printer daemon
+#
+### BEGIN INIT INFO
+# Provides:            cupsd
+# Required-Start:      $local_fs $remote_fs $syslog
+# Required-Stop:       $remote_fs $syslog
+# Should-Start:        dbus $named $portmap ptal slpd printbill
+# Should-Stop:         $portmap
+# Default-Start:       2 3 5
+# Default-Stop:        0 1 6
+# Short-Description:   CUPS printer daemon
+# Description:         Start CUPS to provide spooling and printing files
+#	functionality for local and remote printers. Also required if
+#	printers are broadcasted ("Browsing") by remote CUPS servers.
+### END INIT INFO
+
+# Return values acc. to LSB for all commands but status:
+# 0 - success
+# 1 - generic or unspecified error
+# 2 - invalid or excess argument(s)
+# 3 - unimplemented feature (e.g. "reload")
+# 4 - insufficient privilege
+# 5 - program is not installed
+# 6 - program is not configured
+# 7 - program is not running
+# 
+# Note that starting an already running service, stopping
+# or restarting a not-running service as well as the restart
+# with force-reload (in case signalling is not supported) are
+# considered a success.
+
+# Source SuSE config, only if exists with size greater zero
+test -s /etc/rc.config && . /etc/rc.config
+
+# Shell functions sourced from /etc/rc.status:
+#      rc_check         check and set local and overall rc status
+#      rc_status        check and set local and overall rc status
+#      rc_status -v     ditto but be verbose in local rc status
+#      rc_status -v -r  ditto and clear the local rc status
+#      rc_failed        set local and overall rc status to failed
+#      rc_failed <num>  set local and overall rc status to <num><num>
+#      rc_reset         clear local rc status (overall remains)
+#      rc_exit          exit appropriate to overall rc status
+if test -s /etc/rc.status
+then . /etc/rc.status
+else exit 1
+fi
+# Reset status of this service:
+rc_reset
+
+CUPSD_BIN=/usr/sbin/cupsd
+test -x $CUPSD_BIN || exit 5
+# Get CUPSD_OPTIONS
+test -s /etc/sysconfig/cups && . /etc/sysconfig/cups
+
+# Enforce default umask to avoid problems with wrong file permissions
+# for example of /etc/printcap (see Novell/Suse Bugzilla bnc#31567).
+umask 022
+
+case "$1" in
+    start)
+	echo -n "Starting cupsd"
+	## Start daemon with startproc(8).
+	## If this fails the echo return value is set appropriate.
+	# NOTE: startproc return 0, even if service is 
+	# already running to match LSB spec.
+	startproc $CUPSD_BIN $CUPSD_OPTIONS
+	# Remember status and be verbose:
+	rc_status -v
+	;;
+    stop)
+	echo -n "Shutting down cupsd"
+	## Stop daemon with killproc(8).
+	## If this fails the echo return value is set appropriate.
+	# NOTE: killproc with explicite signal specified
+	# like "killproc -TERM" sends only SIGTERM and exits
+	# to match LSB spec. (see Novell/Suse Bugzilla bnc#595796).
+	# Without explicite signal the default signal SIGTERM is sent
+	# and afterwards killproc waits by default only up to 5 seconds
+	# before killproc sends SIGKILL if cupsd has not yet terminated.
+	# Wait at most 10 seconds until the cupsd does actually no longer run
+	# so that the cupsd should have sufficient time for its clean up:
+	killproc -t 10 $CUPSD_BIN
+	# Remember status and be verbose:
+	rc_status -v
+	;;
+    try-restart)
+	## Stop the service and if this succeeds (i.e. the 
+	## service was running before), start it again.
+	## Note: try-restart is not (yet) part of LSB (as of 0.7.5)
+	$0 status >/dev/null && $0 restart
+	# Remember status and be quiet:
+	rc_status
+	;;
+    restart)
+	## Stop the service and regardless of whether it was
+	## running or not, start it again.
+	$0 stop
+	# The above waits at most 10 seconds until the cupsd does actually no longer run
+	# otherwise "startproc $CUPSD_BIN" would not start a new cupsd
+	# (see Novell/Suse Bugzilla bnc#622058).
+	# Start a new cupsd:
+	$0 start
+	# Remember status and be quiet:
+	rc_status
+	;;
+    force-reload)
+	## Signal the daemon to reload its config.
+	## Most daemons do this on signal 1 (SIGHUP).
+	## If it does not support it, restart.
+	if ps -C cupsd -o user | grep -q '^root$'
+	then echo -n "Reload service cupsd"
+	     killproc -HUP $CUPSD_BIN
+	     rc_status -v
+	else $0 restart
+	fi
+	;;
+    reload)
+	## Like force-reload, but if daemon does not support
+	## signalling, do nothing.
+	# If it supports signalling:
+	if ps -C cupsd -o user | grep -q '^root$'
+	then echo -n "Reload service cupsd"
+	     killproc -HUP $CUPSD_BIN
+	     rc_status -v
+	else echo -n '"reload" not possible (cupsd does not run as user root) use "restart" instead'
+	     rc_status -s
+	fi
+	;;
+    status)
+	echo -n "Checking for cupsd: "
+	## Check status with checkproc(8), if process is running
+	## checkproc will return with exit status 0.
+	# Status has a slightly different for the status command:
+	# 0 - service running
+	# 1 - service dead, but /var/run/ pid file exists
+	# 2 - service dead, but /var/lock/ lock file exists
+	# 3 - service not running
+	# NOTE: checkproc returns LSB compliant status values.
+	checkproc $CUPSD_BIN
+	rc_status -v
+	;;
+    probe)
+	## Optional: Probe for the necessity of a reload,
+	## give out the argument which is required for a reload.
+	rc_failed 3
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload|probe}"
+	exit 1
+	;;
+esac
+rc_exit
+

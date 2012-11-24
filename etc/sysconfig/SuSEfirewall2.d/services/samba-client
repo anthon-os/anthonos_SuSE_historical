@@ -1,0 +1,5 @@
+## Name: Samba Client
+## Description: Enables browsing of SMB shares
+
+RELATED="0/0,udp,137"
+MODULES="nf_conntrack_netbios_ns"

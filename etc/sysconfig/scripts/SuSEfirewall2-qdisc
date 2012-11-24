@@ -1,0 +1,120 @@
+#!/bin/bash
+# SuSEfirewall2-qdisc - upstream tuning
+# Copyright (C) 2004 SUSE LINUX Products GmbH
+#
+# Author:     Uwe Gansert
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# version 2 as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# tune the upload stream a little bit
+# with DSL for example, you have the problem, that your
+# downstream collapses if your upstream is full.
+# After this tuning this should not happen anymore.
+# interactive SSH and VPN are faster too, because they
+# get some extra bandwidth besides the bulk traffic
+#
+# variabel from sysconfig:
+#   FW_HTB_TUNE_DEV="DEV1,BANDWIDTH1 DEV2,BANDWIDTH2 ..."
+#
+# any questions about this to uwe.gansert@suse.de
+#
+do_qdisc_settings()
+{
+    if [ -n "$FW_HTB_TUNE_DEV" ]; then
+	modprobe sch_htb 2> /dev/null
+    fi
+    clear_qdisc_settings
+    for DEVICE_DATA in $FW_HTB_TUNE_DEV; do
+        IFS="," read DEV BANDWIDTH < <(echo "$DEVICE_DATA")
+
+        # sanity check
+        if [ -n "$DEV" -a -n "$BANDWIDTH" ]; then
+            test -e "/sys/class/net/$DEV" || continue
+            # reserve about 15% for small packets (TCP ACK),
+            # interactive SSH from and to us and DNS querys.
+            # We don't need too much bandwidth but we need it fast.
+            SMALL_PACKET_BW=$(( $BANDWIDTH / 7 ))
+            if [ "$SMALL_PACKET_BW" -eq 0 ]; then
+                warning "illegal bandwidth settings for $DEV in FW_HTB_TUNE_DEV"
+            fi
+
+            # reserve 25% for VPN traffic. Never mind if we don't have
+            # a VPN. No bandwidth will be wasted
+            VPN_BW=$(( $BANDWIDTH / 4 ))
+            if [ "$VPN_BW" -eq 0 ];then
+                warning "illegal bandwidth settings for $DEV in FW_HTB_TUNE_DEV"
+            fi
+
+            # bulk traffic
+            REST_BW=$(( ${BANDWIDTH}-${SMALL_PACKET_BW}-${VPN_BW} ))
+
+            $TC qdisc add dev $DEV root handle 1:0 htb default 20       # adding the queing discipline
+
+	    # adding the root class 1:1
+            $TC class add dev $DEV parent 1:0 classid 1:1 htb \
+                rate ${BANDWIDTH}kbit ceil ${BANDWIDTH}kbit
+
+            # class for small tcp packets 1:10
+            $TC class add dev $DEV parent 1:1 classid 1:10 htb \
+                rate ${SMALL_PACKET_BW}kbit ceil ${BANDWIDTH}kbit prio 0 quantum 3000 # and interactive SSH
+	    # class for VPN traffic       1:11
+            $TC class add dev $DEV parent 1:1 classid 1:11 htb \
+                rate ${VPN_BW}kbit ceil ${BANDWIDTH}kbit prio 1 quantum 3000
+	    # class for all the rest      1:20
+            $TC class add dev $DEV parent 1:1 classid 1:20 htb \
+                rate ${REST_BW}kbit ceil ${BANDWIDTH}kbit prio 2 quantum 3000
+	    # packets, marked with "10" to queue 1:10
+            $TC filter add dev $DEV parent 1:0 prio 0 protocol ip \
+                handle 10 fw flowid 1:10
+	    # packets, marked with "11" to queue 1:11
+            $TC filter add dev $DEV parent 1:0 prio 1 protocol ip \
+                handle 11 fw flowid 1:11
+
+	    # iptables marks small TCP packets (potentially ACK)
+	    # with 10, so "tc" will send them to queue 1:10
+            $IPTABLES -A POSTROUTING -t mangle -o $DEV -p tcp \
+                      -m length --length :64 -j MARK --set-mark 10
+
+	    # iptables marks SSH interactive ssh traffic
+	    # with 10 too. So it gets to queue 1:10 like
+            $IPTABLES -A POSTROUTING -t mangle -o $DEV -p tcp \
+                      -m tos --tos Minimize-Delay \
+                      -m tcp --dport 22 -j MARK --set-mark 10
+
+	    # like the rule above, but this time we are
+	    # the sshd and want to respond fast, even when
+            $IPTABLES -A POSTROUTING -t mangle -o $DEV -p tcp \
+                      -m tos --tos Minimize-Delay \
+                      -m tcp --sport 22 -j MARK --set-mark 10 
+
+            # same like above for DNS
+            $IPTABLES -A POSTROUTING -t mangle -o $DEV -p udp \
+                      -m udp --dport 53 -j MARK --set-mark 10
+            $IPTABLES -A POSTROUTING -t mangle -o $DEV -p tcp \
+                      -m tcp --dport 53 -j MARK --set-mark 10
+
+	    # iptables marks VPN traffic with 11
+	    # if we don't have VPN, never mind, no bandwidth
+	    # will be wastet and if we need more, then it'll be
+	    # be "borrowed" from the other queues
+            $IPTABLES -A POSTROUTING -t mangle -o $DEV -p 50 \
+                      -j MARK --set-mark 11
+ 
+        else
+            warning "illegal settings in FW_HTB_TUNE_DEV=\"$FW_HTB_TUNE_DEV\", skipped device \"$DEV\""
+        fi
+    done
+}
+
+# vim: sw=4

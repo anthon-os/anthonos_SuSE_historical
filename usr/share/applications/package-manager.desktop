@@ -1,0 +1,13 @@
+
+[Desktop Entry]
+X-SuSE-translate=true
+Encoding=UTF-8
+Name=添加/删除应用
+Exec=package-manager --install %F
+Icon=package-manager-icon
+Terminal=false
+Type=Application
+Categories=System;PackageManager;X-SuSE-ControlCenter-System;
+MimeType=application/x-rpm;application/x-redhat-package-manager;
+StartupNotify=true
+

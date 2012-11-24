@@ -1,0 +1,26 @@
+[Desktop Entry]
+X-SuSE-translate=true
+X-SuSE-DocTeamID=ycc_mouse
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Hardware;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+X-SuSE-YaST-Call=mouse
+
+X-SuSE-YaST-Group=Hardware
+X-SuSE-YaST-Argument=
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-AutoInst=
+X-SuSE-YaST-Geometry=
+X-SuSE-YaST-SortKey=
+X-SuSE-YaST-AutoInstResource=
+
+Icon=yast-mouse
+Exec=xdg-su -c "/sbin/yast2 mouse"
+
+Name=Mouse on Text Console (GPM)
+GenericName=Change the text console mouse model
+StartupNotify=true
+

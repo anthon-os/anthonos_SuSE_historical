@@ -1,0 +1,365 @@
+#! /bin/bash
+#
+# Copyright (c) 1996-2004 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# Author: Ruediger Oertel <ro@suse.de>, 1996-2002
+#         Werner Fink <werner@suse.de>, 1996-2004
+#         Burchard Steinbild, 1996-2000
+#         Florian La Roche, 1996
+#
+# Please send feedback to http://www.suse.de/feedback
+#
+# /etc/init.d/boot
+#
+# first script to be executed from init on system startup
+#
+
+#
+# Avoid be interrupted by child or keyboard
+# 
+trap "echo" SIGINT SIGSEGV SIGQUIT
+set +e
+
+#
+# Standard input from the system console
+#
+test -z "$CONSOLE" && CONSOLE=/dev/console
+REDIRECT="$(showconsole 2>/dev/null)"
+export CONSOLE REDIRECT
+
+#
+# Check real terminal line
+#
+if test -z "$REDIRECT" ; then
+    if (echo -n > /dev/tty) 2>/dev/null ; then
+	REDIRECT=/dev/tty
+    else
+	REDIRECT=/dev/console
+    fi
+    DO_BLOGD=no
+fi
+
+#
+# Configuration and coloring of the boot messages
+#
+
+. /etc/rc.status
+. /etc/sysconfig/boot
+
+#
+# Reset status of this script
+#
+rc_reset
+
+#
+# Export the real device in variable REDIRECT.
+#
+if test -x /sbin/isserial && /sbin/isserial ; then
+    test "$TERM" = "linux" -o -z "$TERM" && TERM=vt102
+elif test "${REDIRECT%[0-9]}" = "/dev/ttyS" ; then
+    test "$TERM" = "linux" -o -z "$TERM" && TERM=vt102
+fi
+
+#
+# Save old terminal settings and set -nl to avoid staircase
+# effect, do not lock scrolling, and avoid break characters.
+#
+otty=$(stty -g < $REDIRECT)
+if test "$FLOW_CONTROL" = "yes" ; then
+    stty -nl  ixon ignbrk -brkint < $REDIRECT
+else
+    stty -nl -ixon ignbrk -brkint < $REDIRECT
+fi
+
+echo -n "System Boot Control: "
+echo "Running $0"
+
+#
+# mount usual filesystems if not already done by initramfs or the kernel
+#
+echo  -n "mounting mandatory file systems ..."
+test -c /dev/null    || /bin/mknod -m 666 /dev/null c 1 3
+test -e /proc/mounts || /bin/mount -n -t proc proc   /proc >/dev/null 2>&1
+test -e /sys/class   || /bin/mount -n -t sysfs sysfs /sys  >/dev/null 2>&1
+
+HAVE_DEBUGFS=0
+HAVE_DEVTMPFS=0
+while read dev type ; do
+        test "$type" = "debugfs"  && HAVE_DEBUGFS=1
+        test "$type" = "devtmpfs" && HAVE_DEVTMPFS=1
+done < /proc/filesystems
+
+if test "$container" != "lxc" ; then
+    DTYPE=$(stat -f -c "%T" /dev 2>/dev/null)
+    if test "$DTYPE" != "tmpfs" ; then
+	if test "$HAVE_DEVTMPFS" = "0" ; then
+	    echo "************************* FATAL ERROR *************************"
+	    echo "******* CONFIG_DEVTMPFS missing from kernel, cannot continue..."
+	    echo "***************************************************************"
+	    /sbin/halt -f
+	fi
+	echo -n "Mounting devtmpfs at /dev"
+	mount -n -t devtmpfs -o mode=0755 devtmpfs /dev
+	rc_status -v -r
+    fi
+    cp -axT --remove-destination /lib/udev/devices /dev
+    test -c /dev/null || /bin/mknod -m 666 /dev/null c 1 3
+fi
+
+DTYPE=$(stat -f -c "%T" /run 2>/dev/null)
+if test "$DTYPE" != "tmpfs" ; then
+    test -d /run || mkdir -m 0755 /run
+    echo -n "Mounting tmpfs at /run"
+    mount -n -t tmpfs -o mode=0755,nodev,nosuid tmpfs /run
+fi
+mkdir -m 0775 /run/lock
+chgrp 54 /run/lock # lock
+
+if test -d /sys/kernel/debug -a "$HAVE_DEBUGFS" = "1" ; then
+    mount -n -t debugfs debugfs /sys/kernel/debug > /dev/null 2>&1
+fi
+
+if ! test -d /dev/shm; then
+    mkdir -p -m 1777 /dev/shm
+    mount -t tmpfs -o mode=1777 tmpfs /dev/shm
+fi
+
+if ! test -c /dev/pts/ptmx; then
+    mkdir -p -m 755 /dev/pts
+    mount -n -t devpts -o mode=0620,gid=5 devpts /dev/pts
+fi
+
+rc_failed 0
+rc_status -v
+
+#
+# Set I/O of this script and its childs to console
+#
+exec 0<> $CONSOLE 1>&0 2>&0
+
+#
+# Should we ask for interactive boot mode
+#
+DO_CONFIRM=no
+DO_FORCEFSCK=no
+DO_FASTBOOT=no
+DO_QUIET=no
+DO_BLOGD=yes
+if rc_cmdline confirm > /dev/null ; then
+    DO_CONFIRM=yes
+fi
+if rc_cmdline forcefsck > /dev/null || test -e /forcefsck ; then
+    DO_FORCEFSCK=yes
+fi
+if rc_cmdline fastboot > /dev/null  || test -e /fastboot  ; then
+    DO_FASTBOOT=yes
+fi
+if rc_cmdline quiet > /dev/null ; then
+    DO_QUIET=yes
+fi
+if test "$DO_FASTBOOT" = yes -o "$DO_QUIET" = yes -o ! -x /sbin/blogd ; then
+    DO_BLOGD=no
+fi
+if test "$ENFORCE_BLOGD" = yes ; then
+    DO_BLOGD=yes
+fi
+if test "$PROMPT_FOR_CONFIRM" = "yes" -a "$DO_CONFIRM" != "yes" ; then
+    test -z "$CONFIRM_PROMPT_TIMEOUT" && CONFIRM_PROMPT_TIMEOUT=5
+    echo -en "${extd}Enter Interactive startup mode?${norm}"
+    rc_timer_on "$CONFIRM_PROMPT_TIMEOUT" 37
+    read -t "$CONFIRM_PROMPT_TIMEOUT" -n 1 \
+	-p " ${extd}y${norm}/[${extd}n${norm}]("${CONFIRM_PROMPT_TIMEOUT}s") " answer
+    rc_timer_off
+    case "$answer" in
+    [yYiI]) DO_CONFIRM=yes ;;
+    *)      DO_CONFIRM=    ;;
+    esac
+    unset answer
+    echo
+fi
+export DO_CONFIRM DO_FORCEFSCK DO_FASTBOOT DO_QUIET DO_BLOGD
+
+#
+# Start blogd, requires /proc and /dev/pts.
+# Export the real device in variable REDIRECT.
+#
+if test "$DO_BLOGD" = yes ; then
+    test -w /var/log/boot.msg && mv /var/log/boot.msg /var/log/boot.omsg
+    rm -f /var/run/blogd.pid
+    /sbin/blogd $REDIRECT
+fi
+
+#
+# Common used variables
+#
+bootrc=/etc/init.d/boot.d
+rex="[0-9][0-9]"
+failed=""
+skipped=""
+callord=""
+
+#
+# Initialize boosplash progressbar variables
+#
+. /etc/rc.splash B
+splashtrigger "rlchange B"
+
+#
+# Check if we are able to use make for booting
+#
+test -s /etc/init.d/.depend.boot || RUN_PARALLEL="no"
+test "$DO_CONFIRM"   = "yes"	 && RUN_PARALLEL="no"
+type -p startpar &> /dev/null    || RUN_PARALLEL="no"
+startpar -v &> /dev/null	 || RUN_PARALLEL="no"
+
+#
+# Start bootup client scripts.
+#
+if test "$RUN_PARALLEL" = "yes" ; then
+
+    #
+    # Start scripts in parallel with make behaviour of startpar
+    #
+
+    startopt="-p4 -t 30 -T 3 $(splashmake)"
+    eval $(startpar $startopt -M boot)
+    failed="${failed:+$failed }$failed_service"
+    skipped="${skipped:+$skipped }$skipped_service"
+
+    unset failed_service skipped_service startopt
+
+elif test -d ${bootrc}/ ; then
+
+    #
+    # Start scripts in given link order
+    #
+    for i in ${bootrc}/S${rex}*; do
+
+	test -f $i || continue
+
+	B=${i##*/}
+	script=${B#*S$rex}
+	B=${B%$script}
+
+	if test "$DO_CONFIRM" = "yes" ; then
+	    rc_confirm -t $CONFIRM_PROMPT_TIMEOUT "Start bootup script ${script}" 0<>$REDIRECT 1>&0 2>&0
+	    case "$?" in
+	    0) true     ;;
+	    1) continue ;;
+	    2) DO_CONFIRM="" ;;
+	    esac
+	fi
+
+	blogger "$script start"
+
+	if test -x "$i" ; then
+		$i start
+	else
+	    echo Running $i
+	    /bin/sh $i b
+	    rc_status -v1 -r
+	fi
+	status=$?
+	echo -en "$rc_reset"
+	splashprogress "$script start"
+
+	case $status in
+	[1-47])  failed="${failed:+$failed }$script"   ;;
+	[56])   skipped="${skipped:+$skipped }$script" ;;
+	0|*) ;;
+	esac
+
+	blogger "'$script start' exits with status $status"
+    done
+fi
+
+splashtrigger "rlreached B"
+
+#
+# Be verbose and print stats
+#
+echo -n "System Boot Control: "
+echo -e "The system has been ${stat}${extd}set up${norm}"
+if test -n "$failed" ; then
+    n=$((${#failed} + 7))
+    echo -n  "Failed features: "
+    test $n -lt 47 && echo -en "\033[${COLUMNS}C\033[${n}D"
+    echo -e  "${warn}${failed}${norm}"
+fi
+if test -n "$skipped" ; then
+    n=$((${#skipped} + 7))
+    echo -n  "Skipped features: "
+    test $n -lt 47 && echo -en "\033[${COLUMNS}C\033[${n}D"
+    echo -e  "${attn}${skipped}${norm}"
+fi
+
+#
+# Start user defined bootup script.
+#
+if test -f /etc/init.d/boot.local ; then
+    echo -n "System Boot Control: "
+    echo "Running /etc/init.d/boot.local"
+    /bin/sh /etc/init.d/boot.local
+    rc_status -v1 -r
+    splashtrigger "boot.local"
+fi
+
+#
+# Check for boot cycle detection
+#
+test -s /lib/bootcycle/stats && . /lib/bootcycle/stats
+
+#
+# Remember for master resource script
+#
+if test "$DO_CONFIRM" = "yes" ; then
+    > /run/do_confirm
+fi
+if test "$DO_FASTBOOT" = "yes" ; then
+    > /run/do_fastboot
+fi
+if test "$DO_BLOGD" = "no" ; then
+    > /run/no_blogd
+fi
+
+#
+# Restore old terminal settings
+#
+stty $otty < $REDIRECT
+
+#
+# Let YaST2 finish its installation, if you installed with YaST2
+#
+if test -f /var/lib/YaST2/runme_at_boot ; then
+    HOSTTYPE=$(uname -m)
+    splashtrigger "YaST"
+    exec 0<> $REDIRECT 1>&0 2>&0
+    # if yast2 failed, this ensures proper system setup
+    #ulimit -c unlimited
+    > /var/lib/YaST2/run_suseconfig
+    if test -x /usr/lib/YaST2/startup/YaST2.Second-Stage; then
+	/usr/lib/YaST2/startup/YaST2.Second-Stage
+    else
+	# oops, yast2 not installed
+	rm -f /var/lib/YaST2/runme_at_boot
+    fi
+fi
+if test -f /var/lib/YaST2/reconfig_system ; then
+    HOSTTYPE=$(uname -m)
+    splashtrigger "YaST"
+    exec 0<> $REDIRECT 1>&0 2>&0
+    if test -x /usr/lib/YaST2/startup/YaST2.Firstboot; then
+	/usr/lib/YaST2/startup/YaST2.Firstboot
+    else
+	# oops, yast2-firstboot not installed
+	rm -f /var/lib/YaST2/reconfig_system
+    fi
+fi
+# run SuSEconfig (with args) if needed
+if test -f /var/lib/YaST2/run_suseconfig ; then
+    /sbin/SuSEconfig $(cat /var/lib/YaST2/run_suseconfig)
+    rm -f /var/lib/YaST2/run_suseconfig
+fi
+
+exit 0

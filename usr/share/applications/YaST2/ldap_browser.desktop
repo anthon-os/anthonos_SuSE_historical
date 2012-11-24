@@ -1,0 +1,25 @@
+[Desktop Entry]
+X-SuSE-DocTeamID=ycc_ldap_browser
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Net_advanced;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+X-SuSE-YaST-Call=ldap_browser
+
+X-SuSE-YaST-Group=Net_advanced
+X-SuSE-YaST-Argument=
+X-SuSE-YaST-RootOnly=
+X-SuSE-YaST-AutoInst=
+X-SuSE-YaST-Geometry=
+X-SuSE-YaST-SortKey=
+X-SuSE-YaST-Keywords=ldap,browse
+
+Icon=yast-ldap-browser
+Exec=/usr/bin/xdg-su -c '/sbin/yast2 ldap_browser'
+
+Name=LDAP Browser
+GenericName=Browse the LDAP repository
+StartupNotify=true
+

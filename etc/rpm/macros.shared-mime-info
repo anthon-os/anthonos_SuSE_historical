@@ -1,0 +1,39 @@
+# RPM macros for packages installing a MIME type according to the XDG specification
+#
+###
+#
+# When a package installs a MIME type as per the XDG specification, it should
+# use both macros:
+#
+#  - %mime_database_post in %post
+#  - %mime_database_postun in %postun
+#
+# Note that these macros can optionally take as argument the directory
+# where the MIME type is installed. If no argument is passed, then
+# %{_datadir}/mime will be used (which is where applications usually install
+# the MIME type information).
+#
+###
+
+# On install, update the mime database
+%mime_database_post()                                          \
+if test -x %{_bindir}/update-mime-database; then               \
+%if "x%1" != "x%%1"                                            \
+  %{_bindir}/update-mime-database "%1" || true                 \
+%else                                                          \
+  %{_bindir}/update-mime-database "%{_datadir}/mime" || true   \
+%endif                                                         \
+fi 
+
+# On uninstall, update the mime database. Note: we ignore upgrades (already
+# handled in %post of the new package).
+%mime_database_postun()                                        \
+if [ $1 -eq 0 ]; then                                          \
+  if test -x %{_bindir}/update-mime-database; then             \
+%if "x%1" != "x%%1"                                            \
+    %{_bindir}/update-mime-database "%1" || true               \
+%else                                                          \
+    %{_bindir}/update-mime-database "%{_datadir}/mime" || true \
+%endif                                                         \
+  fi                                                           \
+fi

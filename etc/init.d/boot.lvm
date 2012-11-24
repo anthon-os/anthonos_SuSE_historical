@@ -1,0 +1,68 @@
+#! /bin/sh
+#
+# Copyright (c) 2001 SuSE GmbH Nuernberg, Germany.  All rights reserved.
+#
+# /etc/init.d/boot.lvm
+#
+### BEGIN INIT INFO
+# Provides:          boot.lvm
+# Required-Start:    boot.udev boot.rootfsck
+# Should-Start:      boot.device-mapper boot.multipath boot.md boot.dmraid udev-trigger
+# Required-Stop:     $null
+# Should-Stop:       $null
+# Default-Start:     B
+# Default-Stop:
+# Description:       start logical volumes
+### END INIT INFO
+
+. /etc/rc.status
+. /etc/sysconfig/lvm
+
+# udev interaction
+if [ -x /sbin/udevadm ] ; then
+    [ -z "$LVM_DEVICE_TIMEOUT" ] && LVM_DEVICE_TIMEOUT=60
+else
+    LVM_DEVICE_TIMEOUT=0
+fi
+
+rc_reset
+
+case "$1" in
+  start)
+	#
+	# Find and activate volume groups (HM 1/1/1999)
+	#
+	if test -d /etc/lvm -a -x /sbin/vgscan -a -x /sbin/vgchange ; then
+	    # Waiting for udev to settle
+	    if [ "$LVM_DEVICE_TIMEOUT" -gt 0 ] ; then
+		echo "Waiting for udev to settle..."
+		/sbin/udevadm settle --timeout=$LVM_DEVICE_TIMEOUT
+	    fi
+	    echo "Scanning for LVM volume groups..."
+	    /sbin/vgscan --mknodes
+	    echo "Activating LVM volume groups..."
+	    /sbin/vgchange -a y $LVM_VGS_ACTIVATED_ON_BOOT
+
+	    rc_status -v -r
+	fi
+	;;
+    stop)
+	if test -d /etc/lvm -a -x /sbin/vgchange ; then
+	    /sbin/vgchange -a n
+	fi
+	rc_status -v
+	;;
+    status)
+	rc_failed 4
+	rc_status -v
+	;;
+    reload)
+	$0 start
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|reload}"
+	exit 1
+	;;
+esac
+
+rc_exit

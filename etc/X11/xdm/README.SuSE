@@ -1,0 +1,61 @@
+
+         XDM configuration for SuSE Linux
+         ================================
+
+
+ xdm-config:	The configuration of xdm.
+  		`authName' should be in general MIT-MAGIC-COOKIE-1 --
+        	for XDM-AUTHENTICATION-1 which is default for xterminals
+		see man page of xdm and the manual coming with the
+		specific xterminal.
+	NOTE:	In order to use XDMCP this feature the resource
+		DisplayManager.requestPort in xdm-config should
+		be commented out to enable XDMCP.
+
+ Xaccess:	The XDMCP access control file, see note above.
+
+ Xsetup:	Handle all local and remote X Window System consoles.
+		For BackGround pictures go here and read.
+
+ RunChooser:	Handle the remote chooser call. For BackGround pictures
+		go here and read.
+
+ Xstartup:	Do log on of the (remote) user. Write utmp/wtmp/lastlog
+		entries for the session.  If system console is used
+		give to the current virtual console to the user
+
+ GiveDevices:   Give the current virtual and logging consoles over
+                to the user.  Any other device which should be given
+                the user of display :0 should be added herein.
+                Called by Xstartup.
+
+ Xreset:	Do log off of the (remote) user. Reset utmp/wtmp/lastlog
+		entries for the session. If system console was used
+		Take back the current virtual console.
+
+ TakeDevices:   Take the current virtual and and logging console back.
+                Any other device which was given away should be taken
+                back herein. Called by Xreset.
+
+ Xresources:	Disable the possibility to abort the xdm display
+		for any user. They can use <Ctrl>-<Alt>-<BackSpace>
+
+ Xsession:	Setup the xsession and start the xsession script of
+		the user.
+
+ sys.xsession:	Fallback for Xsession script
+
+ Xservers:	The X server(s) for e.g. local console.
+
+ Xservers.fs:	An alternate Xservers file for system without display
+		being server for X terminals. It is a replacment for
+		Xservers in xdm-config.
+
+ Xwilling:	Generate the status line at a XDMCP broadcast query
+		for a remote chooser menu.
+
+--
+      Have a lot of fun...
+
+               Your SuSE Team
+

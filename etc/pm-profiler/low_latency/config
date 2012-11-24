@@ -1,0 +1,6 @@
+NAME="Low Latency Computing"
+DESCRIPTION="Profile optimized for low latency and best performance with no consideration of power consumption."
+CPUFREQ_GOVERNOR="performance"
+CPUFREQ_SCHED_MC_POWER_SAVINGS="0"
+SATA_ALPM="max_performance"
+DIRTY_WRITEBACK_CENTISECS="300"

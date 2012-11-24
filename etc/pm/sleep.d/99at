@@ -1,0 +1,16 @@
+#!/bin/bash
+
+. $PM_UTILS_LIBDIR/functions
+
+case "$1" in
+ 	hibernate|suspend)
+			stopservice atd
+		;;
+	thaw|resume)
+			restartservice atd
+		;;
+	*)
+		;;
+esac
+
+exit 0

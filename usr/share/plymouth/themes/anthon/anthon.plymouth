@@ -1,0 +1,7 @@
+[Plymouth Theme]
+Name=anthon
+Description=Default Boot Theme for Anthon.
+ModuleName=script
+[script]
+ImageDir=/lib/plymouth/themes/anthon
+ScriptFile=/lib/plymouth/themes/anthon/anthon.script

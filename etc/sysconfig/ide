@@ -1,0 +1,11 @@
+## Path:		Hardware/IDE
+## Description:		IDE device settings
+## Type:		string
+## Default:		""
+#
+# Force DMA mode for selected device. Use pairs <device>:<dma_mode> separated
+# by space - dma_mode can be "on" (enable default DMA mode), "off" (disable DMA
+# mode) or any mode supported by hdparm (e.g. "mdma2", "udma5", ...)
+# Example: "/dev/hdc:off /dev/hdd:udma2"
+#
+DEVICES_FORCE_IDE_DMA=""

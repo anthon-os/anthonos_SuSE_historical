@@ -1,0 +1,28 @@
+## Path:	System/SuSEconfig
+## Description:	
+## Type:	yesno
+## Default:	yes
+#
+# Some people don't want SuSEconfig to modify the system. With this
+# entry you can disable SuSEconfig completely. 
+# Please don't contact our support if you have trouble configuring your 
+# system after having disabled SuSEconfig.  (yes/no)
+#
+ENABLE_SUSECONFIG="yes"
+
+## Type:	yesno
+## Default:	no
+#
+# Do you want to have "." in root path?  This is not recommended, but
+# many people do prefer it (yes/no). The setting affects all system
+# users (with uid < 100)
+#
+CWD_IN_ROOT_PATH="no"
+
+## Type:	yesno
+## Default:	yes
+#
+# Do you want to have "." in the path for normal users?
+# Defaults to "yes" since this has been the case for years.
+#
+CWD_IN_USER_PATH="no"

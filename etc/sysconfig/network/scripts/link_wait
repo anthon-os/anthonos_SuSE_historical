@@ -1,0 +1,224 @@
+#!/bin/bash
+#
+# Copyright (c) 2010 SUSE LINUX Products GmbH, Germany.
+# All rights reserved.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Authors: Marius Tomaschewski <mt@suse.de>
+#
+usage () {
+	echo $@
+	echo "usage: if-up.d/$SCRIPTNAME [<config>] <interface> [-o <options>]"
+	echo ""
+	echo "Options are:"
+	echo "    [on]boot : we are currently booting (or shutting down)"
+	echo "    debug    : be verbose"
+	echo "    rc       : indicates that we are called from rcnetwork"
+	echo ""
+	echo "Any another options are ignored"
+	echo ""
+	echo "Per interface ifcfg-<config> file variables are:"
+	echo "  LINK_WAIT=no    (or empty/unset)"
+	echo "    - default, don't do anything"
+	echo "  LINK_WAIT=<steps>"
+	echo "    - space separated list of steps to preform:"
+	echo "       sleep: just sleep"
+	echo "       check: check link state flags"
+	echo "       ping : ping specified address"
+	echo "  LINK_WAIT_SECS=<secs>"
+	echo "    - seconds for each check/sleep/ping step"
+	echo "      (limit is WAIT_FOR_INTERFACES for all)"
+	echo "  LINK_WAIT_PING_IPV4=<ipv4 address to ping>"
+	echo "    - ping the specified address"
+	echo ""
+	echo "Install using:"
+	echo "  ln -s ../scripts/link_wait /etc/sysconfig/network/if-up.d/"
+	echo ""
+	exit $R_USAGE
+}
+
+######################################################################
+# change the working direcory and source some common files
+#
+R_INTERNAL=1      # internal error, e.g. no config or missing scripts
+cd /etc/sysconfig/network || exit $R_INTERNAL
+test -f ./config && . ./config
+test -f scripts/functions && . scripts/functions || exit $R_INTERNAL
+
+######################################################################
+# check arguments and how we are called (in case of links)
+#
+SCRIPTNAME=${0##*/}
+echo debug $*
+#set -x
+case $1 in ""|-h|*help*) usage ;; esac
+CONFIG="$1"
+shift
+if [ "x$1" != x -a "x$1" != "x-o" ] ; then
+        INTERFACE="$1"
+else
+        INTERFACE="$CONFIG"
+fi
+shift
+test "x$1" = "x-o" && shift
+MODE=''
+RUN_FROM_RC=no
+DEBUG=${DEBUG:-no}
+while [ $# -gt 0 ]; do
+	case $1 in
+		boot|onboot) MODE=onboot ;;
+		debug)       DEBUG=yes ;;
+		rc)          RUN_FROM_RC=yes ;;
+		*)           debug unknown option $1 ;;
+	esac
+	shift
+done
+
+
+# filter out some special interface types
+case "$INTERFACE" in
+	all|noiface|lo) exit 0 ;;
+esac
+is_iface_available "$INTERFACE" || exit 0
+
+# source interface config and make sure we use the
+# per interface setting for wait for link check...
+unset LINK_WAIT
+unset LINK_WAIT_SECS
+unset LINK_WAIT_PING_IPV4
+source_iface_config "$CONFIG" || exit 0
+
+# usage: ifprint <err_mesg|mesg|...> message text...
+ifprint() {
+	func=${1}  ; shift
+	test "x$func" = x -o "x$INTERFACE" = x && return 1
+	if [ "$RUN_FROM_RC" = yes -a "$INTERFACE" != all ] ; then
+		$func "`printf "    %-9s " "$INTERFACE"`$*"
+	else
+		$func "$*"
+	fi
+}
+
+check_link_detected () {
+	local c=`cat /sys/class/net/${1}/carrier 2>/dev/null`
+	local d=`cat /sys/class/net/${1}/dormant 2>/dev/null`
+	local o=`cat /sys/class/net/${1}/operstate 2>/dev/null`
+
+	debug "link detection ${1}: carrier=$c, dormant=$d, operstate=$o"
+
+	if test -e "/sys/class/net/${1}/operstate" ; then
+		# SLE 11 has carrier + operstate + dormant
+		test "$c" = "1" -a "$d" = "0" -a \
+		    \( "$o" = "up" -o "$o" = "unknown" \) && return 0
+	else
+		# e.g. SLE 10 does not have operstate/dormant
+		test "$c" = "1" && return 0
+	fi
+}
+
+do_ping()
+{
+	local ifname=$1
+	local target=$2
+	local -i limit=$3
+	local -i ret=0
+	local beg now sec rest
+	IFS=. read beg rest < /proc/uptime
+	for ((now=$beg; $now < ($beg + $limit); )) ; do
+		sec=$(($limit - ($now - $beg)))
+		out=`ping -q -I $ifname -w $sec -c 1 $target 2>&1`
+		ret=$?
+		debug "$out"
+		test $ret -eq 0 && break
+		IFS=. read now rest < /proc/uptime
+	done
+	return $ret
+}
+
+case $0 in
+*if-up.d*)
+	if test "$MODE" = onboot -a "${LINK_WAIT:-no}" != no ;
+	then
+		# some compatibility to older version
+		if test "$LINK_WAIT" = yes ; then
+			LINK_WAIT=check
+		fi
+		if test -z "$LINK_WAIT_SECS" ; then
+			test $(( $LINK_WAIT )) -gt 0 && \
+				LINK_WAIT_SECS=$LINK_WAIT
+			case $LINK_WAIT_PING_IPV4 in
+			*\.*\.*\.*) LINK_WAIT="ping"  ;;
+			*)          LINK_WAIT="check" ;;
+			esac
+		fi
+
+		steps=($LINK_WAIT)
+		# don't wait more than WAIT_FOR_INTERFACES
+		if test ${#steps[@]} -gt 0 ; then
+			if test $(( $LINK_WAIT_SECS )) -eq 0 -o \
+				$(( $(($LINK_WAIT_SECS)) * ${#steps[@]} )) -gt \
+				$(( $WAIT_FOR_INTERFACES )) ; then
+				LINK_WAIT_SECS=$(( $WAIT_FOR_INTERFACES / ${#steps[@]} ))
+			fi
+		fi
+		spend=0
+		for step in ${steps[@]} ; do
+		    case $step in
+		    check)
+			declare -i secs=$LINK_WAIT_SECS
+			declare -i loop=0
+
+			check_link_detected "$INTERFACE"   || \
+			ifprint message "no link detected ... waiting up to $secs secs"
+
+			while ! check_link_detected "$INTERFACE" ; do
+				sleep 1
+				test $((++loop)) -ge $secs && break
+			done
+
+			spend=$((spend + loop))
+			check_link_detected "$INTERFACE" \
+				&& ifprint message "link detected after $spend secs" \
+				|| ifprint message "no link detected ... continue"
+		    ;;
+		    sleep)
+			ifprint message "sleeping for $LINK_WAIT_SECS secs"
+			sleep $LINK_WAIT_SECS
+			spend=$((spend + LINK_WAIT_SECS))
+		    ;;
+		    ping)
+			case $LINK_WAIT_PING_IPV4 in
+			*\.*\.*\.*)
+			ifprint message "ping $LINK_WAIT_PING_IPV4 up to $LINK_WAIT_SECS secs"
+			if do_ping "$INTERFACE" "$LINK_WAIT_PING_IPV4" "$LINK_WAIT_SECS" ; then
+				ifprint message "ping reports reachable $LINK_WAIT_PING_IPV4"
+			else
+				ifprint message "ping reports unreachable $LINK_WAIT_PING_IPV4"
+			fi
+			spend=$((spend + LINK_WAIT_SECS))
+			;;
+			esac
+		    ;;
+		    esac
+		done
+	fi
+;;
+*if-down.d*)
+;;
+*)
+	usage
+;;
+esac
+

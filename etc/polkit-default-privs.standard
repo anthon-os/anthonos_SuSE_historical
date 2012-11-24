@@ -1,0 +1,365 @@
+#
+# /etc/polkit-default-privs.standard is set up for use in most
+# desktop systems to make common operations work out-of-the box for
+# locally logged in users. It still restricts users enough to be
+# safely used on most multi user hosts.
+#
+# Please do not modify this file, use polkit-default-privs.local instead.
+#
+org.freedesktop.policykit.read                              	auth_admin_keep_always
+org.freedesktop.policykit.revoke                            	auth_admin_keep_always
+org.freedesktop.policykit.grant                             	auth_admin_keep_always
+org.freedesktop.policykit.modify-defaults                   	auth_admin_keep_always
+#
+org.freedesktop.network-manager-settings.system.modify      	auth_admin_keep_always
+org.freedesktop.network-manager-settings.system.hostname.modify auth_admin_keep
+org.freedesktop.network-manager-settings.system.wifi.share.protected auth_admin
+org.freedesktop.network-manager-settings.system.wifi.share.open auth_admin
+org.freedesktop.NetworkManager.enable-disable-network           auth_admin:auth_admin:yes
+org.freedesktop.NetworkManager.enable-disable-wifi              auth_admin:auth_admin:yes
+org.freedesktop.NetworkManager.enable-disable-wwan              auth_admin:auth_admin:yes
+org.freedesktop.NetworkManager.use-user-connections             auth_admin:auth_admin:yes
+# auth_admin probably causes issues with suspend here (bnc#716291)
+org.freedesktop.NetworkManager.network-control                  no:no:yes
+org.freedesktop.NetworkManager.sleep-wake                       auth_admin:auth_admin:yes
+# bnc#680140
+org.freedesktop.NetworkManager.enable-disable-wimax             auth_admin:auth_admin:yes
+org.freedesktop.NetworkManager.wifi.share.protected             auth_admin
+org.freedesktop.NetworkManager.wifi.share.open                  auth_admin
+org.freedesktop.NetworkManager.settings.modify.own              auth_admin_keep:auth_admin_keep:yes
+org.freedesktop.NetworkManager.settings.modify.system           auth_admin_keep
+org.freedesktop.NetworkManager.settings.modify.hostname         auth_admin
+#
+org.libvirt.unix.monitor                                    	yes
+org.libvirt.unix.manage                                     	auth_admin_keep_always
+#
+# gnome-settings-daemon (bnc#690496)
+#
+org.gnome.settingsdaemon.datetimemechanism.configure            auth_admin_keep
+# bnc#750795
+org.gnome.settings-daemon.plugins.wacom.wacom-led-helper        no:no:yes
+#
+# colord (bnc#698250)
+#
+org.freedesktop.color-manager.create-device                     auth_admin:auth_admin:yes
+org.freedesktop.color-manager.create-profile                    auth_admin:auth_admin:yes
+org.freedesktop.color-manager.delete-device                     auth_admin:auth_admin:yes
+org.freedesktop.color-manager.delete-profile                    auth_admin:auth_admin:yes
+org.freedesktop.color-manager.modify-device                     auth_admin:auth_admin:yes
+org.freedesktop.color-manager.modify-profile                    auth_admin:auth_admin:yes
+org.freedesktop.color-manager.install-system-wide               auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.color-manager.device-inhibit                    auth_admin:auth_admin:yes
+org.freedesktop.color-manager.sensor-lock                       auth_admin:auth_admin:yes
+#
+# package kit
+#
+org.freedesktop.packagekit.package-install                      auth_admin_keep_always
+org.freedesktop.packagekit.package-install-untrusted            auth_admin
+org.freedesktop.packagekit.system-trust-signing-key             auth_admin
+org.freedesktop.packagekit.package-eula-accept                  auth_admin_keep_always:auth_admin_keep_always:yes
+org.freedesktop.packagekit.package-remove                       auth_admin_keep_always
+org.freedesktop.packagekit.system-update                        auth_admin_keep_always:auth_admin_keep_always:yes
+org.freedesktop.packagekit.system-rollback                      auth_admin_keep_always
+org.freedesktop.packagekit.system-sources-configure             auth_admin_keep_always
+org.freedesktop.packagekit.system-sources-refresh               auth_admin_keep_always:auth_admin_keep_always:yes
+org.freedesktop.packagekit.system-network-proxy-configure       auth_admin_keep_always
+org.freedesktop.packagekit.cancel-foreign                       auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.packagekit.device-rebind                        auth_admin_keep
+org.freedesktop.packagekit.system-change-install-root           auth_admin
+org.freedesktop.packagekit.upgrade-system                       auth_admin
+org.freedesktop.packagekit.repair-system                        auth_admin
+#
+org.pulseaudio.acquire-real-time                                auth_admin_keep_always
+org.pulseaudio.acquire-high-priority                            auth_admin_keep_always
+#
+# gconf
+#
+org.gnome.gconf.defaults.set-system                             auth_admin_keep
+org.gnome.gconf.defaults.set-mandatory                          auth_admin_keep
+#
+# just an example program
+#
+org.gnome.policykit.examples.jump                               no:no:auth_self_one_shot
+org.gnome.policykit.examples.frobnicate                         no:no:auth_self
+org.gnome.policykit.examples.tweak                              no:no:auth_admin
+org.gnome.policykit.examples.twiddle                            no:no:auth_admin_keep_always
+org.gnome.policykit.examples.punch                              no:no:auth_self_keep_session
+org.gnome.policykit.examples.toggle                             no:no:auth_admin_keep_always
+org.gnome.policykit.examples.kick-foo                           no:no:auth_self
+org.gnome.policykit.examples.kick-bar                           no:no:auth_self
+org.gnome.policykit.examples.kick-baz                           no:no:auth_self
+#
+# should be consistent with udisks
+org.freedesktop.consolekit.system.stop                          auth_admin_keep_always:auth_admin_keep_always:yes
+org.freedesktop.consolekit.system.stop-multiple-users           auth_admin:auth_admin:yes
+org.freedesktop.consolekit.system.restart                       auth_admin:auth_admin:yes
+org.freedesktop.consolekit.system.restart-multiple-users        auth_admin_keep_always:auth_admin_keep_always:yes
+#
+# smpppd
+#
+org.opensuse.smpppd.connect                                     auth_admin_keep_always:auth_admin_keep_always:yes
+
+#
+# backup-manager
+#
+org.opensuse.backupmanager.schedule                             auth_admin
+
+#
+# system-config-printer
+#
+org.opensuse.cupspkhelper.mechanism.printer-set-default         auth_admin_keep
+org.opensuse.cupspkhelper.mechanism.printer-enable              auth_admin_keep
+org.opensuse.cupspkhelper.mechanism.printer-local-edit          auth_admin_keep
+org.opensuse.cupspkhelper.mechanism.printer-remote-edit         auth_admin_keep
+org.opensuse.cupspkhelper.mechanism.class-edit                  auth_admin_keep
+org.opensuse.cupspkhelper.mechanism.server-settings             auth_admin_keep
+org.opensuse.cupspkhelper.mechanism.printeraddremove            auth_admin_keep
+org.opensuse.cupspkhelper.mechanism.job-edit                    auth_admin_keep
+org.opensuse.cupspkhelper.mechanism.job-not-owned-edit          auth_admin_keep
+org.opensuse.cupspkhelper.mechanism.devices-get                 auth_admin_keep
+org.opensuse.cupspkhelper.mechanism.all-edit                    auth_admin_keep
+
+#
+# Firewall Zone Switcher
+#
+org.opensuse.zoneswitcher.control                               auth_admin_keep_always:auth_admin_keep_always:yes
+
+#
+# RealTimeKit
+#
+org.freedesktop.RealtimeKit1.acquire-high-priority              auth_admin:auth_admin:auth_admin
+org.freedesktop.RealtimeKit1.acquire-real-time                  auth_admin:auth_admin:auth_admin
+
+#
+# polkit-1
+#
+org.freedesktop.policykit.exec                                  auth_admin:auth_admin:auth_admin
+org.freedesktop.policykit.lockdown                              auth_admin
+# example progam
+org.freedesktop.policykit.example.pkexec.run-frobnicate         auth_admin:auth_admin:auth_admin
+
+#
+# udisks.
+#
+org.freedesktop.udisks.filesystem-mount                auth_admin:auth_admin:yes
+org.freedesktop.udisks.filesystem-mount-system-internal auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks.filesystem-check                auth_admin:auth_admin:yes
+org.freedesktop.udisks.filesystem-check-system-internal auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks.filesystem-unmount-others       auth_admin:auth_admin:auth_admin
+org.freedesktop.udisks.filesystem-lsof                 auth_admin:auth_admin:yes
+org.freedesktop.udisks.filesystem-lsof-system-internal auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks.drive-eject                     auth_admin:auth_admin:yes
+org.freedesktop.udisks.drive-detach                    auth_admin:auth_admin:yes
+org.freedesktop.udisks.change                          auth_admin:auth_admin:yes
+org.freedesktop.udisks.change-system-internal          auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks.drive-ata-smart-refresh         auth_admin:auth_admin:yes
+org.freedesktop.udisks.drive-ata-smart-selftest        auth_admin:auth_admin:auth_admin
+org.freedesktop.udisks.drive-ata-smart-retrieve-historical-data auth_admin:auth_admin:yes
+org.freedesktop.udisks.luks-unlock                     auth_admin:auth_admin:yes
+org.freedesktop.udisks.luks-lock-others                auth_admin:auth_admin:auth_admin
+org.freedesktop.udisks.linux-md                        auth_admin:auth_admin:auth_admin
+org.freedesktop.udisks.cancel-job-others               auth_admin:auth_admin:auth_admin
+org.freedesktop.udisks.inhibit-polling                 auth_admin:auth_admin:yes
+org.freedesktop.udisks.drive-set-spindown              auth_admin:auth_admin:yes
+org.freedesktop.udisks.linux-lvm2                      auth_admin_keep
+#
+# udisks2 (bnc#742751)
+#
+org.freedesktop.udisks2.filesystem-mount-system         auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.filesystem-fstab                auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.filesystem-unmount-others       auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.encrypted-unlock-system         auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.encrypted-unlock-crypttab       auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.encrypted-lock-others           auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.encrypted-change-passphrase-system      auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.loop-delete-others              auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.manage-swapspace                auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.modify-device-system            auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.open-device                     auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.open-device-system              auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.modify-system-configuration     auth_admin
+org.freedesktop.udisks2.read-system-configuration-secrets       auth_admin
+org.freedesktop.udisks2.ata-smart-selftest              auth_admin:auth_admin:auth_admin_keep
+#
+org.freedesktop.udisks2.filesystem-mount                auth_admin:auth_admin:yes
+org.freedesktop.udisks2.encrypted-unlock                auth_admin:auth_admin:yes
+org.freedesktop.udisks2.encrypted-change-passphrase     auth_admin:auth_admin:yes
+org.freedesktop.udisks2.loop-setup                      auth_admin:auth_admin:yes
+org.freedesktop.udisks2.modify-device                   auth_admin:auth_admin:yes
+org.freedesktop.udisks2.ata-smart-update                auth_admin:auth_admin:yes
+# (bnc#761872)
+org.freedesktop.udisks2.eject-media                     auth_admin:auth_admin:yes
+org.freedesktop.udisks2.filesystem-mount-other-seat     auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.encrypted-unlock-other-seat     auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.loop-modify-others              auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.eject-media-system              auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.eject-media-other-seat          auth_admin:auth_admin:auth_admin_keep
+org.freedesktop.udisks2.modify-device-other-seat        auth_admin:auth_admin:auth_admin_keep
+
+#
+# upower
+#
+org.freedesktop.upower.suspend                         auth_admin:auth_admin:yes
+org.freedesktop.upower.hibernate                       auth_admin:auth_admin:yes
+org.freedesktop.upower.qos.request-latency             auth_admin:auth_admin:yes
+org.freedesktop.upower.qos.request-latency-persistent  auth_admin:auth_admin:yes
+org.freedesktop.upower.qos.set-minimum-latency         auth_admin:auth_admin:auth_admin
+org.freedesktop.upower.qos.cancel-request              auth_admin:auth_admin:auth_admin
+
+#
+# YaST
+#
+org.opensuse.yast.module-manager.import                         auth_admin_keep_session
+org.opensuse.yast.module-manager.lock                           auth_admin_keep_session
+org.opensuse.yast.modules.yapi.language.read                    no
+org.opensuse.yast.modules.yapi.language.write                   no
+org.opensuse.yast.modules.yapi.time.read                        no
+org.opensuse.yast.modules.yapi.time.write                       no
+org.opensuse.yast.modules.ysr.statelessregister                 auth_admin_keep_session
+org.opensuse.yast.modules.ysr.getregistrationconfig             auth_admin_keep_session
+org.opensuse.yast.modules.ysr.setregistrationconfig             auth_admin_keep_session
+org.opensuse.yast.scr.read                                      auth_admin_keep_session
+org.opensuse.yast.scr.write                                     auth_admin_keep_session
+org.opensuse.yast.scr.execute                                   auth_admin_keep_session
+org.opensuse.yast.scr.dir                                       auth_admin_keep_session
+org.opensuse.yast.scr.registeragent                             auth_admin_keep_session
+org.opensuse.yast.scr.unregisteragent                           auth_admin_keep_session
+org.opensuse.yast.scr.unmountagent                              auth_admin_keep_session
+org.opensuse.yast.scr.error                                     auth_admin_keep_session
+org.opensuse.yast.scr.unregisterallagents                       auth_admin_keep_session
+org.opensuse.yast.scr.registernewagents                         auth_admin_keep_session
+# webyast
+org.opensuse.yast.permissions.read                              no
+org.opensuse.yast.permissions.write                             no
+org.opensuse.yast.modules.eulas.accept                          no
+org.opensuse.yast.modules.yapi.activedirectory.read             no
+org.opensuse.yast.modules.yapi.activedirectory.write            no
+org.opensuse.yast.modules.yapi.firewall.read                    no
+org.opensuse.yast.modules.yapi.firewall.write                   no
+org.opensuse.yast.modules.yapi.kerberos.read                    no
+org.opensuse.yast.modules.yapi.kerberos.write                   no
+org.opensuse.yast.modules.yapi.ldap.read                        no
+org.opensuse.yast.modules.yapi.ldap.write                       no
+org.opensuse.yast.modules.yapi.mailsettings.read                no
+org.opensuse.yast.modules.yapi.mailsettings.write               no
+org.opensuse.yast.modules.yapi.ntp.synchronize                  no
+org.opensuse.yast.modules.yapi.ntp.setserver                    no
+org.opensuse.yast.roles.assign                                  no
+org.opensuse.yast.roles.modify                                  no
+org.opensuse.yast.modules.yapi.administrator.read               no
+org.opensuse.yast.modules.yapi.administrator.write              no
+org.opensuse.yast.modules.yapi.services.read                    no
+org.opensuse.yast.modules.yapi.services.execute                 no
+org.opensuse.yast.system.repositories.read                      no
+org.opensuse.yast.system.repositories.write                     no
+org.opensuse.yast.system.packages.read                          no
+org.opensuse.yast.system.patches.read                           no
+org.opensuse.yast.system.patches.install                        no
+org.opensuse.yast.system.status.read                            no
+org.opensuse.yast.system.status.writelimits                     no
+org.opensuse.yast.modules.logfile.read                          no
+org.opensuse.yast.modules.yapi.users.groupsget                  no
+org.opensuse.yast.modules.yapi.users.groupget                   no
+org.opensuse.yast.modules.yapi.users.groupadd                   no
+org.opensuse.yast.modules.yapi.users.groupmodify                no
+org.opensuse.yast.modules.yapi.users.groupdelete                no
+org.opensuse.yast.modules.yapi.users.usersget                   no
+org.opensuse.yast.modules.yapi.users.userget                    no
+org.opensuse.yast.modules.yapi.users.usermodify                 no
+org.opensuse.yast.modules.yapi.users.useradd                    no
+org.opensuse.yast.modules.yapi.users.userdelete                 no
+org.opensuse.yast.modules.yapi.network.read                     no
+org.opensuse.yast.modules.yapi.network.write                    no
+org.opensuse.yast.system.terminal.read                          no
+# bnc#687807
+org.opensuse.yast.system.power-management.reboot                no
+org.opensuse.yast.system.power-management.shutdown              no
+
+
+# KDE stuff
+
+org.kde.fontinst.manage                                         auth_admin
+org.kde.kcontrol.kcmclock.save                                  auth_admin
+org.kde.kcontrol.kcmremotewidgets.save                          auth_admin
+org.kde.ksysguard.processlisthelper.changecpuscheduler          auth_admin
+org.kde.ksysguard.processlisthelper.changeioscheduler           auth_admin
+org.kde.ksysguard.processlisthelper.renice                      auth_admin
+org.kde.ksysguard.processlisthelper.sendsignal                  auth_admin
+org.kde.polkitkde1.changeexplicitauthorizations                 auth_admin_keep
+org.kde.polkitkde1.changeimplicitauthorizations                 auth_admin
+org.kde.polkitkde1.changesystemconfiguration                    auth_admin
+org.kde.polkitkde1.readauthorizations                           auth_admin_keep
+org.kde.kcontrol.k3bsetup.save                                  auth_admin
+org.kde.kcontrol.kcmkdm.managefaces                             auth_admin_keep
+org.kde.kcontrol.kcmkdm.managethemes                            auth_admin_keep
+org.kde.kcontrol.kcmkdm.save                                    auth_admin
+# kde backlight helper (bnc#672145)
+org.kde.powerdevil.backlighthelper.brightness                   no:no:yes
+org.kde.powerdevil.backlighthelper.setbrightness                no:no:yes
+# kdepim4/kalarm (bnc#707723)
+org.kde.kalarmrtcwake.settimer                                  auth_admin_keep
+
+# systemd (bnc#641924)
+org.freedesktop.hostname1.set-hostname                          auth_admin
+org.freedesktop.hostname1.set-static-hostname                   auth_admin
+org.freedesktop.hostname1.set-machine-info                      auth_admin
+org.freedesktop.systemd1.reply-password                         auth_admin
+org.freedesktop.systemd1.bus-access                             auth_admin
+org.freedesktop.timedate1.set-time                              auth_admin_keep
+org.freedesktop.timedate1.set-timezone                          auth_admin_keep:auth_admin_keep:yes
+org.freedesktop.timedate1.set-local-rtc                         auth_admin_keep
+org.freedesktop.locale1.set-locale                              auth_admin_keep
+org.freedesktop.login1.attach-device                            auth_admin_keep
+org.freedesktop.login1.flush-devices                            auth_admin_keep
+org.freedesktop.login1.power-off                                auth_admin_keep:auth_admin_keep:yes
+org.freedesktop.login1.power-off-multiple-sessions              auth_admin_keep:auth_admin_keep:yes
+org.freedesktop.login1.reboot                                   auth_admin_keep:auth_admin_keep:yes
+org.freedesktop.login1.reboot-multiple-sessions                 auth_admin_keep:auth_admin_keep:yes
+org.freedesktop.login1.set-user-linger                          auth_admin_keep
+
+# gnome-control-center
+org.gnome.randr.install-system-wide                             auth_admin
+
+# gnome-power-manager/gnome-settings-daemon (bnc#650401, bnc#712841)
+org.gnome.settings-daemon.plugins.power.backlight-helper        no:no:yes
+# xfce4-power-manager, bnc#665169
+# code is copy&paste from gnome-power-manager
+org.xfce.power.backlight-helper                                 no:no:yes
+
+# hp-drive-guard
+com.hp.driveguard.toggle                                        auth_admin
+com.hp.driveguard.install-setup                                 auth_admin
+
+# ModemManager
+org.freedesktop.ModemManager.Device.Control                     auth_admin:auth_admin:yes
+org.freedesktop.ModemManager.Device.Info                        auth_admin:auth_admin:yes
+org.freedesktop.ModemManager.Contacts                           auth_admin
+org.freedesktop.ModemManager.SMS                                auth_admin
+org.freedesktop.ModemManager.Location                           auth_admin
+# (bnc#691896)
+org.freedesktop.ModemManager.USSD                               auth_admin
+
+# urfkill (bnc#688328)
+org.freedesktop.urfkill.block                                   auth_admin:auth_admin:yes
+org.freedesktop.urfkill.blockidx                                auth_admin:auth_admin:yes
+org.freedesktop.urfkill.unblock                                 auth_admin:auth_admin:yes
+org.freedesktop.urfkill.unblockidx                              auth_admin:auth_admin:yes
+org.freedesktop.urfkill.enablekeycontrol                        auth_admin:auth_admin:yes
+
+# account services (bnc#676638)
+org.freedesktop.accounts.user-administration                    auth_admin_keep
+org.freedesktop.accounts.set-login-option                       auth_admin
+org.freedesktop.accounts.change-own-user-data                   yes
+
+#
+# smb4k (bnc#749065)
+#
+de.berlios.smb4k.mounthelper.mount                              auth_admin_keep
+de.berlios.smb4k.mounthelper.unmount                            auth_admin_keep
+
+#
+# RecordItNow (bnc#753908)
+#
+org.kde.recorditnow.helper.watch                                auth_admin
+
+###

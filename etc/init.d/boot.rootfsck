@@ -1,0 +1,194 @@
+#! /bin/sh
+#
+# Copyright (c) 2001-2002 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# /etc/init.d/boot.rootfsck
+#
+### BEGIN INIT INFO
+# Provides:          boot.rootfsck
+# Required-Start:    boot.udev
+# Required-Stop:     $null
+# Default-Start:     B
+# Default-Stop:
+# X-Interactive:     true
+# Short-Description: check and mount root filesystem
+# Description:       check and mount root filesystem
+### END INIT INFO
+
+. /etc/rc.status
+
+# to get max number of parallel fsck processes
+. /etc/sysconfig/boot
+
+export FSCK_MAX_INST
+
+rc_reset
+
+case "$1" in
+  start)
+	#
+	# fsck may need a huge amount of memory, so make sure, it is there.
+	#
+	echo "Activating swap-devices in /etc/fstab..."
+	swapon -ae &> /dev/null
+	rc_status -v1 -r
+	
+	#
+	# do fsck and start sulogin, if it fails.
+	#
+	FSCK_RETURN=0
+	MAY_FSCK=1
+
+	# we may get ROOTFS_BLKDEV passed from initrd, skip extra actions
+	if [ -n "$ROOTFS_BLKDEV" ]  ; then
+	    if [ -n "$ROOTFS_REALDEV" ]  ; then
+		ROOTFS_BLKDEV=$ROOTFS_REALDEV
+	    fi
+	else
+	    # if not booted via initrd, udev should still have
+            # created /dev/root already
+            # if not, create it
+	    ROOTFS_BLKDEV="/dev/root"
+	    if test ! -e /dev/root ; then
+		rootcpio=`echo / | /bin/cpio --quiet -o -H newc`
+		rootmajor=0x${rootcpio:62:8}
+		rootminor=0x${rootcpio:70:8}
+		if [ $((rootmajor)) -ne 0 ] ; then
+		    echo /bin/mknod -m600 $ROOTFS_BLKDEV b $((rootmajor)) $((rootminor))
+		    /bin/mknod -m600 $ROOTFS_BLKDEV b $((rootmajor)) $((rootminor))
+		fi
+	    fi
+        fi
+	# common options for file system check
+	FSCK_OPTS="-a"
+	if test -f /forcefsck -o "$DO_FORCEFSCK" = "yes" ; then
+	    # force file system check if forced is specified
+	    FSCK_OPTS="$FSCK_OPTS -f"
+	    ROOTFS_FSCK=""
+        fi
+	if test "$ROOTFS_FSCK" = "0" ; then
+	    # already checked and ok, skip the rest
+            MAY_FSCK=0
+        else
+	    ROOTFS_TYPE=`stat -f -c "%T" /`
+	    case $ROOTFS_TYPE in
+		aufs|tmpfs|afs|cifs|nfs|novell|smb|UNKNOWN*) MAY_FSCK=0 ;;
+		*)
+		    if test -x /usr/bin/on_ac_power ; then
+			# skip fsck if running on battery
+			/usr/bin/on_ac_power -q || MAY_FSCK=0
+		    fi
+		;;
+	    esac
+        fi
+
+	if test ! -f /fastboot -a "$DO_FASTBOOT" != "yes" -a $MAY_FSCK -eq 1 ; then
+	    # If we use a serial console, don't use the fsck progress bar
+	    if test "${REDIRECT##*/}" = "tty1" ; then
+                FSCK_OPTS="$FSCK_OPTS -C"
+	    else
+                FSCK_OPTS="$FSCK_OPTS -V"
+	    fi
+	    # on an umsdos root fs this mount will fail,
+	    # so direct error messages to /dev/null.
+	    # this seems to be ugly, but should not really be a problem.
+	    mount -n -o remount,ro / 2> /dev/null
+	    if test $? = 0; then
+		if test -n "$ROOTFS_FSCK" ; then
+		    FSCK_RETURN=$ROOTFS_FSCK
+		else
+		    echo "Checking root file system..."
+		    fsck $FSCK_OPTS $ROOTFS_BLKDEV
+		    # A return code of 1 indicates that file system errors
+		    # were corrected, but that the boot may proceed.
+		    # A return code of 2 or larger indicates failure.
+		    FSCK_RETURN=$?
+		fi
+		test $FSCK_RETURN -lt 4
+		rc_status -v1 -r
+		if test $FSCK_RETURN -gt 1 -a $FSCK_RETURN -lt 4 ; then
+		    # if appropriate, switch bootsplash to verbose 
+		    # mode to make text messages visible.
+		    test -f /proc/splash && echo "verbose" > /proc/splash
+		    echo
+		    echo "fsck succeed, but reboot is required."
+		    echo
+		    sleep 1
+		    sync
+		    reboot -f
+		elif test $FSCK_RETURN -gt 3; then
+		    # if appropriate, switch bootsplash to verbose 
+		    # mode to make text messages visible.
+		    test -f /proc/splash && echo "verbose" > /proc/splash
+		    # Stop blogd since we reboot after sulogin
+		    test -x /sbin/blogd && killproc -QUIT /sbin/blogd
+		    if test -x /etc/init.d/kbd ; then
+			/etc/init.d/kbd start
+		    fi
+	            echo
+	            echo "fsck failed.  Please repair manually and reboot. The root"
+	            echo "file system is currently mounted read-only. To remount it"
+	            echo "read-write do:"
+	            echo
+	            echo "   bash# mount -n -o remount,rw /"
+	            echo
+	            echo "Attention: Only CONTROL-D will reboot the system in this"
+	            echo "maintanance mode. shutdown or reboot will not work."
+	            echo
+	            PS1="(repair filesystem) # "
+	            export PS1
+	            /sbin/sulogin /dev/console
+
+	            # if the user has mounted something rw, this should be umounted
+	            echo "Unmounting file systems (ignore error messages)"
+	            umount -avn
+
+	            # on umsdos fs this would lead to an error message.
+		    # so direct errors to /dev/null
+	            mount -no remount,ro / 2> /dev/null
+
+	            sync
+	            reboot -f
+	        fi
+	        sync
+		if rc_cmdline readonlyroot ; then
+		    echo "Skipping rw-remount of / since boot commandline specified \"readonlyroot\""
+		else
+		    mount -n -o remount,rw /
+		fi
+		test $FSCK_RETURN -gt 0 && > /fsck_corrected_errors
+	    else
+		echo
+		echo '*** ERROR!  Cannot fsck because root is not read-only!'
+		echo
+	    fi
+	else
+	    if test "$ROOTFS_FSCK" != "0" ; then
+		echo "root file system (/) is NOT being checked."
+	    fi
+	fi
+	if ! test -L /etc/mtab ; then
+	    ln -sf /proc/self/mounts /etc/mtab
+	fi
+	;;
+    stop)
+	;;
+    restart)
+	rc_failed 3
+	rc_status -v
+	;;
+    status)
+        echo -n "Checking if boot.rootfsck has run"
+        rc_reset
+        grep -q " / " /etc/mtab || rc_failed 3
+        rc_status -v
+        ;;
+    *)
+	echo "Usage: $0 {start|stop|status|restart}"
+	exit 1
+	;;
+esac
+
+rc_exit
+

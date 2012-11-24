@@ -1,0 +1,11 @@
+[Directories]
+prefixes=/etc/opt/kde3/
+userProfileMapFile=/etc/kde-user-profile
+profileDirsPrefix=/var/lib/kde-profiles/
+dir_wallpaper=/usr/share/wallpapers
+
+[Directories-default]
+ProfileDescription=Default Profile
+ProfileInstallUser=root
+prefixes=/var/lib/kde-profiles/default/
+

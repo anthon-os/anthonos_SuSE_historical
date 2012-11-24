@@ -1,0 +1,17 @@
+# to ${PREFIX-~/.local}/share/applications
+
+[Desktop Entry]
+X-SuSE-translate=true
+Name=YaST一键安装
+GenericName=YaST 1-Click Install
+Comment=Install packages without manually adding repositories
+Exec=/sbin/OneClickInstallUI %f
+Terminal=false
+MultipleArgs=false
+Type=Application
+MimeType=text/x-suse-ymp;
+Categories=Settings;System;SystemSetup;
+# thx Beineri
+NoDisplay=true
+X-KDE-StartupNotify=false
+

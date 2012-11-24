@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# Copyright (c) 2010 SuSE Linux Products GmbH, Nuernberg, Germany.
+#
+# /etc/init.d/boot.cgroup
+#
+### BEGIN INIT INFO
+# Provides:          boot.cgroup
+# Required-Start:    boot.udev
+# Should-Start:      boot.loadmodules
+# Required-Stop:     $null
+# Should-Stop:       $null
+# Default-Start:     B
+# Default-Stop:
+# Short-Description: mount /sys/fs/cgroup
+# Description:       mount /sys/fs/cgroup
+### END INIT INFO
+
+. /etc/rc.status
+
+rc_reset
+
+case "$1" in
+  start)
+	echo -n "mounting cgroup file systems..."
+	if [ ! -e /sys/fs/cgroup -o ! -e /proc/cgroups ]; then
+		rc_status -u
+		rc_exit
+	fi
+	if ! /bin/mountpoint -q /sys/fs/cgroup; then
+		if ! mount -t tmpfs tmpfs  -o mode=755,nosuid,nodev,noexec /sys/fs/cgroup; then
+			rc_status -v1
+			rc_exit
+		fi
+	fi
+	
+	while read name h num enabled rest; do
+		[ "${name###}" = "$name" ] || continue
+		[ "$enabled" -eq 1 ] || continue
+		d="/sys/fs/cgroup/$name"
+		/bin/mountpoint -q "$d" && continue
+		[ -e "$d" ] || mkdir "$d"
+		if mount -t cgroup -o nosuid,nodev,noexec,$name cgroup "$d"; then
+			echo -n " $name"
+		else
+			rc_failed 1
+		fi
+	done < <(cat /proc/cgroups)
+	rc_status -v
+	;;
+    stop)
+	echo -n "umounting cgroup file systems..."
+	rc_status -s
+	;;
+    restart)
+	rc_failed 3
+	rc_status -v
+	;;
+    status)
+        echo -n "Checking if boot.cgroup has run"
+        rc_reset
+        rc_status -v
+        ;;
+    *)
+	echo "Usage: $0 {start|stop|status|restart}"
+	exit 1
+	;;
+esac
+
+rc_exit

@@ -1,0 +1,154 @@
+#! /bin/sh
+# Copyright (c) 2004, 2008, 2009 Author: Thorsten Kukuk <kukuk@suse.de>
+#
+# /etc/init.d/ypbind
+#
+#   and symbolic its link
+#
+# /usr/sbin/rcypbind
+#
+# System startup script for the ypbind daemon
+#
+### BEGIN INIT INFO
+# Provides: ypbind
+# Required-Start: $remote_fs $portmap
+# Required-Stop: $remote_fs $portmap
+# Should-Start: ypserv slpd
+# Should-Stop: $null
+# Default-Start: 3 5
+# Default-Stop: 0 1 2 6
+# Short-Description: Start ypbind (necessary for a NIS client)
+# Description: ypbind finds the server for NIS domains and maintains
+#	the NIS binding information.
+### END INIT INFO
+
+YPBIND_BIN=/usr/sbin/ypbind
+test -x $YPBIND_BIN || { echo "$YPBIND_BIN not installed";
+        if [ "$1" = "stop" ]; then exit 0; else exit 5; fi; }
+
+YPBIND_CONFIG=/etc/sysconfig/ypbind
+test -r $YPBIND_CONFIG || { echo "$YPBIND_CONFIG not existing";
+        if [ "$1" = "stop" ]; then exit 0; else exit 6; fi; }
+
+# Read config
+. $YPBIND_CONFIG
+
+. /etc/rc.status
+
+# First reset status of this service
+rc_reset
+
+# Return values acc. to LSB for all commands but status:
+# 0 - success
+# 1 - misc error
+# 2 - invalid or excess args
+# 3 - unimplemented feature (e.g. reload)
+# 4 - insufficient privilege
+# 5 - program not installed
+# 6 - program not configured
+#
+# Note that starting an already running service, stopping
+# or restarting a not-running service as well as the restart
+# with force-reload (in case signalling is not supported) are
+# considered a success.
+
+case "$1" in
+    start)
+	echo -n "Starting ypbind"
+	## If we don't have a /etc/yp.conf file, skip starting of
+        ## ypbind and return with "program not configured"
+        ## if you add the -broadcast Option later, comment this out.
+	if [ ! -f /etc/yp.conf -a "$YPBIND_BROADCAST" != "yes" ] ; then
+	  # Tell the user this has skipped
+	  echo -n " . . . . . . . . . . ${attn}/etc/yp.conf not found${norm}"
+          rc_status -s
+          # service is not configured
+	  rc_failed 6
+          rc_exit
+        fi
+
+	# evaluate the OPTIONS for ypbind-mt
+	OPTIONS=""
+	test "$YPBIND_VERBOSE" = "yes" && OPTIONS="-verbose $OPTIONS"
+	test "$YPBIND_LOCAL_ONLY" = "yes" && OPTIONS="-local-only $OPTIONS"
+	test "$YPBIND_BROADCAST" = "yes" && OPTIONS="-broadcast $OPTIONS"
+	test "$YPBIND_BROKEN_SERVER" = "yes" && OPTIONS="-broken-server $OPTIONS"
+	test "X$YPBIND_PING_INTERVAL" != "X" && OPTIONS="-ping-interval $YPBIND_PING_INTERVAL $OPTIONS"
+	test "$YPBIND_DBUS" = "no" && OPTIONS="-no-dbus $OPTIONS"
+
+	startproc $YPBIND_BIN $YPBIND_OPTIONS $OPTIONS
+	RETVAL=$?
+	if [ "$YPBIND_DBUS" = "no" ]; then
+	    # Only check if we don't use NetworkManager
+            if [ $? -eq 0 ]; then
+                notfound=1
+                for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+                    ypwhich &>/dev/null && { notfound=0 ; break; };
+                    echo -n " ."
+                    sleep 1;
+                done
+                if [ $notfound -eq 1 ]; then
+                    echo -n " ${warn}No NIS server found${norm}";
+	        fi
+            else
+                rc_failed
+            fi
+        fi
+	rc_status -v
+	;;
+    stop)
+	echo -n "Shutting down ypbind"
+	killproc -TERM $YPBIND_BIN
+	# Remove static data, else glibc will continue to use NIS
+        rm -f /var/yp/binding/* /var/run/ypbind.pid
+	rc_status -v
+	;;
+    try-restart|condrestart)
+        ## Do a restart only if the service was active before.
+        ## Note: try-restart is now part of LSB (as of 1.9).
+        ## RH has a similar command named condrestart.
+        if test "$1" = "condrestart"; then
+                echo "${attn} Use try-restart ${done}(LSB)${attn} rather than condrestart ${warn}(RH)${norm}"
+        fi
+	$0 status
+        if test $? = 0; then
+                $0 restart
+        else
+                rc_reset        # Not running is not a failure.
+        fi
+        rc_status
+	;;
+    restart)
+	$0 stop
+	sleep 1
+	$0 start
+	rc_status
+	;;
+    force-reload)
+	echo -n "Reload service ypbind"
+	killproc -HUP $YPBIND_BIN
+	rc_status -v
+	;;
+    reload)
+	echo -n "Reload service ypbind"
+	killproc -HUP $YPBIND_BIN
+	rc_status -v
+	;;
+    status)
+	echo -n "Checking for ypbind: "
+	checkproc $YPBIND_BIN
+	rc_status -v
+	;;
+    probe)
+	if [ /etc/yp.conf -nt /var/run/ypbind.pid ]; then
+	  echo reload
+        elif [ $YPBIND_CONFIG -nt /var/run/ypbind.pid ]; then
+          echo restart
+	fi
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload|probe}"
+	exit 1
+	;;
+esac
+rc_exit

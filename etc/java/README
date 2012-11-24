@@ -1,0 +1,178 @@
+Dear customer,
+
+The SuSE Linux distribution contains several versions of development
+kits for developing and running java applications and several versions 
+of runtime environments only for running java applications.
+
+To be able to run java applications which need different versions of
+runtime environment or development kit, you may install several
+versions at the same time. One of these development kits or runtime
+environments is always the default while the other versions can be used
+to develop or run particular applications.
+
+Note: In the next text JDK stands for java development kit and JRE for
+      java runtime environment.
+
+
+
+The directory /etc/java contains configuration files for all installed
+JDKs and JREs.
+
+These configuration files are used by SuSEconfig and  setDefaultJava
+scripts which will help you to set default JDK or JRE on your computer.
+
+They are also used by script setJava which will help you to use one of
+valid versions of JDKs or JREs with your application.
+
+
+Syntax of configuration files:
+------------------------------
+1. empty lines are ignored
+2. white characters are ignored (spaces, TABs)
+3. comments are ignored, they are prefixed by hash '#'
+4. Parameters and values are delimited by ':' or '='
+
+Available parameters in config files (see the example config file below):
+--------------------------------------------------------------------
+
+Priority:
+    - value is an integer
+    - the JDK or JRE with higher priority is selected when there are more
+      JDKs or JREs acceptable for given parameters in the scripts setJava and
+      setDefaultJava
+    - a lower value defines higher priority
+    
+Vendor:
+    - value is a string (spaces are allowed)
+    - defines java vendor name
+    
+Version:
+    - value is composed of integers delimited by dots
+    - defines JDK or JRE version
+    
+Devel:
+    - value is either "True" or "False"
+    - value "True" defines that this java is JDK
+        
+JAVA_BINDIR:
+    - value is a path to a directory
+    - defines the path to java executables
+    - will be used for PATH and JAVA_BINDIR environment variables
+      
+JAVA_ROOT:
+    - value is a path to a directory
+    - defines the path to the java root directory
+    - is exactly the same for the JDK and the JRE of the same version
+      and vendor
+    - will be used for JAVA_ROOTDIR environment variable
+
+JAVA_HOME:
+    - value is path to directory
+    - some applications use this value to find java executables
+      in $JAVA_HOME/bin
+    - the value is usually different for JDK and JRE of the same version
+      and vendor
+    - will be used for JAVA_HOME environment variable
+      
+JRE_HOME:
+    - value is a path to a directory
+    - some applications use this value to search for java executables and
+      libraries in $JAVA_JRE/bin and $JAVA_JRE/lib
+    - the value is the same for the JDK and the JRE of the same version
+      and vendor
+    - will be used for JRE_HOME environment variable
+
+JDK_HOME:
+    - value is a path to a directory
+    - it is added as supplement to JRE_HOME
+    - it is defined for all JDKs
+    - will be used for JDK_HOME environment variable
+
+SDK_HOME:
+    - value is a path to a directory
+    - it is added as supplement to JRE_HOME
+    - it is defined for JDKs with version 1.2 and higher
+    - will be used for SDK_HOME environment variable
+
+JAVA_LINK:
+    - value is a absolute or relative path to a directory
+    - it is used by script setDefaultJava and SuSEconfig,
+    - the link /usr/lib/java and other compatibility links will point
+      to this directory name or to this path
+
+alternative:
+    - first value defines target; relative or absolute path to a vendor and/or
+      version specific file
+    - second value defines link name; absolute path of a symbolic link
+      which is common for more alternatives
+    - it defines a common symbolic link for alternative files from different
+      JREs/SDKs
+    - the script setDefaultJava is able to update the links for a selected
+      java
+    
+more_alternatives:
+    - value is the name of another java configuration file
+    - it points to a configuration file which contains more alternative links
+      which should be set together with this java
+    - it is often used in the config files for SDKs which use some sources
+      from the related JREs
+      
+      
+Example:
+# this is configutation file for SDK from Sun Microsystems, version 1.4.2
+# it is installed in /usr/lib/SunJava2-1.4
+
+Priority: 30
+
+Vendor  :  Sun
+Version :  1.4.2
+Devel   :  True
+
+JAVA_BINDIR = /usr/lib/SunJava2-1.4/bin
+JAVA_ROOT   = /usr/lib/SunJava2-1.4
+JAVA_HOME   = /usr/lib/SunJava2-1.4
+JRE_HOME    = /usr/lib/SunJava2-1.4/jre
+JDK_HOME    = /usr/lib/SunJava2-1.4
+SDK_HOME    = /usr/lib/SunJava2-1.4
+
+JAVA_LINK   = SunJava2-1.4
+
+
+# alternatives
+#
+# man pages
+alternative: appletviewer-SunJava2.1.gz	/usr/share/man/man1/appletviewer.1.gz
+alternative: extcheck-SunJava2.1.gz    	/usr/share/man/man1/extcheck.1.gz
+alternative: idlj-SunJava2.1.gz		/usr/share/man/man1/idlj.1.gz
+alternative: jar-SunJava2.1.gz		/usr/share/man/man1/jar.1.gz
+alternative: jarsigner-SunJava2.1.gz	/usr/share/man/man1/jarsigner.1.gz
+alternative: javac-SunJava2.1.gz	/usr/share/man/man1/javac.1.gz
+alternative: javadoc-SunJava2.1.gz	/usr/share/man/man1/javadoc.1.gz
+alternative: javah-SunJava2.1.gz	/usr/share/man/man1/javah.1.gz
+alternative: javap-SunJava2.1.gz	/usr/share/man/man1/javap.1.gz
+alternative: jdb-SunJava2.1.gz		/usr/share/man/man1/jdb.1.gz
+alternative: native2ascii-SunJava2.1.gz	/usr/share/man/man1/native2ascii.1.gz
+alternative: rmic-SunJava2.1.gz		/usr/share/man/man1/rmic.1.gz
+alternative: serialver-SunJava2.1.gz	/usr/share/man/man1/serialver.1.gz
+#
+# japanese man pages
+alternative: appletviewer-SunJava2.1.gz	/usr/share/man/ja/man1/appletviewer.1.gz
+alternative: extcheck-SunJava2.1.gz    	/usr/share/man/ja/man1/extcheck.1.gz
+alternative: idlj-SunJava2.1.gz		/usr/share/man/ja/man1/idlj.1.gz
+alternative: jar-SunJava2.1.gz		/usr/share/man/ja/man1/jar.1.gz
+alternative: jarsigner-SunJava2.1.gz	/usr/share/man/ja/man1/jarsigner.1.gz
+alternative: javac-SunJava2.1.gz	/usr/share/man/ja/man1/javac.1.gz
+alternative: javadoc-SunJava2.1.gz	/usr/share/man/ja/man1/javadoc.1.gz
+alternative: javah-SunJava2.1.gz	/usr/share/man/ja/man1/javah.1.gz
+alternative: javap-SunJava2.1.gz	/usr/share/man/ja/man1/javap.1.gz
+alternative: jdb-SunJava2.1.gz		/usr/share/man/ja/man1/jdb.1.gz
+alternative: native2ascii-SunJava2.1.gz	/usr/share/man/ja/man1/native2ascii.1.gz
+alternative: rmic-SunJava2.1.gz		/usr/share/man/ja/man1/rmic.1.gz
+alternative: serialver-SunJava2.1.gz	/usr/share/man/ja/man1/serialver.1.gz
+#
+more_alternatives:	java2-jre
+
+
+Have a lot of fun,
+
+			    Your SuSE team

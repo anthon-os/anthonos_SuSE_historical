@@ -1,0 +1,8 @@
+#%PAM-1.0
+#
+# The PAM configuration file for /sbin/init
+# Used for updating the lastlog logging file
+#
+auth	    sufficient	pam_rootok.so
+account	    include	common-account
+session	    requisite	pam_lastlog.so silent

@@ -1,0 +1,113 @@
+#! /bin/sh
+
+### BEGIN INIT INFO
+# Provides:          haveged
+# Required-Start:    $syslog $local_fs
+# Required-Stop:     $syslog $local_fs
+# Default-Start:     2 3 5
+# Default-Stop:
+# Short-Description: Daemon to feed entropy into /dev/urandom
+# Description:       The haveged daemon uses the timing variations that occur in executing a fixed loop
+#                    to generate random numbers that are fed into the random pool.
+### END INIT INFO
+
+HAVEGED_BIN=/usr/sbin/haveged
+HAVEGED_PARAMS="-w 1024 -v 0"
+
+# Shell functions sourced from /etc/rc.status:
+#      rc_check         check and set local and overall rc status
+#      rc_status        check and set local and overall rc status
+#      rc_status -v     ditto but be verbose in local rc status
+#      rc_status -v -r  ditto and clear the local rc status
+#      rc_failed        set local and overall rc status to failed
+#      rc_reset         clear local rc status (overall remains)
+#      rc_exit          exit appropriate to overall rc status
+. /etc/rc.status
+
+# First reset status of this service
+rc_reset
+
+# Return values acc. to LSB for all commands but status:
+# 0 - success
+# 1 - misc error
+# 2 - invalid or excess args
+# 3 - unimplemented feature (e.g. reload)
+# 4 - insufficient privilege
+# 5 - program not installed
+# 6 - program not configured
+#
+# Note that starting an already running service, stopping
+# or restarting a not-running service as well as the restart
+# with force-reload (in case signalling is not supported) are
+# considered a success.
+case "$1" in
+    start)
+        echo -n "Starting haveged daemon "
+        ## Start daemon with startproc(8). If this fails
+        ## the echo return value is set appropriate.
+
+        
+            # startproc should return 0, even if service is
+            # already running to match LSB spec.
+            startproc $HAVEGED_BIN $HAVEGED_PARAMS
+
+            # Remember status and be verbose
+            rc_status -v
+        ;;
+    stop)
+        echo -n "Shutting down haveged daemon "
+        killproc -TERM $HAVEGED_BIN
+        
+        # Remember status and be verbose
+        rc_status -v
+        ;;
+    try-restart|condrestart)
+        ## Do a restart only if the service was active before.
+        ## Note: try-restart is now part of LSB (as of 1.9).
+        ## RH has a similar command named condrestart.
+        if test "$1" = "condrestart"; then
+                echo "${attn} Use try-restart ${done}(LSB)${attn} rather than condrestart ${warn}(RH)${norm}"
+        fi
+        $0 status
+        if test $? = 0; then
+                $0 restart 
+        else 
+                rc_reset        # Not running is not a failure.
+        fi
+        # Remember status and be quiet
+        rc_status
+        ;;
+    restart | force-reload)
+        $0 stop
+        $0 start
+        ;;
+    reload)
+        ## Like force-reload, but if daemon does not support
+        ## signaling, do nothing (!)
+        rc_failed 3
+        rc_status -v
+        ;;
+    status)
+        echo -n "Checking for haveged daemon "
+        ## Check status with checkproc(8), if process is running
+        ## checkproc will return with exit status 0.
+        
+        # Status has a slightly different for the status command:
+        # 0 - service running
+        # 1 - service dead, but /var/run/  pid  file exists
+        # 2 - service dead, but /var/lock/ lock file exists
+        # 3 - service not running
+        
+        # NOTE: checkproc returns LSB compliant status values.
+        checkproc $HAVEGED_BIN
+        rc_status -v
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|reload}"
+        exit 1
+        ;;
+esac
+
+rc_exit
+
+# vim: set sw=4 ts=4 et:

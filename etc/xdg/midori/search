@@ -1,0 +1,35 @@
+[Duck Duck Go]
+name=Duck Duck Go
+text=Privacy-aware Web Search
+uri=https://duckduckgo.com/?q=%s
+token=dd
+
+[Yahoo]
+name=Yahoo
+text=Yahoo Web Search
+uri=http://search.yahoo.com/search?p=
+token=y
+
+[Google]
+name=Google
+text=Web Search
+uri=http://www.google.com/search?q=%s
+token=g
+
+[Wikipedia]
+name=Wikipedia
+text=The free encyclopedia
+uri=http://en.wikipedia.org/wiki/Special:Search/%s
+token=wp
+
+[TheFreeDictionary]
+name=The Free Dictionary
+text=Dictionary, Encyclopedia and Thesaurus
+uri=http://www.thefreedictionary.com/%s
+token=fd
+
+[openSUSE Software]
+name=openSUSE Software
+text=Search for openSUSE packages
+uri=http://software.opensuse.org/search?p=1&baseproject=ALL&q=%s
+token=os

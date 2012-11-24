@@ -1,0 +1,188 @@
+#
+# Copyright (c) 2004 SUSE LINUX AG Nuernberg, Germany.  All rights reserved.
+#
+# Softly Inspired by draft-lachman-laser-ldap-mail-routing and
+# /usr/share/doc/packages/postfix/README_FILES/LDAP_README
+#
+# $Id: suse-mailserver.schema 36210 2007-02-16 11:28:50Z varkoly $
+#
+objectidentifier MailOC 1.3.6.1.4.1.7057.10.4.1
+objectidentifier MailAT 1.3.6.1.4.1.7057.10.4.2
+
+##
+## Attribute Section
+##
+
+attributetype ( MailAT:1 NAME ( 'suseMailAcceptAddress' 'mailAcceptAddress' )
+        DESC 'RFC 822 email address'
+        EQUALITY caseIgnoreIA5Match 
+        SUBSTR caseIgnoreIA5SubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.26{256} )
+
+attributetype ( MailAT:2 NAME ( 'suseMailRejectAddress' 'mailRejectAddress' )
+        DESC 'RFC 822 email address'
+        EQUALITY caseIgnoreIA5Match 
+        SUBSTR caseIgnoreIA5SubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.26{256} )
+
+attributetype ( MailAT:3 NAME ( 'suseVirtualAddress' 'virtualAddress' )
+        DESC 'virtual address'
+        EQUALITY caseIgnoreIA5Match
+	OBSOLETE
+        SUBSTR caseIgnoreIA5SubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.26{256} )
+
+attributetype ( MailAT:4 NAME ( 'suseMailAlias' 'mailAlias' )
+        DESC 'email alias'
+        EQUALITY caseIgnoreIA5Match
+	OBSOLETE
+        SUBSTR caseIgnoreIA5SubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.26{256} )
+
+attributetype ( MailAT:5 NAME ( 'suseMailCommand' 'mailCommand')
+        DESC 'for aliases which must be expanded to a command'
+        EQUALITY caseIgnoreIA5Match
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.26{256} SINGLE-VALUE )
+
+attributetype ( MailAT:6 NAME ( 'suseMailRestrictedAddressRegexp' 'mailRestrictedAddressRegexp' )
+        EQUALITY caseIgnoreMatch
+        SUBSTR caseIgnoreSubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32768} )
+
+attributetype ( MailAT:7 NAME ( 'suseMailAllowedAddressRegexp' 'mailAllowedAddressRegexp' )
+        EQUALITY caseIgnoreMatch
+        SUBSTR caseIgnoreSubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32768} )
+
+attributetype ( MailAT:8 NAME ( 'suseMailTransportDestination' 'mailTransportDestination' )
+        EQUALITY caseIgnoreMatch
+        SUBSTR caseIgnoreSubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32768} )
+
+attributetype ( MailAT:9 NAME ( 'suseMailTransportNexthop' 'mailTransportNexthop' )
+	DESC 'The server to be connected in the transport table Containing port & [] resp'
+        EQUALITY caseIgnoreMatch
+        SUBSTR caseIgnoreSubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32768} )
+
+attributetype ( MailAT:10 NAME ( 'suseTLSPerSiteMode' 'TLSPerSiteMode' )
+	DESC 'Shows how tls will be used: NONE | MAY | MUST | MUST_NOPEERMATCH'
+        EQUALITY caseIgnoreMatch
+        SUBSTR caseIgnoreSubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32768} )
+
+attributetype ( MailAT:11 NAME ( 'suseMailClient' 'mailClient' )
+	DESC 'Is the left hand value of the access postmap'
+        EQUALITY caseIgnoreMatch
+        SUBSTR caseIgnoreSubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32768} )
+
+attributetype ( MailAT:12 NAME ( 'suseMailAction' 'mailAction' )
+	DESC 'Is the right hand value of many postmaps'
+        EQUALITY caseIgnoreMatch
+        SUBSTR caseIgnoreSubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32768} 
+        SINGLE-VALUE  )
+
+attributetype ( MailAT:13 NAME ( 'suseMailDomainType' 'mailDomainType' )
+	DESC 'Type of the mydomain. Avaiable values: main, local, virtual'
+        EQUALITY caseIgnoreMatch
+        SUBSTR caseIgnoreSubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32768} 
+        SINGLE-VALUE )
+
+attributetype ( MailAT:14 NAME ( 'suseMailDomainMasquerading' 'mailDomainMasquerading' )
+	DESC 'Shows if the domain must be masqueraded'
+        EQUALITY caseIgnoreMatch
+        SUBSTR caseIgnoreSubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32768}
+        SINGLE-VALUE )
+
+attributetype ( MailAT:15 NAME ( 'suseTLSPerSitePeer' 'TLSPerSitePeer' )
+	DESC 'The hostname of the tls_per_site peer machine'
+        EQUALITY caseIgnoreMatch
+        SUBSTR caseIgnoreSubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32768} )
+
+attributetype ( MailAT:16 NAME ( 'suseMailForwardAddress' 'mailForwardAddress' )
+	DESC 'Container for Addresses the mail must be forwarded too. Will be used by the aliases table.'
+        EQUALITY caseIgnoreMatch
+        SUBSTR caseIgnoreSubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32768} )
+
+attributetype ( MailAT:17 NAME ( 'suseDeliveryToMember' 'deliveryToMember' )
+	DESC 'Shows if the member of the group the mails will get'
+        EQUALITY caseIgnoreMatch
+        SUBSTR caseIgnoreSubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{16}
+        SINGLE-VALUE )
+
+attributetype ( MailAT:18 NAME ( 'suseDeliveryToFolder' 'deliveryToFolder' )
+	DESC 'Shows if the member of the group the mails will get'
+        EQUALITY caseIgnoreMatch
+        SUBSTR caseIgnoreSubstringsMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{16}
+        SINGLE-VALUE )
+
+attributetype ( MailAT:19 NAME ( 'suseImapQuota' 'imapQuota')
+        DESC 'Shows the imap quota of a user.'
+        EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+        SINGLE-VALUE )
+
+attributetype ( MailAT:20 NAME ( 'tableKey')
+        DESC 'Shows the imap quota of a user.'
+        EQUALITY caseIgnoreMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{256}
+        SINGLE-VALUE )
+
+attributetype ( MailAT:21 NAME ( 'tableValue')
+        DESC 'Shows the imap quota of a user.'
+        EQUALITY caseIgnoreMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{256}
+        SINGLE-VALUE )
+
+attributetype ( MailAT:22 NAME ( 'valueType')
+        DESC 'Shows the imap quota of a user.'
+        EQUALITY caseIgnoreMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{16}
+        SINGLE-VALUE )
+
+##
+## Objectclass Section
+##
+objectclass ( MailOC:1 NAME ( 'suseMailRecipient' 'mailRecipient' ) SUP top AUXILIARY
+        DESC 'represents an entry which is able to receive mail'
+        MAY ( suseMailAcceptAddress $ suseMailAlias $
+              suseVirtualAddress $ suseMailCommand $ 
+	      suseMailForwardAddress $ suseDeliveryToMember $
+	      suseDeliveryToFolder $ suseImapQuota  ) )
+
+objectclass ( MailOC:2 NAME ( 'suseMailDomain' 'mailDomain' ) SUP top AUXILIARY
+        DESC 'To configure behaviour of mail domains'
+        MAY  ( suseMailDomainType $ suseMailDomainMasquerading))
+
+objectclass ( MailOC:3 NAME ( 'suseMailTransport' 'mailTransport' ) SUP top STRUCTURAL
+        DESC 'To build transport maps in LDAP'
+        MUST ( suseMailTransportDestination $ suseMailTransportNexthop  )
+        MAY  ( description ) )
+
+objectclass ( MailOC:4 NAME ( 'suseMailAccess' 'mailAccess' ) SUP top STRUCTURAL
+        DESC 'To build access maps in LDAP'
+        MUST ( suseMailClient $ suseMailAction  )
+        MAY  ( description ) )
+
+objectclass ( MailOC:5 NAME ( 'suseMailMyNetworks' 'mailMyNetworks' ) SUP top STRUCTURAL
+        DESC 'To build mynetworks maps in LDAP'
+        MUST ( suseMailClient )
+        MAY  ( cn ) )
+
+objectclass ( MailOC:6 NAME ( 'suseTLSPerSiteContainer' 'TLSPerSiteContainer' ) SUP top STRUCTURAL
+        DESC 'To build TLS per side maps'
+        MUST ( suseTLSPerSiteMode $ suseTLSPerSitePeer ) )
+
+objectclass ( MailOC:7 NAME ( 'suseMailTable' 'MailTable' ) SUP top STRUCTURAL
+        DESC 'To build Mail Tables'
+        MUST ( tableKey  $ tableValue )
+	MAY  ( valueType $ description ) )
+

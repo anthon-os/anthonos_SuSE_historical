@@ -1,0 +1,150 @@
+#! /bin/sh
+# Copyright (c) 1995-2002 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# Author: Kurt Garloff <feedback@suse.de>
+# Author: Ludwig Nussel <feedback@suse.de>
+#
+# /etc/init.d/lirc
+#   and its symbolic link
+# /usr/sbin/rclirc
+#
+# LSB compatible service control script; see http://www.linuxbase.org/spec/
+# 
+### BEGIN INIT INFO
+# Provides:          lirc
+# Required-Start:    $remote_fs
+# Required-Stop:     $remote_fs
+# Default-Start:     3 5
+# Default-Stop:      0 1 2 6
+# Short-Description: lirc daemon
+# Description:       The  main  task  of lircd is to decode the infrared
+#	signals and provide an uniform interface for client applications
+### END INIT INFO
+
+# Check for missing binaries (stale symlinks should not happen)
+lircd_BIN=/usr/sbin/lircd
+test -x $lircd_BIN || exit 5
+
+# Check for existence of needed config file and read it
+lircd_CONFIG=/etc/sysconfig/lirc
+test -r $lircd_CONFIG || exit 6
+. $lircd_CONFIG
+
+lircd_CONF=/etc/lirc/lircd.conf
+lircd_PID=/var/run/lirc/lircd.pid
+
+. /etc/rc.status
+
+rc_reset
+
+setdefaults()
+{
+    # set LIRCD_DEVICE default if unset
+    for retries in 1 2; do
+        if test "$LIRCD_DEVICE" != ""; then
+            break;
+        fi
+        if test -L "/dev/input/ir"; then
+	    # have input driver
+	    LIRCD_DEVICE="/dev/input/ir"
+        elif grep -q BaseRemoteCtl /proc/devices && [ -e /dev/lirc0 -o -e /dev/lirc ]; then
+	    # have lirc driver
+	    if [ -e /dev/lirc0 ]; then
+		LIRCD_DEVICE="/dev/lirc0"
+	    else
+		LIRCD_DEVICE="/dev/lirc"
+	    fi
+        else
+	    # wait for udev and try again
+	    udevadm settle
+        fi
+    done
+
+    # set LIRCD_DRIVER default if unset
+    if test "$LIRCD_DRIVER" = "" -a "$LIRCD_DEVICE" = "/dev/input/ir"; then
+	LIRCD_DRIVER="dev/input"
+    fi
+}
+
+case "$1" in
+    start)
+	echo -n "Starting lircd "
+	modinfo evdev > /dev/null 2>&1 && modprobe evdev || :
+	if test "$LIRC_MODULE" != ""; then
+		modprobe "$LIRC_MODULE"
+	fi
+	setdefaults
+	if [ -z "$LIRCD_DRIVER" -a -z "$LIRCD_DEVICE" -a ! -e /dev/lirc ]; then
+		echo -n "Error: no device found"
+		rc_failed 6
+		rc_status -v
+		rc_exit
+	fi
+	if [ ! -e "$lircd_CONF" ]; then
+		DEVINPUTCONF='/usr/share/lirc/remotes/devinput/lircd.conf.devinput'
+		if [ "$LIRCD_DEVICE" = "/dev/input/ir" -a -e "$LIRCD_DEVICE" -a -e "$DEVINPUTCONF" ]; then
+			install -m 644 "$DEVINPUTCONF" "$lircd_CONF"
+		else
+			echo -n "Error: please create "$lircd_CONF""
+			rc_failed 6
+			rc_status -v
+			rc_exit
+		fi
+	fi
+	[ -n "$LIRCD_DEVICE" ] && echo -n "($LIRCD_DEVICE)"
+	install -d -m 755 /var/run/lirc
+	install -m "$LIRCD_DEV_PERMISSIONS" /dev/null /var/run/lirc/lircd
+	chown "$LIRCD_DEV_OWNER" /var/run/lirc/lircd
+	if [ ! -L /dev/lircd ]; then
+		rm -f /dev/lircd
+		ln -s /var/run/lirc/lircd /dev/lircd 
+	fi
+
+	lircd_ARGS=()
+	[ -n "$LIRCD_DRIVER" ]     && lircd_ARGS+=(-H "$LIRCD_DRIVER")
+	[ -n "$LIRCD_DEVICE" ]     && lircd_ARGS+=(-d "$LIRCD_DEVICE")
+	[ -n "$LIRCD_LISTENPORT" ] && lircd_ARGS+=(--listen="$LIRCD_LISTENPORT")
+	[ -n "$LIRCD_CONNECT" ]    && lircd_ARGS+=(-c "$LIRCD_CONNECT")
+
+	start_daemon -p $lircd_PID $lircd_BIN "${lircd_ARGS[@]}"
+	rc_status -v
+	;;
+    stop)
+	echo -n "Shutting down lircd "
+	killproc -TERM -p $lircd_PID $lircd_BIN
+	rc_status -v
+	;;
+    try-restart)
+	$0 status >/dev/null &&  $0 restart
+	rc_status
+	;;
+    restart)
+	$0 stop
+	$0 start
+	rc_status
+	;;
+    force-reload|reload)
+	echo -n "Reload service lircd "
+	killproc -HUP $lircd_BIN
+	touch "$lircd_PID"
+	rc_status -v
+	;;
+    status)
+	echo -n "Checking for service lircd "
+	checkproc -p $lircd_PID $lircd_BIN
+	rc_status -v
+	;;
+    probe)
+	if test "$lircd_CONFIG" -nt "$lircd_PID"; then
+		 echo reload
+	elif test "$lircd_CONF" -nt "$lircd_PID"; then
+		 echo reload
+	fi
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload|probe}"
+	exit 1
+	;;
+esac
+rc_exit

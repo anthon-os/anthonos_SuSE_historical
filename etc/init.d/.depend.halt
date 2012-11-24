@@ -1,0 +1,4 @@
+TARGETS = boot.sysctl boot.localnet boot.cleanup boot.cycle boot.klog boot.loadmodules boot.swap boot.localfs boot.rootfsck boot.udev
+boot.loadmodules: boot.cycle
+boot.localfs: boot.swap boot.cycle boot.klog
+boot.udev: boot.localfs boot.loadmodules

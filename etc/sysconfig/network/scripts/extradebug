@@ -1,0 +1,37 @@
+#! /bin/bash
+
+# This is a debugging helper script. It collects all interesting info and bash
+# debug output into files /tmp/exded.*. Just source it in all questionable
+# scripts and add 'rm -f /tmp/exded.*' in the start section of /etc/init.d
+# boot.udev to start cleanly when booting.
+
+SCRIPT=${0##*/}
+
+{ set +vx ; . /etc/sysconfig/network/scripts/functions.common ; } >&2
+test -d $RUN_FILES_BASE && dir=$RUN_FILES_BASE || dir=/
+args="" ; for arg in "$@" ; do args="$args.$arg" ; done
+exec 2> "$dir/exdeb.${SCRIPT}_$$.$PPID.${SEQNUM}_${args}"
+
+date +"%F %T.%N" >&2
+echo -------------------------------------------------- >&2
+ps axhwfu >&2
+#ps axhwfu | grep -v "grep\|sed" | grep -C3 "$$\|ifplugd\|dhcp\|ifup\|ifdown\|ifstatus" |
+ps axhwwfu | grep -C3 "$$\|ifplugd\|dhcp\|ifup\|ifdown\|ifstatus" | \
+	sed "s/ $$ /#$$#/" >&2
+echo -------------------------------------------------- >&2
+ls -ltr --full-time /sys/class/net $RUN_FILES_BASE >&2
+echo >&2
+{ set +vx ; grep -H "" $(ls -1d $RUN_FILES_BASE/* | grep -v "[/]exdeb") ; } >&2
+echo -------------------------------------------------- >&2
+ip a >&2
+ip -4 r >&2
+ip -6 r >&2
+echo >&2
+iwconfig >&2
+echo >&2
+ifplugstatus >&2
+echo >&2
+echo "##################################################" >&2
+echo "##################################################" >&2
+echo >&2
+set -vx

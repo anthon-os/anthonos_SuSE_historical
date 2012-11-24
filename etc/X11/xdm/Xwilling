@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# Xwilling:	Generate the message for the choosers line
+#
+# Copyright (c) 2000 SuSE GmbH Nuernberg, Germany.
+# please report bugfixes or comments at http://www.suse.de/feedback.
+#
+# Author: Werner Fink,   <werner@suse.de>
+
+read la lb lc rest < /proc/loadavg
+set -- `users`
+OIFS="$IFS"; IFS='
+'
+set -- `echo "${*}" | sort -u`
+IFS="$OIFS"
+
+echo "${#} user${2+"s"}, load: $la, $lb, $lc"

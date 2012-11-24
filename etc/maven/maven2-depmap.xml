@@ -1,0 +1,17 @@
+<dependencies>
+
+<dependency>
+    <maven>
+        <groupId>jline</groupId>
+        <artifactId>jline</artifactId>
+        <version>0.9.94</version>
+    </maven>
+    <jpp>
+        <groupId>JPP</groupId>
+        <artifactId>jline</artifactId>
+        <version>0.9.94</version>
+    </jpp>
+</dependency>
+
+</dependencies>
+

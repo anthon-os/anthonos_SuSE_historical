@@ -1,0 +1,35 @@
+# RPM macros for packages installing a Pango module
+#
+###
+#
+# When a package installs a Pango module, it should use all
+# three macros:
+#
+#  - %pango_module_requires in the preamble
+#  - %pango_module_post in %post
+#  - %pango_module_postun in %postun
+#
+###
+
+%pango_module_requires                                                        \
+Requires(post): pango-tools                                                   \
+Requires(postun): pango-tools
+
+# On install, update the cache
+%pango_module_post                                                            \
+%if "%_lib" == "lib64"                                                        \
+  %{_bindir}/pango-querymodules-64 > %{_sysconfdir}/pango/pango64.modules     \
+%else                                                                         \
+  %{_bindir}/pango-querymodules > %{_sysconfdir}/pango/pango.modules          \
+%endif
+
+# On uninstall, update the cache. Note: we ignore upgrades (already
+# handled in %post of the new package).
+%pango_module_postun                                                          \
+if [ $1 -eq 0 ]; then                                                         \
+  %if "%_lib" == "lib64"                                                      \
+    %{_bindir}/pango-querymodules-64 > %{_sysconfdir}/pango/pango64.modules   \
+  %else                                                                       \
+    %{_bindir}/pango-querymodules > %{_sysconfdir}/pango/pango.modules        \
+  %endif                                                                      \
+fi

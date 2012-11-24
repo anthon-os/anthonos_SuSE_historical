@@ -1,0 +1,3 @@
+## Name: VNC Server
+## Description: Opens ports for VNC Server
+TCP="5801 5901"

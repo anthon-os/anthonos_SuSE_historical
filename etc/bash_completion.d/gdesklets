@@ -1,0 +1,50 @@
+# $Id$
+# See http://devmanual.gentoo.org/tasks-reference/completion/index.html
+# Author: Joe Sapp
+
+_gdesklets() 
+{
+	local cur prev opts
+
+	COMPREPLY=()
+
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD-1]}"
+	opts="open start stop list restart profile shell status about
+		version configure help check"
+	running_opts="slay"
+	not_running_opts=""
+
+	# Do these take an additional paramater?
+	case "${prev}" in
+	open)
+		# First, look for .display files in the current directory
+		COMPREPLY=$(compgen -f -o filenames -X '!*.display' ${cur})
+		
+		# If no filename completions are found, try for directory
+		# completions
+		# This, with the '-o filenames' argument on the 'complete'
+		# line below allows entering a directory name with the intent
+		# of finishing with a .display file
+		COMPREPLY=( ${COMPREPLY:-$(compgen -d ${cur})} )
+		return 0
+		;;
+	profile)
+		local prof_output=$(gdesklets profile | grep "Available" | sed -e 's/.*: //' -e 's/,//')
+		COMPREPLY=( $(compgen -W "${prof_output}" -- ${cur}) )
+		return 0
+		;;
+	esac
+
+	if [[ ${COMP_CWORD} -eq 1 ]] ; then
+		local stat="$(gdesklets status)"
+		if [[ "${stat}" == *not* ]] ; then
+			opts="${opts} ${not_running_opts}"
+		else
+			opts="${opts} ${running_opts}"
+		fi
+		COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+		return 0
+	fi
+}
+complete -F _gdesklets -o filenames gdesklets

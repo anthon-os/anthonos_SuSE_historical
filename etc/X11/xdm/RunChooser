@@ -1,0 +1,144 @@
+#!/bin/sh
+#
+# RunChooser:	Setup a chooser's display and run it.
+#
+# Copyright (c) 1998-2000 SuSE GmbH Nuernberg, Germany.
+# please report bugfixes or comments at http://www.suse.de/feedback.
+#
+# Author: Werner Fink,   <werner@suse.de>
+#
+ LIBDIR=/usr/lib/X11
+ ETCDIR=/etc/X11
+ XDMDIR=${ETCDIR}/xdm
+ BINDIR=/usr/bin
+
+no_exit_on_failed_exec=1
+type shopt &> /dev/null && shopt -s execfail
+set +e     &> /dev/null
+
+#
+# Background picture:
+# Store your preferred picture in XPM format (see xv(1) or ppm(5))
+# You can run gzip on the file BackGround.xpm to save disk space.
+#
+ background=${XDMDIR}/BackGround.xpm
+
+#
+# Special screensaver parameters for xset, see manual page xset(1x).
+# Default is no special parameters.  Use DPMS (VESA Power Savings
+# Protocol) if USEDPMS is set to "yes".
+#
+ SAVESC=""
+ USEDPMS="no"
+
+#
+# Default settings
+#
+# Note: If you need a special key mapping copy Xmodmap.remote to
+# Xmodmap.<full_qualified_domain_name_of_the_terminal> where the
+# suffix is the full qualified name identical with  the value of
+# the DISPLAY variable without `:0', `:1' ... e.g.
+# Xmodmap.xterminal.uni-yx.de
+#
+# Note that xkb and xmodmap should not be mixed.
+
+ sysmodmap=${ETCDIR}/Xmodmap
+ defmodmap=${ETCDIR}/Xmodmap.remote
+hostmodmap=${ETCDIR}/Xmodmap.${DISPLAY%:*}
+ sysxkbmap=${ETCDIR}/Xkbmap
+ defxkbmap=${ETCDIR}/Xkbmap.remote
+hostxkbmap=${ETCDIR}/Xkbmap.${DISPLAY%:*}
+      xset=${BINDIR}/xset
+   xmodmap=${BINDIR}/xmodmap
+    xkbmap=${BINDIR}/xkbmap
+   xpmroot=${BINDIR}/xpmroot
+  xsetroot=${BINDIR}/xsetroot
+kdmdesktop=/opt/kde/bin/kdmdesktop
+   chooser=${BINDIR}/chooser
+  xmessage=${BINDIR}/xmessage
+      xrdb=${BINDIR}/xrdb
+   backprg=${BINDIR}/BackGround
+
+#
+# Check if kdm is running and does its own background
+#
+pidof -s kdm > /dev/null 2>&1
+if test $? -eq 0 -a -x $kdmdesktop ; then
+    backprg=$kdmdesktop
+    $xrdb -override -retain <<-EOF
+	#ifdef COLOR
+	*Foreground: white
+	*Background: #483d8b
+	Chooser*Label*foreground: black
+	Chooser*Label*background: grey
+	Chooser*Box*foreground: black
+	Chooser*Box*background: grey
+	#endif
+	EOF
+fi
+
+#
+# Check if gdm is running and if so set the Xresources
+#
+pidof -s gdm > /dev/null 2>&1
+if test $? -eq 0 ; then
+    $xrdb -override -retain ${XDMDIR}/Xresources
+fi
+
+#
+# Screensaver
+#
+if test -x $xset ; then
+    $xset s on
+    test -n "$SAVESC"       && $xset s $SAVESC
+    test "$USEDPMS" = "yes" && $xset +dpms
+fi
+
+#
+# Set keymap for various displays
+#
+if test -x $xmodmap -o -x $xkbmap ; then
+    if test -z "${DISPLAY%:*}" ; then
+	# local connection
+	if test -s $sysxkbmap -a -x $xkbmap ; then
+	    cat $sysxkbmap | $xkbmap
+	elif test -r $sysmodmap ; then
+	    $xmodmap $sysmodmap
+	fi
+    else
+	# TCP/IP connection (remote or local)
+	if test -s $defxkbmap -a -x $xkbmap ; then
+	    cat $defxkbmap | $xkbmap
+	elif test -r $defmodmap ; then
+	    $xmodmap $defmodmap
+	fi
+	if test -s $hostxkbmap -a -x $xkbmap ; then
+	    cat $hostxkbmap | $xkbmap
+	elif test -r $hostmodmap ; then
+	    $xmodmap $hostmodmap
+	fi
+    fi
+fi
+
+
+#
+# Handle background:
+#   First users choise, if no choise is given
+#   use the system defaults.
+#
+if   test -s ${background}.gz -a -x $xpmroot ; then
+    $xpmroot ${background}.gz
+elif test -s ${background}    -a -x $xpmroot ; then
+    $xpmroot $background
+elif test -x $backprg ; then
+    $backprg
+else
+    $xsetroot -gray
+fi
+
+#
+# Now run the main chooser
+#
+exec $chooser ${1+"$@"}
+$xmessage -timeout 10 -default okay -center "$0: $chooser failed."
+exit 1

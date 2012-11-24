@@ -1,0 +1,29 @@
+[Desktop Entry]
+X-SuSE-translate=true
+X-SuSE-DocTeamID=ycc_security
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Security;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+X-SuSE-YaST-Call=security
+
+X-SuSE-YaST-Group=Security
+X-SuSE-YaST-Argument=
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-AutoInst=all
+X-SuSE-YaST-Geometry=
+X-SuSE-YaST-SortKey=
+X-SuSE-YaST-AutoInstResource=security
+X-SuSE-YaST-AutoInstClonable=true
+X-SuSE-YaST-AutoInstSchema=security.rnc
+X-SuSE-YaST-Keywords=security,system settings
+
+Icon=yast-security
+Exec=xdg-su -c "/sbin/yast2 security"
+
+Name=Security Center and Hardening
+GenericName=Configure local security settings
+StartupNotify=true
+

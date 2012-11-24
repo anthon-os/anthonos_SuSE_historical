@@ -1,0 +1,22 @@
+[Desktop Entry]
+Version=1.0
+Terminal=false
+Icon=libreoffice-base
+Type=Application
+Categories=Office;Database;X-Red-Hat-Base;
+Exec=libreoffice --base %U
+MimeType=application/vnd.oasis.opendocument.database;application/vnd.sun.xml.base;
+Name=数据库
+GenericName=Database Development
+GenericName[zu]=Database Development
+Comment=Manage databases, create queries and reports to track and manage your information by using Base.
+Comment[zu]=Lawula idatabheyzi, yenza amakhwiri nemibiko ukuze uthole futhi ulawule ukwaziswa kwakho ngokusebenzisa iBheysi.
+InitialPreference=5
+X-Ayatana-Desktop-Shortcuts=X-New
+
+[X-New Shortcut Group]
+Name=New Database
+Name[zu]=New Database
+Exec=libreoffice --base %U
+TargetEnvironment=Unity
+

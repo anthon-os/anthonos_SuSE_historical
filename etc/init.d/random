@@ -1,0 +1,77 @@
+#! /bin/sh
+# Copyright (c) 1998-2002 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# Author: Burchard Steinbild, 1998
+#         originally from Theodore Ts'o <tytso@mit.edu>
+#
+# Please send feedback to http://www.suse.de/feedback
+#
+# /etc/init.d/random
+#
+# Script to snapshot random state and reload it at boot time.
+#
+# Saves and restores system entropy pool for higher quality
+# random number generation.
+#
+### BEGIN INIT INFO
+# Provides:       random
+# Required-Start:
+# Required-Stop:
+# Default-Start:  2 3 5
+# Default-Stop:   0 1 6
+# Short-Description: Snapshot random state
+# Description:    Script to snapshot random state and reload it at boot time.
+### END INIT INFO
+
+. /etc/rc.status
+
+random_seed=/var/lib/misc/random-seed
+read pool_size < /proc/sys/kernel/random/poolsize
+# fall back to the old 512 if not found,
+# current default should be 4096
+test -n "$pool_size" || pool_size=512
+
+rc_reset
+case "$1" in
+    start)
+        echo -n "Initializing random number generator"
+        # Carry a random seed from start-up to start-up
+        # Load and then save a number bytes, the size of the entropy pool
+        if test -f $random_seed ; then
+		RSIZE=`stat -c %s $random_seed`
+		test "$RSIZE" = "$pool_size" || rm -f $random_seed
+	fi
+        if test -f $random_seed ; then
+                cat $random_seed > /dev/urandom
+		rc_status
+        else
+                > $random_seed
+		rc_status
+        fi
+        chmod 600 $random_seed
+        dd if=/dev/urandom of=$random_seed count=1 bs=$pool_size 2>/dev/null
+	rc_status -v
+	;;
+    stop)
+        # Carry a random seed from shut-down to start-up
+        # Save 512 bytes, which is the size of the entropy pool
+        echo -n "Saving random seed"
+        if test ! -f $random_seed ; then
+                > $random_seed
+		rc_status
+	fi
+        chmod 600 $random_seed
+        dd if=/dev/urandom of=$random_seed count=1 bs=$pool_size 2>/dev/null
+	rc_status -v
+	;;
+    status)
+	echo -n "Checking for random generator (always true)"
+	rc_status -v
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status}"
+	exit 1
+	;;
+esac
+rc_exit

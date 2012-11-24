@@ -1,0 +1,7 @@
+/dev/disk/by-id/ata-VBOX_HARDDISK_VB6ffa82a1-b88db3af-part2 swap                 swap       defaults              0 0
+/dev/disk/by-id/ata-VBOX_HARDDISK_VB6ffa82a1-b88db3af-part1 /                    reiserfs   acl,user_xattr        1 1
+proc                 /proc                proc       defaults              0 0
+sysfs                /sys                 sysfs      noauto                0 0
+debugfs              /sys/kernel/debug    debugfs    noauto                0 0
+usbfs                /proc/bus/usb        usbfs      noauto                0 0
+devpts               /dev/pts             devpts     mode=0620,gid=5       0 0

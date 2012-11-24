@@ -1,0 +1,135 @@
+# Copyright (c) 2011, Red Hat, Inc
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification,
+# are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+# * Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+# * Neither the name of the <ORGANIZATION> nor the names of its contributors
+# may be used to endorse or promote products derived from this software
+# without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ''AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+# ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Stanislav Ochotnicky <sochotnicky@redhat.com>
+#          [your name here]
+
+
+#==============================================================================
+#
+# add_maven_depmap is simplified version of jpackage-style add_to_maven_depmap
+# -f addition to fragment name
+# -a is "g1:a1,g2:a2" formatted string with additional depmaps (groupId:artifactId,...)
+# %1 is the pom filename relative to mavenpomdir
+# %2 is the path to jar file (when omitted we deal with parent pom file without jar)
+#
+# add_maven_depmap automatically parses pom file and it will fail with incorrect pom
+# or jar filename
+#
+
+%add_maven_depmap(f:a:) \
+# default values \
+%if %# == 0 \
+    _pompart="JPP-%{name}.pom" \
+   _jarpart="%{name}.jar" \
+%else \
+   _pompart="%1" \
+   _jarpart="%2" \
+%endif \
+install -dm 755 $RPM_BUILD_ROOT/%{_mavendepmapfragdir}\
+_jpath="$_jarpart" \
+if [ -f %{buildroot}/%{_javadir}/$_jarpart ]; then \
+	_jpath="%{buildroot}/%{_javadir}/$_jarpart" \
+elif [ -f %{buildroot}/%{_javajnidir}/$_jarpart ]; then \
+	_jpath="%{buildroot}/%{_javajnidir}/$_jarpart" \
+elif [ -f %{buildroot}/%{_jnidir}/$_jarpart ]; then \
+	_jpath="%{buildroot}/%{_jnidir}/$_jarpart" \
+fi \
+python -m %{_datadir}/java-utils/maven_depmap %{-a} \\\
+          %{buildroot}%{_mavendepmapfragdir}/%{name}%{-f*:-%{-f*}} \\\
+          %{buildroot}%{_mavenpomdir}/$_pompart \\\
+%if %# == 2 \
+          "${_jpath}" \\\
+%endif \
+%if %# == 0 \
+          "${_jpath}" \\\
+%endif \
+\
+%{nil}
+
+#==============================================================================
+
+# %create_javadoc_subpackage can be used to completely create
+# javadoc subpackage for java projects.
+# !!! Needs to be used at the end of %install section
+# There are these variables that change its behaviour:
+#
+# %__javadoc_license - set if the license is in non-standard place
+# %__apidocs_dir - set custom path to directory with javadocs
+#                (defaults to target/site/apidocs)
+# %__javadoc_no_license - if defined javadoc subpackage will not have
+#                licensing information. Use only if if upstream
+#                doesn't provide separate license file.
+#
+
+
+%create_javadoc_subpackage() %{expand:\
+%{!?__apidocs_dir: %global __apidocs_dir target/site/apidocs} \
+%{expand: %{__find_javadoc_license}} \
+%global __spec_install_post %{expand:%{__java_install_post}} \
+%if "%{__javadoc_license}" == "%{nil}" \
+%{?!__javadoc_no_license:echo License not found. Either set __javadoc_license to point to license file or set __javadoc_no_license if sources do not contain license file;exit 1;} \
+%endif \
+%package javadoc \
+Group:          Documentation \
+Summary:        Javadoc for %{name} \
+Requires:       jpackage-utils \
+%description javadoc \
+API documentation for %{name}. \
+%files javadoc \
+%{_javadocdir}/%{name} \
+%doc %{__javadoc_license} \
+}
+
+%__java_install_post %{expand: \
+%{?__spec_check_pre} \
+pushd %{buildsubdir} \
+%{__mkdir_p} %{buildroot}/%{_javadocdir}/%{name} \
+cp -pr %{__apidocs_dir}/* %{buildroot}/%{_javadocdir}/%{name} \
+popd \
+}
+
+%__find_javadoc_license() %{expand: \
+%{!?__javadoc_license: \
+%global __javadoc_license %(\
+cd %{buildsubdir} \
+licenses="" \
+for lic in LICENSE* COPYING* doc/LICENSE* doc/COPYING* license*;do \
+if [ -f $lic ];then \
+   licenses="$licenses $lic"; \
+fi \
+done \
+if [ "$licenses" == "" ]; then \
+echo "%{nil}"; \
+else \
+echo $licenses; \
+fi \
+)\
+}
+}
+
+

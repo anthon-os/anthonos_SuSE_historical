@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Name=扫描易
+Comment=Scan Documents
+Exec=simple-scan
+Icon=simple-scan
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=GNOME;GTK;Graphics;Scanning;
+X-GNOME-Gettext-Domain=simple-scan
+

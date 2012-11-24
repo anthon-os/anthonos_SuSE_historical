@@ -1,0 +1,17 @@
+#! /bin/sh
+#
+# Copyright (c) 2010 SuSE LINUX Products GmbH, Germany.  All rights reserved.
+#
+# Author: Werner Fink, 2010
+#
+# /etc/init.d/before.local
+#
+# script with local commands to be executed from init before executing
+# any script of a runlevel. 
+#
+# Here you should add things, that should happen directly before entering
+# a runlevel. Common environment variables for this are:
+#  RUNLEVEL  -- The current system runlevel.
+#  PREVLEVEL -- The previous runlevel (useful after a runlevel switch).
+#
+

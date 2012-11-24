@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<gconf>
+	<dir name="system">
+		<dir name="gstreamer">
+			<dir name="0.10">
+				<dir name="default">
+					<entry name="audiosrc" mtime="1342486181" type="string">
+						<stringvalue>pulsesrc</stringvalue>
+					</entry>
+				</dir>
+			</dir>
+		</dir>
+	</dir>
+	<dir name="desktop">
+		<dir name="gnome">
+			<dir name="url-handlers">
+				<dir name="https">
+					<entry name="enabled" mtime="1342486181" type="bool" value="true"/>
+					<entry name="command" mtime="1342486181" type="string">
+						<stringvalue>firefox %s</stringvalue>
+					</entry>
+				</dir>
+				<dir name="http">
+					<entry name="enabled" mtime="1342486180" type="bool" value="true"/>
+					<entry name="command" mtime="1342486180" type="string">
+						<stringvalue>firefox %s</stringvalue>
+					</entry>
+				</dir>
+				<dir name="irc">
+					<entry name="enabled" mtime="1342486181" type="bool" value="true"/>
+					<entry name="command" mtime="1342486181" type="string">
+						<stringvalue>xchat --existing --url=%s</stringvalue>
+					</entry>
+				</dir>
+			</dir>
+		</dir>
+	</dir>
+	<dir name="apps">
+		<dir name="gdm">
+			<dir name="simple-greeter">
+				<entry name="logo_icon_name" mtime="1342486180" type="string">
+					<stringvalue>distributor</stringvalue>
+				</entry>
+			</dir>
+		</dir>
+		<dir name="gnome-terminal">
+			<dir name="global">
+				<entry name="use_menu_accelerators" mtime="1342486180" type="bool" value="false"/>
+				<entry name="use_mnemonics" mtime="1342486180" type="bool" value="false"/>
+			</dir>
+		</dir>
+	</dir>
+</gconf>

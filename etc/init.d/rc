@@ -1,0 +1,450 @@
+#! /bin/bash
+#
+# Copyright (c) 1996-2004 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# Author: Florian La Roche, 1996
+#	  Werner Fink <werner@suse.de> 1994-99,2000-2004
+#
+# Please send feedback to http://www.suse.de/feedback
+#
+# /etc/init.d/rc   --    The Master Resource Control Script
+#
+# This file is responsible  for  starting/stopping  services
+# when the runlevel changes.  If the action for a particular
+# feature in the new run-level is the same as  the action in
+# the previous run-level, this script will neither start nor
+# stop that feature.
+#
+
+#
+# Avoid be interrupted by child or keyboard
+#
+trap "echo" SIGINT SIGSEGV SIGQUIT
+trap 'test "$RUNLEVEL" = "1" && exit 0' SIGTERM
+set +e
+
+#
+# On previous runlevel identical with current runlevel do not
+# re-examine current runlevel.
+#
+test "$PREVLEVEL" = "$RUNLEVEL" && exit 0
+
+#
+# Coming from runlevel 1 we do not need to enter S
+#
+test "$PREVLEVEL" = "1" -a "$RUNLEVEL" = "S" && exit 0
+
+runrc=/etc/init.d/rc${RUNLEVEL}.d
+prerc=/etc/init.d/rc${PREVLEVEL}.d
+
+#
+# Initialize boosplash progressbar variables
+#
+. /etc/rc.splash $RUNLEVEL
+
+#
+# Configuration and coloring of the boot messages
+#
+
+. /etc/rc.status
+. /etc/sysconfig/boot
+
+#
+# Up from runlevel S we have to check if the system was
+# cold booted into single user mode and call /etc/init.d/boot.
+#
+if test "$PREVLEVEL" = "S" -a -n "$INIT_VERSION" ; then
+    #
+    # Check if this is a cold boot
+    #
+    COLD_BOOT=no
+    DTYPE=$(stat -f -c "%T" /proc 2>/dev/null)
+    if test "$DTYPE" != "proc" ; then
+	mount -n -t proc proc /proc
+	COLD_BOOT=yes
+    fi
+    DTYPE=$(stat -f -c "%T" /sys 2>/dev/null)
+    if test "$DTYPE" != "sysfs" ; then
+	mount -n -t sysfs sysfs /sys
+	COLD_BOOT=yes
+    fi
+    DTYPE=$(stat -f -c "%T" /dev/pts 2>/dev/null)
+    if test "$DTYPE" != "devpts" ; then
+	mount -n -t devpts -o mode=0620,gid=5 devpts /dev/pts
+	COLD_BOOT=yes
+    fi
+    read -t 2 hostname < /proc/sys/kernel/hostname 2> /dev/null
+    case "${hostname}" in
+    "(none)"|unknown|"") COLD_BOOT=yes ;;
+    esac
+    unset hostname
+    export COLD_BOOT
+
+    #
+    # Changing from single user mode into runlevel mode
+    # For cold boot run all run boot otherwise start udev
+    #
+    if test "$RUNLEVEL" != "0" -a "$RUNLEVEL" != "6" ; then
+	if test "$COLD_BOOT" = "yes" ; then
+	    # This is the case if we're up from cold boot
+	    echo "Sending all processes the TERM signal..."
+	    killall5 -15
+	    sleep 3
+	    echo "Sending all processes the KILL signal..."
+	    killall5 -9
+	    /etc/init.d/boot.swap    stop nomtab
+	    /etc/init.d/boot.localfs stop nomtab
+	    /etc/init.d/boot
+	else
+	    for b in /etc/init.d/boot.d/S*boot.udev
+	    do
+		test -x $b || continue
+		$b start
+	    done
+	fi
+	unset COLD_BOOT
+    fi
+fi
+
+#
+# Standard input from the system console
+#
+test -z "$CONSOLE" && CONSOLE=/dev/console
+REDIRECT="$(showconsole 2>/dev/null)"
+export CONSOLE REDIRECT
+
+#
+# Check real terminal line
+#
+if test -z "$REDIRECT" ; then
+    if (echo -n > /dev/tty) 2>/dev/null ; then
+	REDIRECT=/dev/tty
+    else
+	REDIRECT=/dev/console
+    fi
+    DO_BLOGD=no
+fi
+
+#
+# Set I/O of this script and its childs to console
+#
+exec 0<> $CONSOLE 1>&0 2>&0
+
+#
+# Up from runlevel N we may want to run in confirm mode
+#
+DO_CONFIRM=no
+DO_FORCEFSCK=no
+DO_FASTBOOT=no
+DO_QUIET=no
+if test "$RUNLEVEL" != "S" ; then
+    DO_BLOGD=yes
+else
+    DO_BLOGD=no
+fi
+if test "$PREVLEVEL" = "N" ; then
+    if rc_cmdline confirm > /dev/null ; then
+	DO_CONFIRM=yes
+    fi
+    test -e /run/do_confirm && DO_CONFIRM=yes
+    rm -f   /run/do_confirm
+    if rc_cmdline forcefsck > /dev/null ; then
+	DO_FORCEFSCK=yes
+    fi
+    if rc_cmdline fastboot > /dev/null  ; then
+	DO_FASTBOOT=yes
+    fi
+    test -e /run/do_fastboot && DO_FASTBOOT=yes
+    rm -f   /run/do_fastboot
+    if rc_cmdline quiet > /dev/null ; then
+	DO_QUIET=yes
+    fi
+    if test "$DO_FASTBOOT" = yes -o "$DO_QUIET" = yes -o ! -x /sbin/blogd ; then
+	DO_BLOGD=no
+    fi
+    export DO_CONFIRM DO_FORCEFSCK DO_FASTBOOT DO_QUIET DO_BLOGD
+fi
+test -e /run/no_blogd && DO_BLOGD=no
+
+#
+# Reset status of this script
+#
+rc_reset
+
+#
+# First kill all vlock sessions
+#
+if vlock=$(type -p vlock) ; then
+    killall -q $vlock
+fi
+
+#
+# This redirects all rc messages during reboot and halt
+# to tty1 if the system console is bound on VGA (tty0).
+#
+if test -x /sbin/isserial && /sbin/isserial ; then
+    test "$TERM" = "linux" -o -z "$TERM" && TERM=vt102
+elif test "${REDIRECT%[0-9]}" = "/dev/ttyS" ; then
+    test "$TERM" = "linux" -o -z "$TERM" && TERM=vt102
+else
+    # VGA
+    if test "$RUNLEVEL" = "0" -o "$RUNLEVEL" = "6" ; then
+	case "$REDIRECT" in /dev/tty[1-9]*)
+	    REDIRECT=/dev/tty1
+	    setconsole $REDIRECT < $CONSOLE
+	    command -p chvt --userwait 1 > /dev/null 2>&1
+	esac
+    fi
+fi
+
+#
+# Save old terminal settings and set -nl to avoid staircase
+# effect, do not lock scrolling, and avoid break characters.
+#
+otty=$(stty -g < $REDIRECT)
+if test "$FLOW_CONTROL" = "yes" ; then
+    stty -nl  ixon ignbrk -brkint < $REDIRECT
+else
+    stty -nl -ixon ignbrk -brkint < $REDIRECT
+fi
+
+#
+# Start blogd if not in single user mode
+#
+if test "$DO_BLOGD" = yes; then
+    /sbin/start_daemon /sbin/blogd $REDIRECT
+fi
+
+if test "$DO_CONFIRM" = "yes" ; then
+    echo -n "Master Resource Control: "
+    echo -e "${stat}${extd}Interactive startup${norm}"
+fi
+echo -n "Master Resource Control: "
+echo -n "previous runlevel: $PREVLEVEL, "
+echo -e "switching to runlevel: ${stat}${extd}${RUNLEVEL}${norm}"
+
+splashtrigger "rlchange $RUNLEVEL"
+
+#
+# Start the user defined resource control script which
+# should be executed _before_ runlevel is entered.
+#
+if test -f /etc/init.d/before.local ; then
+    echo -n "Master Resource Control: "
+    echo "Running /etc/init.d/before.local"
+    /bin/sh /etc/init.d/before.local
+    rc_status -v1 -r
+    splashtrigger "before.local"
+fi
+
+rex="[0-9][0-9]"
+failed=""
+skipped=""
+callord=""
+
+#
+# Check if we are able to use make like booting
+#
+test -s /etc/init.d/.depend.start || RUN_PARALLEL="no"
+test -s /etc/init.d/.depend.stop  || RUN_PARALLEL="no"
+test "$DO_CONFIRM"   = "yes"	  && RUN_PARALLEL="no"
+type -p startpar &> /dev/null     || RUN_PARALLEL="no"
+startpar -v      &> /dev/null	  || RUN_PARALLEL="no"
+
+checklink()
+{
+    if test $# -gt 1 ; then
+	local service=${1#*[SK]$rex}
+	echo -e "$attn${1%/*}/: more than one link for service $service$norm"
+    fi
+    test -x $1
+}
+
+#
+# Stop running services not enabled in new runlevel
+#
+if test "$RUN_PARALLEL" = "yes" ; then
+
+    startopt="-p4 -t 30 -T 3 $(splashmake)"
+
+    #
+    # Stop services in parallel with make behaviour of startpar
+    #
+
+    eval $(startpar $startopt -M stop  -P $PREVLEVEL -R $RUNLEVEL)
+    failed="${failed:+$failed }$failed_service"
+    skipped="${skipped:+$skipped }$skipped_service"
+
+    unset failed_service skipped_service
+
+elif test -d ${prerc}/ ; then
+
+    #
+    # First check and test services of previous and current (new) runlevel.
+    #
+
+    for link in $prerc/K${rex}* ; do
+
+	test -x "$link" || continue
+
+	#
+	# Don't stop service if the new runlevel requires the service.
+	#
+	service=${link##*/K$rex}
+	checklink $runrc/S$rex$service && continue
+
+	blogger "$service stop"
+	$link stop; status=$?
+	echo -en "$rc_reset"
+	splashprogress "$service stop"
+
+	case $status in
+	[1-4])	 failed="${failed:+$failed }$service"	;;
+	[56])	skipped="${skipped:+$skipped }$service" ;;
+	[07]|*)	;;
+	esac
+
+	blogger "'$service stop' exits with status $status"
+
+    done
+    unset link service
+
+fi
+
+#
+# Do never call startpar for single, halt or reboot script
+#
+case "$RUNLEVEL" in
+    S|0|1|6)
+	DO_CONFIRM=no
+	RUN_PARALLEL=no
+	killproc -SYS /sbin/blogd
+esac
+
+#
+# Start services required to enter new runlevel
+#
+if test "$RUN_PARALLEL" = "yes" ; then
+
+    #
+    # Start services in parallel with make behaviour of startpar
+    #
+
+    eval $(startpar $startopt -M start -P $PREVLEVEL -R $RUNLEVEL)
+    failed="${failed:+$failed }$failed_service"
+    skipped="${skipped:+$skipped }$skipped_service"
+
+    unset failed_service skipped_service startopt 
+
+elif test -d ${runrc}/ ; then
+
+    for link in $runrc/S${rex}*; do
+
+	test -x "$link" || continue
+
+	#
+	# Don't start service if previous runlevel includes the service.
+	#
+	service=${link##*/S$rex}
+	checklink $prerc/K$rex${service} && continue
+
+	#
+	# Ask the user if wanted
+	#
+	if test "$DO_CONFIRM" = "yes" ; then
+	    rc_confirm -t $CONFIRM_PROMPT_TIMEOUT "Start service $service" 0<>$REDIRECT 1>&0 2>&0
+	    case "$?" in
+	    0) true	;;
+	    1) continue	;;
+	    2) DO_CONFIRM="" ;;
+	    esac
+	fi
+
+	blogger "$service start"
+	$link start; status=$?
+        echo -en "$rc_reset"
+	splashprogress "$service start"
+
+	case "$status" in
+	[1-47])	 failed="${failed:+$failed }$service"	;;
+	[56])	skipped="${skipped:+$skipped }$service" ;;
+	0|*)	;;
+	esac
+
+	blogger "'$service start' exits with status $status"
+    done
+    unset link service
+
+fi
+
+#
+# Inform the users
+#   Reaction on LSB return values:
+#    OK   : 0 - success
+#    FAIL : 1 - generic or unspecified error
+#    FAIL : 2 - invalid or excess argument(s)
+#    FAIL : 3 - unimplemented feature (e.g. "reload")
+#    FAIL : 4 - insufficient privilege
+#    SKIP : 5 - program is not installed
+#    SKIP : 6 - program is not configured
+#    FAIL : 7 - program is not running (doing "start")
+#    OK   : 7 - program is not running (doing "stop")
+#
+
+#
+# Start the user defined resource control script which
+# should be executed _after_ runlevel is reached.
+#
+if test -f /etc/init.d/after.local ; then
+    echo -n "Master Resource Control: "
+    echo "Running /etc/init.d/after.local"
+    /bin/sh /etc/init.d/after.local
+    rc_status -v1 -r
+    splashtrigger "after.local"
+fi
+
+splashtrigger "rlreached $RUNLEVEL"
+
+#
+# Be verbose and print stats
+#
+echo -n "Master Resource Control: "
+echo -e "runlevel ${RUNLEVEL} has been ${stat}${extd}reached${norm}"
+if test -n "$failed" ; then
+    n=$((${#failed} + 7))
+    echo -n  "Failed services in runlevel ${RUNLEVEL}: "
+    test $n -lt 47 && echo -en "\033[${COLUMNS}C\033[${n}D"
+    echo -e  "${warn}${failed}${norm}"
+fi
+if test -n "$skipped" ; then
+    n=$((${#skipped} + 7))
+    echo -n  "Skipped services in runlevel ${RUNLEVEL}: "
+    test $n -lt 47 && echo -en "\033[${COLUMNS}C\033[${n}D"
+    echo -e  "${attn}${skipped}${norm}"
+fi
+
+#
+# Check for boot cycle detection
+#
+test -s /lib/bootcycle/stats && . /lib/bootcycle/stats
+
+#
+# Stop blogd if running
+#
+killproc -QUIT /sbin/blogd
+
+#
+# Restore old terminal settings
+#
+stty $otty < $REDIRECT
+
+#
+# For the first logon on a virtual console.
+#
+test -e /etc/issue-SuSE-first-run && {
+    cat /etc/issue-SuSE-first-run > $REDIRECT
+    rm -f /etc/issue-SuSE-first-run 2>/dev/null
+}
+
+exit 0

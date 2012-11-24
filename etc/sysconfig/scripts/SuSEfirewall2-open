@@ -1,0 +1,72 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my $config = '/etc/sysconfig/SuSEfirewall2';
+my $tmpconfig = $config.'.new';
+
+my %zones = map { $_ => 1} ( 'INT', 'EXT', 'DMZ' );
+my %types = map { $_ => 1} ( 'TCP', 'UDP', 'IP', 'RPC' );
+
+if($#ARGV < 2)
+{
+	print "USAGE: $0 <ZONE> <TYPE> <services...>\n\n";
+	print "where ZONE is one of ".join(' ', keys %zones)."\n";
+	print "and TYPE is one of ".join(' ', keys %types)."\n";
+	exit 1
+}
+
+my ($zone, $type);
+
+$zone = shift;
+$type = shift;
+
+if(!exists $zones{$zone})
+{
+	print "$zone is not a valid zone, must be one of ".join(' ', keys %zones)."\n";
+	exit 1
+}
+
+if(!exists $types{$type})
+{
+	print "$type is not a valid type, must be one of ".join(' ', keys %types)."\n";
+	exit 1
+}
+
+my $var = 'FW_SERVICES_'.$zone.'_'.$type;
+
+open(CONF,"<$config") or die "Unable to open file $config";
+open(OUT,">$tmpconfig") or die "Unable to open file $tmpconfig";
+
+while(<CONF>)
+{
+	if(/^$var=(['"])?([^'"]*)(['"])?/)
+	{
+		my @val = split(/\s+/, $2);
+		my $fc = $1 || '"';
+		if ($fc ne ($3 || '"'))
+		{
+			unlink $tmpconfig;
+			die "invalid line $.\n";
+		}
+		my %new = map { $_ => 1 } @val;
+		for my $service (@ARGV)
+		{
+			next if $new{$service};
+			$new{$service} = 1;
+			push @val, $service;
+		}
+		print OUT "$var=$fc",join(' ',  @val), $fc, "\n";
+	}
+	else
+	{
+		print OUT;
+	}
+}
+
+close OUT;
+close CONF;
+
+rename $tmpconfig, $config or die "can't rename file $tmpconfig to $config";
+
+exit 0

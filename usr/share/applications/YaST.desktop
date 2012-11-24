@@ -1,0 +1,13 @@
+
+[Desktop Entry]
+X-SuSE-translate=true
+GenericName=Administrator Settings
+Type=Application
+Categories=Settings;System;X-SuSE-Core-System;X-SuSE-ControlCenter-System;
+Name=YaST管理员设置
+Icon=yast
+GenericName=Control Center
+Exec=/usr/bin/xdg-su -c /sbin/yast2
+Encoding=UTF-8
+Comment=Manage system-wide settings
+

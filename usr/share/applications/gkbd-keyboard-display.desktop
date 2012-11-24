@@ -1,0 +1,16 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Name=键盘模式
+Comment=Preview keyboard layouts
+Icon=preferences-desktop-keyboard
+Exec=gkbd-keyboard-display
+Terminal=false
+Type=Application
+StartupNotify=true
+NoDisplay=true
+X-GNOME-Bugzilla-Bugzilla=GNOME
+X-GNOME-Bugzilla-Product=libgnomekbd
+X-GNOME-Bugzilla-Component=Drawing
+X-GNOME-Bugzilla-Version=3.4.0.2
+Categories=GNOME;GTK;Core;System;
+OnlyShowIn=GNOME;

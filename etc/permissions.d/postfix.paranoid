@@ -1,0 +1,2 @@
+/usr/sbin/postdrop                     root.maildrop      0755
+/usr/sbin/postqueue                    root.maildrop      0755

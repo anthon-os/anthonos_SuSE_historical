@@ -1,0 +1,86 @@
+#! /bin/bash
+# Copyright (c) 2000-2002 SuSE GmbH Nuernberg, Germany.
+# Copyright (C) 2003,2004 SUSE Linux AG
+# Copyright (C) 2005-2008 SUSE LINUX Products GmbH
+#
+# Author: Marc Heuse
+# Maintainer: Ludwig Nussel
+#
+# /etc/init.d/SuSEfirewall2_setup
+#
+### BEGIN INIT INFO
+# Provides: SuSEfirewall2_setup
+# Required-Start: SuSEfirewall2_init $network $remote_fs
+# Should-Start:   $ALL network-remotefs ypbind nfs nfsserver rpcbind
+# Required-Stop:  $remote_fs
+# Should-Stop:    $null
+# Default-Start:  3 5
+# Default-Stop:   0 1 2 6
+# Short-Description: SuSEfirewall2 phase 2
+# Description: SuSEfirewall2_setup does some basic setup and is the
+#	phase 2 of 2 of the SuSEfirewall initialization.
+### END INIT INFO
+# X-SuSE-Dep-Only
+
+SUSEFWALL="/sbin/SuSEfirewall2"
+
+test -x $SUSEFWALL || exit 5
+
+test "$1" != 'status' || SYSTEMD_NO_WRAP=1 # bnc#727445
+. /etc/rc.status
+rc_reset
+
+case "$1" in
+    start)
+	echo -n "Loading firewall rules "
+	$SUSEFWALL -q --bootunlock start
+	rc_status -v
+	;;
+    stop)
+	called_manually=''
+	if [ -e /sys/fs/cgroup/systemd ]; then
+		# XXX: find a better way to check whether shutdown is in progress
+		if ! systemctl --no-pager --full --all  list-units | grep -q 'basic\.target.*active.*stop'; then
+			called_manually=yes
+		fi
+	elif [ -z "$REDIRECT" ]; then
+		called_manually=yes
+	fi
+	if [ "$called_manually" = yes ]; then
+		echo -n "Unloading firewall rules"
+		$SUSEFWALL -q stop
+		rc_status -v
+	else
+		echo -n "Not unloading firewall rules at system shutdown"
+		rc_status -s
+	fi
+	;;
+    restart|force-reload)
+	$0 start
+	;;
+    try-restart|reload)
+	if ($0 status) >/dev/null 2>&1; then
+	    $0 start
+	else
+	    rc_reset
+	fi
+	;;
+    long-status)
+	echo "Checking the status of SuSEfirewall2 "
+	if ! $SUSEFWALL status; then
+		rc_failed 3
+	fi
+	;;
+    status)
+	echo -n "Checking the status of SuSEfirewall2 "
+	{ test -e /proc/net/ip_tables_names && iptables -nL reject_func >/dev/null 2>&1; } || rc_failed 3
+	rc_status -v
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|restart|reload|force-reload}"
+	exit 1
+	;;
+esac
+
+# Set exit status
+rc_exit

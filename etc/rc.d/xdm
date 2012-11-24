@@ -1,0 +1,284 @@
+#! /bin/bash
+# Copyright (c) 1996-2002 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# Author: Florian La Roche, 1996
+#	  Werner Fink <werner@suse.de>, 1996,98,99
+#         Martin Scherbaum, 1997
+#         Reinhard Max <max@suse.de>, 1997
+#
+# Please send feedback to http://www.suse.de/feedback
+#
+# /etc/init.d/xdm
+#
+### BEGIN INIT INFO
+# Provides:          xdm
+# Required-Start:    $remote_fs dbus
+# Required-Stop:     $remote_fs
+# Should-Start: ypbind $syslog gpm firstboot kbd resmgr earlyxdm winbind acpid ntp
+# Should-Stop:  ypbind $syslog gpm firstboot kbd resmgr earlyxdm winbind acpid ntp
+# Default-Start:     5
+# Default-Stop:
+# Description:       X Display Manager
+# Short-Description:       X Display Manager
+### END INIT INFO
+
+# Avoid duplicated messages when earlyxdm was active
+case "$EARLYXDM" in
+    start)
+	# earlyxdm is calling us, remember this
+	> /var/run/earlyxdm.start
+	;;
+    "")
+	# earlyxdm was already active, exit now
+	if test -e /var/run/earlyxdm.start ; then
+	    rm -f  /var/run/earlyxdm.start
+	    exit 0
+	fi
+esac
+
+. /etc/rc.status
+. /etc/sysconfig/displaymanager
+. /etc/sysconfig/language
+. /etc/sysconfig/windowmanager
+test -e /etc/SuSEconfig/profile        && . /etc/SuSEconfig/profile
+test -r /etc/profile.d/desktop-data.sh && . /etc/profile.d/desktop-data.sh
+
+locale_vars="     \
+LANG              \
+LC_CTYPE          \
+LC_NUMERIC        \
+LC_TIME           \
+LC_COLLATE        \
+LC_MONETARY       \
+LC_MESSAGES       \
+LC_PAPER          \
+LC_NAME           \
+LC_ADDRESS        \
+LC_TELEPHONE      \
+LC_MEASUREMENT    \
+LC_IDENTIFICATION \
+LC_ALL"
+
+unset LC_ALL
+for lc in $locale_vars
+do
+    eval val="\$RC_$lc"
+    if test -n "$val"; then
+        eval $lc="\$RC_$lc"
+        export $lc
+    fi
+done
+unset lc val
+
+test -z "$DEFAULT_WM" && DEFAULT_WM=twm
+
+if test -z "$WINDOWMANAGER" ; then
+    SAVEPATH=$PATH
+    PATH=$PATH:/usr/X11R6/bin:/usr/openwin/bin
+    desktop=/usr/share/xsessions/${DEFAULT_WM}.desktop
+    if test -s "$desktop" ; then
+        while read -r line; do
+            case ${line} in
+            Exec=*) WINDOWMANAGER="$(command -v ${line#Exec=})"
+                    break
+            esac
+        done < $desktop
+    fi
+    if test -n "$DEFAULT_WM" -a -z "$WINDOWMANAGER" ; then
+        WINDOWMANAGER="$(command -v ${DEFAULT_WM##*/})"
+    fi
+    PATH=$SAVEPATH
+    unset SAVEPATH desktop
+fi
+unset DEFAULT_WM
+export WINDOWMANAGER
+
+DMDIR=/etc/X11/xdm
+RELOADSIGNAL="-HUP"
+
+PIDFILELNK="/var/run/displaymanager.pid"
+
+
+xdm_reload_files () {
+    test -x /etc/X11/xdm/SuSEconfig.xdm && \
+        MD5DIR="/var/adm/SuSEconfig/md5" \
+        /etc/X11/xdm/SuSEconfig.xdm | \
+        sed 's+\(.*\)+/etc/init.d/xdm: \1+g' | \
+        /bin/logger
+	return 0
+}
+
+splashcopy()
+{
+    local from=$1
+    local to=$2
+    if [ "$SPLASH" = yes ]
+    then
+	ver=$(sed "s/.*v\([[:digit:]]\)\.\([[:digit:]]\).*/\\1\\2/" /proc/splash)
+	if [ $ver -gt 31 ]
+	then
+	    echo "copy $from $to" > /proc/splash
+	    echo "@$to silent" > /proc/splash
+	    echo "@$to show -1" > /proc/splash
+	fi
+    fi
+}
+
+plymouth_quit()
+{
+    if [ -x /usr/bin/plymouth ]; then
+        plymouth quit
+        plymouth --wait
+    fi
+}
+
+#set -x
+
+DM=${DISPLAYMANAGER##*/}
+
+case "$DM" in
+    console)	
+	exit 0
+	;;
+    *)
+	for i in  /usr/lib/X11/displaymanagers/*
+	do
+	    tmp=${i%.fallback} 
+	    test "$tmp" != "$i" -a -e $tmp && continue # pick foodm over foodm.fallback
+	    DISPLAY_MANAGERS="$DISPLAY_MANAGERS ${tmp##*/}"
+	    . $i
+	done
+	for i in $DISPLAY_MANAGERS
+	do
+	    name="${i}_vars"
+	    PIDFILE=/var/run/$i.pid;
+	    $name $DM && break;
+	done
+	if [ -z "$DISPLAYMANAGER" -o ! -x "$DISPLAYMANAGER" ]
+	then
+	    PIDFILE=/var/run/xdm.pid
+	    xdm_vars xdm  # FALLBACK
+	fi
+	unset i
+	;;
+esac
+
+DM=${DISPLAYMANAGER##*/}
+
+rc_reset
+case "$1" in
+    start)
+
+	# use system keyboard as global X keyboard configuration
+	if [ -x /etc/X11/xdm/keytable ]; then
+	   /etc/X11/xdm/keytable
+ 	fi
+
+	[ -n "$STARTPROC" ] && $STARTPROC
+	echo -n "Starting service $DM"
+	# Don't start xdm if no Xserver is configured and xdm is not 
+	# configured for remote access 
+	if [ ! -x /usr/bin/X -a "$DISPLAYMANAGER_REMOTE_ACCESS" = "no" ]; 
+	then 
+			rc_status -u 
+			rc_exit 
+	fi
+	# Graphical failsafe mode (Bug #246158).
+	#
+	# Needs changes in kernel commandline of "Failsafe" entry in
+	# /boot/grub/menu.lst.
+	#
+	#  * use the same "vga" option value as in the non-"Failsafe" entry
+	#  * remove "3" option (runlevel)
+	#  * add "x11failsafe" option
+	if cat /proc/cmdline | grep -q x11failsafe; then
+            if [ -f /etc/X11/xorg.conf.install ]; then
+		export XORGCONFIG=xorg.conf.install
+                echo 
+                echo "Using failsafe X.Org configuration /etc/X11/xorg.conf.install"
+            else
+                echo
+                echo "The failsafe X.Org configuration /etc/X11/xorg.conf.install no longer exists."
+                echo "Either move it back (if still available) or copy /etc/X11/xorg.conf to"
+                echo "/etc/X11/xorg.conf.install to use the native graphics driver instead of the"
+                echo "failsafe graphics driver. Of course the latter option no longer can be called"
+                echo "failsafe."
+                rc_status -u
+                rc_exit
+            fi
+	fi
+	startproc -p $PIDFILE $DISPLAYMANAGER $XDMOPTIONS || rc_failed
+	# After a crash or a kill signal we may have
+	# a wrong ownership of /dev/xconsole
+	if rc_status ; then
+	    if test -x $DMDIR/TakeDevices ; then
+		$DMDIR/TakeDevices
+	    else
+		chown root:tty /dev/xconsole /dev/tty0
+		chmod 622      /dev/xconsole /dev/tty0
+	    fi
+	    ln -snf $PIDFILE $PIDFILELNK
+	fi
+	rc_status -v
+	;;
+    stop)
+        # make sure to stop the running one (Bug #306035)
+	if test -s $PIDFILELNK; then
+	    read -t 1 PID < $PIDFILELNK
+	    if CHECKDM=$(ps ho command= -p $PID) ; then
+		DISPLAYMANAGER_BIN=${CHECKDM%%[[:blank:]]*}
+		PIDFILE=$(readlink $PIDFILELNK)
+	    else
+		rm -f $PIDFILELNK $(readlink $PIDFILELNK)
+	    fi
+	    unset CHECKDM
+	else
+	    rm -f $PIDFILELNK
+ 	fi
+
+	test -n "$DISPLAYMANAGER_BIN" && \
+	    echo -n "Shutting down service ${DISPLAYMANAGER_BIN##*/}"
+
+	# 
+	# killproc(8) sleep upto five seconds and sends
+	# SIGKILL if xdm does not terminate within
+	#
+
+	killproc -p $PIDFILE -TERM $DISPLAYMANAGER_BIN
+	rm -f $PIDFILELNK $PIDFILE
+	rc_status -v
+	;;
+    restart)
+	$0 stop
+        $0 start
+	rc_status
+	;;
+    reload|force-reload)
+	echo -n "Reload service $DM"
+	[ -n "$RELOADPROC" ] && $RELOADPROC
+	killproc -p $PIDFILE $RELOADSIGNAL $DISPLAYMANAGER
+	rc_status -v
+	;;
+    status|check)
+	echo -n "Checking for service ${DM}: "
+	checkproc -p $PIDFILE $DISPLAYMANAGER
+	rc_status -v
+	;;
+    probe)
+	[ -n "$PROBEPROC" ] && $PROBEPROC
+	;;
+    try-restart|condrestart)
+	$0 status
+	if test $? = 0; then
+	    $0 restart
+	else
+	    rc_reset
+	fi
+	rc_status
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|restart|reload|force-reload|probe|try-restart}"
+	exit 1
+esac
+rc_exit

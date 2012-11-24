@@ -1,0 +1,10 @@
+# This file allows you to mount SMB/ CIFS shares during system boot while
+# hiding passwords to other people than root.  Use /etc/fstab for public
+# available services.  You have to specify at least a service name and a mount
+# point.  Current default vfstype is cifs.
+#
+# The options are explained in the manual page of mount.cifs.
+#
+# service       moint-point     vfstype options
+
+;//fjall/test    /data/test      cifs    username=tridge,password=foobar

@@ -1,0 +1,150 @@
+#! /bin/sh
+# Copyright (c) 1995-2002 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# Author: Petr Ostadal, feedback to http://www.suse.de/feedback
+#
+# /etc/init.d/mdadmd
+#
+#   and its symbolic link
+#
+# /usr/sbin/rcmdadmd
+#
+### BEGIN INIT INFO
+# Provides:          mdadmd
+# Required-Start:    $local_fs
+# Should-Start:  $time sendmail
+# Required-Stop:     $local_fs
+# Should-Stop: $time sendmail
+# Default-Start:     3 5
+# Default-Stop:      0 1 2 6
+# Short-Description: mdadmd daemon monitoring MD devices
+# Description:       Start mdadmd to allow monitoring MD devices aka
+#	Linux Software Raid. This is only meaningful for raid1, raid5
+#	or  multipath arrays as only these have interesting state.
+#	raid0 or linear never have missing, spare, or failed drives, 
+#	so there is nothing to monitor.
+### END INIT INFO
+
+mdadmd_BIN=/sbin/mdadm
+test -x $mdadmd_BIN || exit 5
+
+mdadmd_CONFIG=/etc/sysconfig/mdadm
+test -r $mdadmd_CONFIG || exit 6
+. $mdadmd_CONFIG
+
+if [ x$MDADM_DELAY = x"" ]; then
+  MDADM_DELAY=60
+fi
+MDADM_DELAY="-d "$MDADM_DELAY;  
+
+if [ x$MDADM_MAIL != x"" ]; then
+  MDADM_MAIL="-m \"$MDADM_MAIL\""
+fi
+ 
+if [ x$MDADM_PROGRAM != x"" ]; then
+  MDADM_PROGRAM="-p \"$MDADM_PROGRAM\""
+fi
+
+if [ x$MDADM_SCAN = x"yes" ]; then
+  MDADM_SCAN="-s"
+else
+  MDADM_SCAN=""
+fi
+
+if [ x$MDADM_SEND_MAIL_ON_START = x"yes" ]; then
+  MDADM_SEND_MAIL="-t"
+else
+  MDADM_SEND_MAIL=""
+fi
+
+if [ x$MDADM_CONFIG != x"" ]; then
+  MDADM_CONFIG="-c \"$MDADM_CONFIG\""
+fi
+
+. /etc/rc.status
+
+# Reset status of this service
+rc_reset
+
+# Return values acc. to LSB for all commands but status:
+# 0	  - success
+# 1       - generic or unspecified error
+# 2       - invalid or excess argument(s)
+# 3       - unimplemented feature (e.g. "reload")
+# 4       - user had insufficient privileges
+# 5       - program is not installed
+# 6       - program is not configured
+# 7       - program is not running
+# 8--199  - reserved (8--99 LSB, 100--149 distrib, 150--199 appl)
+# 
+# Note that starting an already running service, stopping
+# or restarting a not-running service as well as the restart
+# with force-reload (in case signaling is not supported) are
+# considered a success.
+
+case "$1" in
+    start)
+	echo -n "Starting mdadmd "
+	## Start daemon with startproc(8). If this fails
+	## the return value is set appropriately by startproc.
+	eval startproc -q -s $mdadmd_BIN -F $MDADM_RAIDDEVICES $MDADM_DELAY $MDADM_MAIL $MDADM_PROGRAM $MDADM_SCAN $MDADM_SEND_MAIL $MDADM_CONFIG 
+
+	# Remember status and be verbose
+	rc_status -v
+	;;
+    stop)
+	echo -n "Shutting down mdadmd "
+	## Stop daemon with killproc(8) and if this fails
+	## killproc sets the return value according to LSB.
+
+	killproc -TERM $mdadmd_BIN
+
+	# Remember status and be verbose
+	rc_status -v
+	;;
+    try-restart)
+	## Do a restart only if the service was active before.
+	## Note: try-restart is not (yet) part of LSB (as of 1.2)
+	$0 status >/dev/null &&  $0 restart
+
+	# Remember status and be quiet
+	rc_status
+	;;
+    restart)
+	## Stop the service and regardless of whether it was
+	## running or not, start it again.
+	$0 stop
+	$0 start
+
+	# Remember status and be quiet
+	rc_status
+	;;
+    reload)
+        exit 3
+        ;;
+    status)
+	echo -n "Checking for service mdadmd "
+	## Check status with checkproc(8), if process is running
+	## checkproc will return with exit status 0.
+
+	# Return value is slightly different for the status command:
+	# 0 - service up and running
+	# 1 - service dead, but /var/run/  pid  file exists
+	# 2 - service dead, but /var/lock/ lock file exists
+	# 3 - service not running (unused)
+	# 4 - service status unknown :-(
+	# 5--199 reserved (5--99 LSB, 100--149 distro, 150--199 appl.)
+	
+	# NOTE: checkproc returns LSB compliant status values.
+	checkproc $mdadmd_BIN
+	# NOTE: rc_status knows that we called this init script with
+	# "status" option and adapts its messages accordingly.
+	rc_status -v
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|try-restart|restart}"
+	exit 1
+	;;
+esac
+rc_exit

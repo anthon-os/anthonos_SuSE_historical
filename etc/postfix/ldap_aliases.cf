@@ -1,0 +1,5 @@
+server_host = 127.0.0.1
+search_base = dc=mail,dc=net
+query_filter = (&(|(mail=%s)(mailAlternateAddress=%s))(objectClass=posixAccount))
+result_attribute = uid
+version = 3

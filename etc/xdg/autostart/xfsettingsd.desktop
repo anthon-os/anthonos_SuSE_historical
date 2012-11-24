@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Version=1.0
+Name=Xfsettingsd
+Comment=The Xfce Settings Daemon
+Exec=xfsettingsd
+Icon=applications-system
+Terminal=false
+Type=Application
+StartupNotify=false
+OnlyShowIn=XFCE;
+

@@ -1,0 +1,25 @@
+[Desktop Entry]
+X-SuSE-DocTeamID=ycc_relocation-server
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Virtualization;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+X-SuSE-YaST-Call=relocation-server
+
+X-SuSE-YaST-Group=Virtualization
+X-SuSE-YaST-Argument=
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-AutoInst=
+X-SuSE-YaST-Geometry=
+X-SuSE-YaST-SortKey=
+X-SuSE-YaST-AutoInstResource=
+
+Icon=yast-vm-install
+Exec=/usr/bin/xdg-su -c "/sbin/yast2 relocation-server"
+
+Name=Relocation Server Configuration
+GenericName=Configure Host for Virtual Machine Migration
+StartupNotify=true
+

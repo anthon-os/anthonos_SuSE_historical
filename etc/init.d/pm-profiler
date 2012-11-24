@@ -1,0 +1,72 @@
+#!/bin/sh
+#
+# Author: Holger Macht <hmacht@suse.de>
+#
+# /etc/init.d/rcpm-profiler
+#
+### BEGIN INIT INFO
+# Provides:          pm-profiler
+# Required-Start:    $remote_fs
+# Should-Start:
+# Required-Stop:     $null
+# Should-Stop:
+# Default-Start:     2 3 5
+# Default-Stop:      
+# Short-Description: Script infrastructure to enable/disable certain power management functions
+# Description:       Script infrastructure to enable/disable certain power management functions
+#                    via simple configuration files
+#                    
+### END INIT INFO
+
+PM_PROFILER_ENABLE="/usr/lib/pm-profiler/enable-profile"
+test -x $PM_PROFILER_ENABLE || exit 5
+
+STATEFILE="/var/run/pm-profiler.profile"
+. /etc/rc.status
+
+. /etc/pm-profiler.conf
+CURRENT_PROFILE=$PM_PROFILER_PROFILE
+if [ -z "$CURRENT_PROFILE" ]; then
+    echo -n "No active profile"
+    rc_status -u
+    exit 0
+fi
+
+# Reset status of this service
+rc_reset
+
+case "$1" in
+    start)
+	echo -n "Activating power management profile $CURRENT_PROFILE"
+	$PM_PROFILER_ENABLE $CURRENT_PROFILE
+	rc_status -v
+        ;;
+    stop)
+	if [ ! -e "$STATEFILE" ]; then
+	    echo -n "No active profile, nothing to do"
+	else
+	    echo -n "Resetting profile status, this does not revert any settings"
+	    rm $STATEFILE
+	fi
+       	rc_status -v
+        ;;
+    restart|reload)
+        $0 stop
+        $0 start
+        ;;
+    status)
+	if [ ! -e "$STATEFILE" ]; then
+	    echo -n "No active profile"
+	    rc_status -u
+	else
+            echo -n "Active power management profile: `cat $STATEFILE`"
+            rc_status -v
+	fi
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|status}"
+        exit 1
+        ;;
+esac
+
+rc_exit

@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<gconf>
+	<dir name="schemas">
+		<dir name="apps">
+			<dir name="aisleriot">
+				<entry name="recent_games_list">
+					<local_schema short_desc="C&apos;hoarioù graet a nevez zo">
+						<longdesc>Roll c&apos;hoarioù graet a nevez zo</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="statistics">
+					<local_schema short_desc="Stadegoù c&apos;hoarioù graet">
+						<longdesc>A list of strings that come in the form of a quintuple: name, wins, total games played, best time (in seconds) and worst time (also in seconds). Unplayed games do not need to be represented.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="game_file">
+					<local_schema short_desc="Restr c&apos;hoari da implj">
+					</local_schema>
+				</entry>
+				<entry name="animations">
+					<local_schema short_desc="Tresadennoù fiñv">
+					</local_schema>
+				</entry>
+				<entry name="sound">
+					<local_schema short_desc="Son">
+					</local_schema>
+				</entry>
+				<entry name="click_to_move">
+					<local_schema short_desc="Dibabit un doare kontroll">
+					</local_schema>
+				</entry>
+				<entry name="card_style">
+					<local_schema short_desc="Anv ar restr neuz">
+						<longdesc>Anv ar restr gant grafek ar c&apos;hartennoù</longdesc>
+					</local_schema>
+				</entry>
+			</dir>
+		</dir>
+	</dir>
+</gconf>

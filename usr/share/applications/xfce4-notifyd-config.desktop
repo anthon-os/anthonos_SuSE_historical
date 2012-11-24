@@ -1,0 +1,15 @@
+
+[Desktop Entry]
+X-SuSE-translate=true
+Version=1.0
+Name=通知
+Comment=Customize how notifications appear on your screen
+Exec=xfce4-notifyd-config
+Icon=xfce4-notifyd
+Terminal=false
+StartupNotify=true
+Type=Application
+OnlyShowIn=XFCE;
+Categories=XFCE;GTK;Settings;DesktopSettings;X-XFCE-SettingsDialog;
+X-XfcePluggable=true
+

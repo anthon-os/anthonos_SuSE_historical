@@ -1,0 +1,7 @@
+############ general 
+## Path:        Hardware/Bluetooth
+## Description: General settings for the Bluetooth device, if set to 'yes' bluetooth is started when udev reports 'added bluetooth device'
+## Type:        yesno
+## Default:     yes
+
+START_BLUETOOTHD=yes

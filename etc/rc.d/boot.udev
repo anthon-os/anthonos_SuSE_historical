@@ -1,0 +1,81 @@
+#!/bin/sh
+#
+### BEGIN INIT INFO
+# Provides:          boot.udev
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start:     B
+# Default-Stop:
+# Short-Description: manage /dev and kernel device-events
+# Description:       udevd daemon to manage /dev and kernel device events
+### END INIT INFO
+
+. /etc/rc.status
+
+PATH="/sbin:/bin"
+udev_timeout=180
+
+case "$1" in
+	start)
+		# create /dev/root symlink with dynamic rule
+		if [ -x /lib/udev/write_dev_root_rule ]; then
+		    /lib/udev/write_dev_root_rule
+		fi
+
+		# start udevd
+		echo -n "Starting udevd: "
+		/sbin/udevd --daemon
+		if [ $? -ne 0 ]; then
+			rc_status -v
+			rc_exit
+		fi
+		rc_status -v
+
+		# trigger events for all devices
+		echo -n "Loading drivers, configuring devices: "
+		/sbin/udevadm trigger --type=subsystems --action=add
+		/sbin/udevadm trigger --type=devices --action=add
+
+		# wait for events to finish
+		/sbin/udevadm settle --timeout=$udev_timeout
+		rc_status -v
+		;;
+	stop)
+		echo -n "Stopping udevd: "
+		killproc /sbin/udevd
+		rc_status -v
+		;;
+	restart)
+		echo -n "Restarting udevd: "
+		killproc /sbin/udevd
+		/sbin/udevd --daemon
+		rc_status -v
+		;;
+	status)
+		echo -n "Checking for udevd: "
+		checkproc /sbin/udevd
+		rc_status -v
+		;;
+	reload)
+		echo -n "Reloading udev rules: "
+		/sbin/udevadm control --reload-rules
+		rc_status -v
+		;;
+	force-reload)
+		echo -n "Restarting udev and reconfiguring all devices: "
+		killproc /sbin/udevd
+		rm -rf /dev/.udev /dev/disk
+		root_symlink_rule
+		/sbin/udevd --daemon
+		/sbin/udevadm trigger --action=add
+		/sbin/udevadm settle --timeout=$udev_timeout
+		rc_status -v
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|status|reload|force-reload}"
+		exit 1
+		;;
+esac
+rc_exit

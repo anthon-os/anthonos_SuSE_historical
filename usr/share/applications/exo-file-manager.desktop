@@ -1,0 +1,14 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Version=1.0
+Type=Application
+Exec=exo-open --launch FileManager %u
+Icon=system-file-manager
+StartupNotify=true
+Terminal=false
+Categories=Utility;X-XFCE;X-Xfce-Toplevel;
+OnlyShowIn=XFCE;
+X-XFCE-MimeType=x-scheme-handler/file;x-scheme-handler/trash;
+Name=文件管理器
+Comment=Browse the file system
+

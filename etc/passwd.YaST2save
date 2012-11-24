@@ -1,0 +1,25 @@
+root:x:0:0:root:/root:/bin/bash
+bin:x:1:1:bin:/bin:/bin/bash
+daemon:x:2:2:Daemon:/sbin:/bin/bash
+lp:x:4:7:Printing daemon:/var/spool/lpd:/bin/bash
+mail:x:8:12:Mailer daemon:/var/spool/clientmqueue:/bin/false
+news:x:9:13:News system:/etc/news:/bin/bash
+uucp:x:10:14:Unix-to-Unix CoPy system:/etc/uucp:/bin/bash
+games:x:12:100:Games account:/var/games:/bin/bash
+man:x:13:62:Manual pages viewer:/var/cache/man:/bin/bash
+wwwrun:x:30:8:WWW daemon apache:/var/lib/wwwrun:/bin/false
+ftp:x:40:49:FTP account:/srv/ftp:/bin/bash
+nobody:x:65534:65533:nobody:/var/lib/nobody:/bin/bash
+usbmux:x:100:65534:usbmuxd daemon:/var/lib/usbmuxd:/sbin/nologin
+messagebus:x:101:101:User for D-Bus:/var/run/dbus:/bin/false
+sshd:x:102:103:SSH daemon:/var/lib/sshd:/bin/false
+postfix:x:51:51:Postfix Daemon:/var/spool/postfix:/bin/false
+ntp:x:74:104:NTP daemon:/var/lib/ntp:/bin/false
+statd:x:103:65534:NFS statd daemon:/var/lib/nfs:/sbin/nologin
+at:x:25:25:Batch jobs daemon:/var/spool/atjobs:/bin/bash
+tftp:x:104:105:TFTP account:/srv/tftpboot:/bin/false
+dnsmasq:x:105:65534:dnsmasq:/var/lib/empty:/bin/false
+scard:x:106:106:Smart Card Reader:/var/run/pcscd:/bin/nologin
+avahi:x:107:107:User for Avahi:/var/run/avahi-daemon:/bin/false
+smolt:x:108:108:user for smolt:/usr/share/smolt:/sbin/nologin
+lightdm:x:109:109:LightDM daemon:/var/lib/lightdm:/bin/false

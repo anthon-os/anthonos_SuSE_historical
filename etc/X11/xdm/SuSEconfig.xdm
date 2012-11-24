@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+# Copyright (c) 2001 SuSE GmbH Nuernberg, Germany.
+# Copyright (c) 2008 SuSE LINUX Products GmbH, Germany.
+# Author: Werner Fink      <werner@suse.de>
+
+type -p sed  &> /dev/null || {
+    echo "${0##*/}: No sed  in PATH ... skipping"
+    exit 0
+}
+
+r=$ROOT
+test -f $r/etc/sysconfig/displaymanager || {
+    echo "${0##*/}: No $r/etc/sysconfig/displaymanager found."
+    exit 1
+}
+. $r/etc/sysconfig/displaymanager
+
+test -f $r/lib/YaST/SuSEconfig.functions || {
+    echo "${0##*/}: ERROR - can not find $r"'/lib/YaST/SuSEconfig.functions!!'
+    echo "${0##*/}: This should not happen.  Exit..."
+    exit 1
+}
+. $r/lib/YaST/SuSEconfig.functions
+
+if test -r $r/etc/X11/xdm/Xservers -a $r/etc/sysconfig/displaymanager -nt $r/etc/X11/xdm/Xservers; then
+    file=$r/etc/X11/xdm/Xservers
+    cp -p $file ${file}.SuSEconfig
+    if   test "$DISPLAYMANAGER_STARTS_XSERVER" = "no"  ; then
+	sed -ri 's/^(:[0-9][[:blank:]]+local[[:blank:]]+)/#\1/g' ${file}.SuSEconfig
+    elif test "$DISPLAYMANAGER_STARTS_XSERVER" = "yes" ; then
+	sed -ri 's/^#[[:blank:]]*(:[0-9][[:blank:]]+local[[:blank:]]+)/\1/g' ${file}.SuSEconfig
+    fi
+    if   test "$DISPLAYMANAGER_XSERVER_TCP_PORT_6000_OPEN" = "no" ; then
+        sed -ri 's%(.*/usr/bin/X)[[:blank:]]*(-nolisten[[:blank:]]*tcp[[:blank:]]*|)%\1 -nolisten tcp %g' ${file}.SuSEconfig
+    elif test "$DISPLAYMANAGER_XSERVER_TCP_PORT_6000_OPEN" = "yes" ; then
+        sed -ri 's%(.*/usr/bin/X)[[:blank:]]*-nolisten tcp[[:blank:]]*%\1 %g' ${file}.SuSEconfig
+    fi
+    check_md5_and_move $file
+fi
+
+if test -n "$DISPLAYMANAGER_XSERVER" -a -x "/usr/bin/$DISPLAYMANAGER_XSERVER" ; then
+    test -d /var/lib/X11 && ln -snf "/usr/bin/$DISPLAYMANAGER_XSERVER" /var/lib/X11/X
+else
+    test -d /var/lib/X11 && ln -snf /usr/bin/Xorg /var/lib/X11/X
+fi
+
+if test -r $r/etc/X11/xdm/xdm-config -a $r/etc/sysconfig/displaymanager -nt $r/etc/X11/xdm/xdm-config; then
+    file=$r/etc/X11/xdm/xdm-config
+    cp -p $file ${file}.SuSEconfig
+    if   test "$DISPLAYMANAGER_REMOTE_ACCESS" = "yes"  ; then
+	sed -ri 's/^(DisplayManager\.requestPort:[[:blank:]]+0)/!\1/g' ${file}.SuSEconfig
+    elif test "$DISPLAYMANAGER_REMOTE_ACCESS" = "no" ; then
+	sed -ri 's/^![[:blank:]]*(DisplayManager\.requestPort:[[:blank:]]+0)/\1/g' ${file}.SuSEconfig
+    fi
+    check_md5_and_move $file
+fi
+
+#
+# end
+#

@@ -1,0 +1,95 @@
+## Path:        Desktop
+## Description: Display font configuration
+## Type:        yesno
+## Default:     yes
+#
+# generate TTCap entries in fonts.dir, which can be used by 
+# xtt/freetype font module
+#
+GENERATE_TTCAP_ENTRIES="yes"
+
+## Path:        System/Printing
+## Description: Printer font configuration
+## Type:        yesno
+## Default:     no
+#
+# generate fontmaps for ghostscript
+#
+# (needs 'ftdump' from the 'ft2demos' package).
+#
+GENERATE_GHOSTSCRIPT_FONTMAPS="no"
+
+## Path:        Desktop
+## Description: Display font configuration
+## Type:        yesno
+## Default:     yes
+#
+# generate font setup for OpenOffice
+#
+GENERATE_OOO_FONT_SETUP="yes"
+
+## Path:        Desktop
+## Description: Display font configuration
+## Type:        yesno
+## Default:     yes
+#
+# generate font setup for Java 1.4.x and Java 1.5.x
+#
+GENERATE_JAVA_FONT_SETUP="yes"
+
+## Path:        Desktop
+## Description: Display font configuration
+## Type:        integer
+## Default:     0
+#
+# Fonts which have high quality byte code interpreter instructions
+# can look very good in small sizes when rendered in black and white
+# (no anti-aliasing!) using the byte code interpreter (not the autohinter!).
+# The results look as good as high quality bitmap fonts.
+#
+# If you want to use this rendering style by default for all fonts
+# which are known to have good byte code instructions (these are the
+# fonts from the agfa-fonts package and the Microsoft webfonts), enter
+# an integer number greater than 0 here. For example, if you enter "18",
+# black and white rendering using the byte code interpreter will be used
+# for pixel sizes <= 18, for larger sizes the autohinter and anti-aliasing
+# will be used. You can disable this by entering "0".
+#
+BYTECODE_BW_MAX_PIXEL="0"
+
+## Path:        Desktop
+## Description: Display font configuration
+## Type:        yesno
+## Default:     yes
+#
+# As rendering of outlines is often not perfect at small sizes, some
+# TrueType or OpenType fonts contain "embedded" bitmaps for small sizes.
+# This is very common in CJK fonts.
+#
+# Using embedded bitmaps usually gives clearly readable results as the bitmaps
+# are handtuned for good readability and do not suffer from imperfections
+# of the rendering algorithms.
+#
+# On the other hand, anti-aliasing is only possible when the outlines
+# are used.
+#
+# Often, using the outlines with anti-aliasing looks more "beautiful".
+# But using the embedded bitmaps is often better readable.
+# It is a matter of taste, decide by yourself which style you prefer.
+#
+USE_EMBEDDED_BITMAPS="yes"
+
+## Path:        Desktop
+## Description: Display font configuration
+## Type:        string
+## Default:     ja:ko:zh-CN:zh-TW:zh-HK:zh-SG
+#
+# You can limit the use of embedded bitmaps only to fonts which support certain
+# languages. To do this set this variable to a colon separated list of languages.
+# The spelling of the languages is the same as used by fontconfig.
+# For example, if you want to use embedded bitmaps only in fonts supporting
+# Japanese or simplified Chinese, you can set this variable to "ja:zh-CN".
+# If you want to use embedded bitmaps for *all* languages, set this variable
+# to the empty string "" or to "no".
+#
+EMBEDDED_BITMAPS_LANGUAGES="ja:ko:zh-CN:zh-TW:zh-HK:zh-SG"

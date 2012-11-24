@@ -1,0 +1,13 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Version=1.0
+Type=Application
+Exec=xfce4-appfinder --collapsed
+Icon=gtk-execute
+StartupNotify=true
+Terminal=false
+Categories=Utility;X-XFCE;X-Xfce-Toplevel;
+OnlyShowIn=XFCE;
+Name=启动程序
+Comment=启动一个程序
+Path=

@@ -1,0 +1,16 @@
+# HPLIP udev rules file. Notify console user if plugin support is required for this device.
+
+ACTION!="add", GOTO="hpmud_support_rules_end"
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", GOTO="hpmud_support_pid_test"
+SUBSYSTEM!="usb_device", GOTO="hpmud_support_rules_end"
+ 
+LABEL="hpmud_support_pid_test"
+
+# Check for LaserJet products (0x03f0xx17).
+ATTR{idVendor}=="03f0", ATTR{idProduct}=="??17", ENV{hp_model}="$attrs{product}", ENV{hp_test}="yes"
+# Check for LaserJet products (0x03f0xx2a).
+ATTR{idVendor}=="03f0", ATTR{idProduct}=="??2a", ENV{hp_model}="$attrs{product}", ENV{hp_test}="yes"
+ENV{hp_test}=="yes", RUN+="/bin/sh -c '/usr/bin/hp-mkuri -c &'"
+
+LABEL="hpmud_support_rules_end"
+

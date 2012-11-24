@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Version=1.0
+Name=截图
+Comment=Take screenshots of the entire screen, of the active window or of a region
+Icon=applets-screenshooter
+Exec=xfce4-screenshooter
+Type=Application
+StartupNotify=true
+Terminal=false
+Categories=Utility;X-SuSE-DesktopUtility;GTK;
+

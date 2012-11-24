@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=Fcitx Config Tool
+Name[zh_CN]=Fcitx配置工具
+Name[zh_TW]=Fcitx 設定工具
+Comment=Fcitx GUI Config Tool
+Comment[zh_CN]=Fcitx图形化配置工具
+Comment[zh_TW]=Fcitx GUI 設定工具
+Exec=fcitx-configtool
+Icon=fcitx
+MimeType=
+Type=Application
+Categories=Settings;System;SystemSetup;
+X-KDE-StartupNotify=false
+StartupNotify=false
+

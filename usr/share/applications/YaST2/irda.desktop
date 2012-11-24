@@ -1,0 +1,27 @@
+[Desktop Entry]
+X-SuSE-translate=true
+X-SuSE-DocTeamID=ycc_irda
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Hardware;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+X-SuSE-YaST-Call=irda
+
+X-SuSE-YaST-Group=Hardware
+X-SuSE-YaST-Argument=
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-AutoInst=
+X-SuSE-YaST-Geometry=
+X-SuSE-YaST-SortKey=
+X-SuSE-YaST-AutoInstResource=irda
+X-SuSE-YaST-Keywords=irda,infrared
+
+Icon=yast-irda
+Exec=xdg-su -c "/sbin/yast2 irda"
+
+Name=Infrared Device
+GenericName=Configure an Infrared device (IrDA)
+StartupNotify=true
+

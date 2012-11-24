@@ -1,0 +1,17 @@
+[Desktop Entry]
+X-SuSE-translate=true
+GenericName=Solitaire
+Name=空当接龙
+Comment=经典的空当接龙
+Exec=sol --freecell
+Icon=gnome-freecell
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;Game;CardGame;
+X-GNOME-Bugzilla-Bugzilla=GNOME
+X-GNOME-Bugzilla-Product=aisleriot
+X-GNOME-Bugzilla-Component=Zwischenlager
+X-GNOME-Bugzilla-Version=3.4.1
+StartupNotify=true
+
+Path=

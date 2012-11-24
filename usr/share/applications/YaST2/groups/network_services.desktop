@@ -1,0 +1,19 @@
+[Desktop Entry]
+X-SuSE-DocTeamID=ycc_network_services
+Type=Application
+Categories=Qt;X-SuSE-YaST;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+
+X-SuSE-YaST-Group=Net_advanced
+X-SuSE-YaST-SortKey=40
+
+OnlyShowIn=X-SuSE-YaST;
+Icon=yast-network_services
+
+Name=Network Services
+
+Exec=/sbin/yast2
+

@@ -1,0 +1,8 @@
+NAME="Powersaving"
+DESCRIPTION="Profile optimized for a low power consumption at the price of a higher latency. Useful for systems which are not accessed frequently."
+CPUFREQ_GOVERNOR="ondemand"
+CPUFREQ_SCHED_MC_POWER_SAVINGS="1"
+SATA_ALPM="min_power"
+HAL_DISABLE_POLLING="yes"
+DIRTY_WRITEBACK_CENTISECS="1500"
+READ_AHEAD_KB="3072"

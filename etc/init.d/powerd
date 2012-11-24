@@ -1,0 +1,65 @@
+#! /bin/sh
+#
+# System startup script for the UPS monitoring daemon
+#
+### BEGIN INIT INFO
+# Provides: powerd
+# Required-Start: $syslog
+# Should-Start:
+# Required-Stop:  $syslog
+# Should-Stop:
+# Default-Start:  2 3 5
+# Default-Stop:   0 1 6
+# Short-Description: Start the UPS monitoring daemon
+# Description:    Start the UPS monitoring daemon
+### END INIT INFO
+
+POWERD=/sbin/powerd
+test -x $POWERD || exit 5
+
+POWERD_CONFIG=/etc/powerd.conf
+test -f $POWERD_CONFIG || exit 6
+
+# Source SuSE config
+. /etc/rc.status
+
+rc_reset
+case "$1" in
+    start)
+        echo -n "Starting UPS monitoring daemon"
+        startproc -f $POWERD
+        rc_status -v
+        ;;
+    stop)
+        echo -n "Shutting down UPS monitoring daemon"
+        killproc $POWERD
+        rc_status -v
+        ;;
+    try-restart)
+        $0 status >/dev/null && $0 restart
+        rc_status
+        ;;
+    restart)
+        $0 stop
+        $0 start
+        rc_status
+        ;;
+    force-reload)
+        $0 try-restart
+        rc_status
+        ;;
+    reload)
+        $0 try-restart
+        rc_status
+        ;;
+    status)
+        echo -n "Checking for UPS monitoring service"
+        checkproc $POWERD
+        rc_status -v
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload}"
+        exit 1
+        ;;
+esac
+rc_exit

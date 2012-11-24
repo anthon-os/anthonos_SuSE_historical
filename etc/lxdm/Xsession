@@ -1,0 +1,26 @@
+#!/bin/bash
+
+failsafe="xterm -ls -T Failsafe -geometry 80x24+0+0"
+trap "exec $failsafe" EXIT SIGHUP SIGINT SIGPIPE SIGTERM SIGIO
+shopt -s execfail
+
+# default session
+LXSESSION=/usr/bin/startlxde
+test $# -eq 1 -a -n "$1" && LXSESSION=$1
+
+export WINDOWMANAGER=$LXSESSION
+test -x /etc/X11/xdm/Xsession  && exec /etc/X11/xdm/Xsession "${LXSESSION}"
+test -x /etc/X11/xinit/xinitrc && exec -l $SHELL -c /etc/X11/xinit/xinitrc
+
+# unknown, user should custom /etc/lxdm/xinitrc self
+test -s /etc/lxdm/xinitrc && . /etc/lxdm/xinitrc
+
+if ! test -z "$XDG_SESSION_COOKIE" ; then
+	CK_XINIT_SESSION=
+elif test -x /usr/bin/ck-launch-session ; then
+	CK_XINIT_SESSION="/usr/bin/ck-launch-session"
+fi
+exec -l $SHELL -c "$CK_XINIT_SESSION \"$LXSESSION\""
+
+# failsafe
+exit 1

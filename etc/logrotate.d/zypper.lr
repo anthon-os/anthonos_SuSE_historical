@@ -1,0 +1,12 @@
+/var/log/zypper.log {
+    compress
+    dateext
+    notifempty
+    missingok
+    nocreate
+
+    maxage 60
+    rotate 99
+    size 10M
+}
+

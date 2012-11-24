@@ -1,0 +1,7 @@
+NAME="Balanced Low Latency Computing"
+DESCRIPTION="Profile optimized for low latency with a certain consideration of power consumption."
+CPUFREQ_GOVERNOR="ondemand"
+CPUFREQ_SCHED_MC_POWER_SAVINGS="0"
+CPUFREQ_ONDEMAND_UP_THRESHOLD="20"
+SATA_ALPM="medium_power"
+HAL_DISABLE_POLLING="yes"

@@ -1,0 +1,43 @@
+## Path:        System/Boot
+## Description: Variables used on system shutdown, reboot, or halt
+## Type:	list(no,yes,octave)
+## Default:	no
+#
+# Set to "yes" or "quint" to play a quint tone sequence at system halt or reboot
+# or set to "octave" to play octave sound at that occasion.
+#
+HALT_SOUND="no"
+
+## Type:        string
+## Default:     ""
+#
+# Hook during system shutdown to run extra command
+#
+HALT_POWERDOWN_INSERT=""
+
+## Type:        list(poweroff,halt,auto)
+## Default:     auto
+#
+# What should the system do on halt? With poweroff the
+# system not only halt the OS but also switch the power
+# down. On ix86 or x86_64 this depends on the APM and/or
+# ACPI capabilities of the hardware, therefore "auto" will
+# cause the system to check about.
+#
+HALT="auto"
+
+## Type:        list(no,yes)
+## Default:     no
+#
+# By default the network is not stopped at halt/poweroff.
+# Sometimes this may be to "yes" to avoid wake-on-lan.
+#
+HALT_NETWORK="no"
+
+## Type:        list(no,yes)
+## Default:     yes
+#
+# By default the disk are also halted at halt/poweroff.
+# For software raids this option is ignored.
+#
+HALT_DISKS="yes"

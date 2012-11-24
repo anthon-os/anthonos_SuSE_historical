@@ -1,0 +1,101 @@
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+ "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+	<Name>YaST2</Name>
+	
+	<!-- Read standard .directory and .desktop file locations -->
+	<DefaultAppDirs/>
+	<DefaultDirectoryDirs/>
+	
+	<Directory>yast-gnome.directory</Directory>
+	<OnlyUnallocated/>
+	<Include>
+		<Category>X-SuSE-YaST</Category>
+	</Include>   
+	<Menu>
+		<Name>Software</Name>
+		<Directory>yast-gnome-software.directory</Directory>
+		<Include>
+			<Category>X-SuSE-YaST-Software</Category>
+		</Include>
+	</Menu>
+	<Menu>
+		<Name>Hardware</Name>
+		<Directory>yast-gnome-hardware.directory</Directory>
+		<Include>
+			<Category>X-SuSE-YaST-Hardware</Category>
+		</Include>
+	</Menu>
+	<Menu>
+		<Name>System</Name>
+		<Directory>yast-gnome-system.directory</Directory>
+		<Include>
+			<Category>X-SuSE-YaST-System</Category>
+		</Include>
+	</Menu>
+	<Menu>
+		<Name>Network Devices</Name>
+		<Directory>yast-gnome-net-devices.directory</Directory>
+		<Include>
+			<Category>X-SuSE-YaST-Network</Category>
+		</Include>
+	</Menu>
+	<Menu>
+		<Name>Network Services</Name>
+		<Directory>yast-gnome-net-services.directory</Directory>
+		<Include>
+			<Category>X-SuSE-YaST-Net_advanced</Category>
+		</Include>
+	</Menu>
+	<Menu>
+		<Name>AppArmor</Name>
+		<Directory>yast-gnome-apparmor.directory</Directory>
+		<Include>
+			<Category>X-SuSE-YaST-AppArmor</Category>
+		</Include>
+	</Menu>
+	<Menu>
+		<Name>Security</Name>
+		<Directory>yast-gnome-security.directory</Directory>
+		<Include>
+			<Category>X-SuSE-YaST-Security</Category>
+		</Include>
+	</Menu>
+	<Menu>
+		<Name>Virtualization</Name>
+		<Directory>yast-gnome-virtualization.directory</Directory>
+		<Include>
+			<Category>X-SuSE-YaST-Virtualization</Category>
+		</Include>
+	</Menu>
+	<Menu>
+		<Name>High Availability</Name>
+		<Directory>yast-gnome-ha.directory</Directory>
+		<Include>
+			<Category>X-SuSE-YaST-High_Availability</Category>
+		</Include>
+	</Menu>
+	<Menu>
+		<Name>Misc</Name>
+		<Directory>yast-gnome-misc.directory</Directory>
+		<Include>
+			<Category>X-SuSE-YaST-Misc</Category>
+		</Include>
+	</Menu>
+	<DefaultMergeDirs/>
+
+   <Layout>
+     <Menuname>Software</Menuname>
+     <Menuname>Hardware</Menuname>
+     <Menuname>System</Menuname>
+     <Menuname>Network Devices</Menuname>
+     <Menuname>Network Services</Menuname>
+     <Menuname>AppArmor</Menuname>
+     <Menuname>Security</Menuname>
+     <Menuname>Virtualization</Menuname>
+     <Menuname>High Availability</Menuname>
+     <Menuname>Misc</Menuname>
+     <Merge type="all" />
+   </Layout>
+</Menu>

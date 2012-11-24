@@ -1,0 +1,11 @@
+# Per default, only "su -" will set a new PATH.
+# If this variable is changed to "yes" (default is "no"),
+# every su call will overwrite the PATH variable.
+ALWAYS_SET_PATH=no
+
+# Default path. 
+PATH=/usr/local/bin:/bin:/usr/bin
+
+# Default path for a user invoking su to root.
+SUPATH=/usr/sbin:/bin:/usr/bin:/sbin
+

@@ -1,0 +1,61 @@
+Section "Device"
+  Identifier "vboxvideo"
+  Driver  "vboxvideo"
+EndSection
+
+Section "Screen"
+  Identifier "vboxvideo"
+  Device "vboxvideo"
+EndSection
+
+
+Section "Device"
+  Identifier "vmware"
+  Driver  "vmware"
+EndSection
+
+Section "Screen"
+  Identifier "vmware"
+  Device "vmware"
+EndSection
+
+
+Section "Device"
+  Identifier "cirrus"
+  Driver  "cirrus"
+EndSection
+Section "Screen"
+  Identifier "cirrus"
+  Device "cirrus"
+EndSection
+
+
+Section "Device"
+  Identifier "fbdev"
+  Driver  "fbdev"
+EndSection
+Section "Screen"
+  Identifier "fbdev"
+  Device "fbdev"
+EndSection
+
+
+Section "Device"
+  Identifier "vesa"
+  Driver  "vesa"
+EndSection
+
+Section "Screen"
+  Identifier "vesa"
+  Device "vesa"
+EndSection
+
+
+Section "ServerLayout"
+  Identifier "Layout"
+  Screen  "vboxvideo"
+  Screen  "vmware"
+  Screen  "cirrus"
+  Screen  "fbdev"
+  Screen  "vesa"
+EndSection

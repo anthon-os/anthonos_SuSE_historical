@@ -1,0 +1,6 @@
+TARGETS = bluez-coldplug vboxadd xdm smartd SuSEfirewall2_setup acpid alsasound avahi-daemon dbus syslog network SuSEfirewall2_init
+acpid: xdm
+dbus: avahi-daemon
+syslog: smartd xdm
+network: syslog avahi-daemon
+SuSEfirewall2_init: network

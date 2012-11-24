@@ -1,0 +1,13 @@
+
+[Desktop Entry]
+X-SuSE-translate=true
+Categories=System;Settings;HardwareSettings;X-SuSE-PrintingUtility;
+Exec=desktop-launch http://localhost:631/
+NotShowIn=GNOME;
+Icon=cups
+StartupNotify=false
+Terminal=false
+Type=Application
+Name=管理打印机
+Comment=CUPS Web Interface
+

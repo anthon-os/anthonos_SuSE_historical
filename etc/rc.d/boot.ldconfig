@@ -1,0 +1,52 @@
+#! /bin/sh
+#
+# Copyright (c) 2001-2002 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# /etc/init.d/boot.ldconfig
+#
+### BEGIN INIT INFO
+# Provides:          boot.ldconfig
+# Required-Start:    
+# Should-Start:      boot.crypto boot.swap boot.clock
+# Required-Stop:
+# Should-Stop:       boot.crypto boot.swap boot.clock
+# Default-Start:     B
+# Default-Stop:
+# Short-Description: run ldconfig if needed
+# Description:       run ldconfig if needed
+### END INIT INFO
+
+. /etc/rc.status
+. /etc/sysconfig/clock
+
+rc_reset
+
+case "$1" in
+  start|restart|stop)
+	#
+	# Let ld.so rebuild its cache.
+	# But do some tests before if it is really needed
+	LDCONFIG_NEEDED=false
+	test -s /etc/ld.so.cache || LDCONFIG_NEEDED=true
+	test "$run_ldconfig" = true && LDCONFIG_NEEDED=true
+	test -x /sbin/ldconfig -a "$LDCONFIG_NEEDED" = true && {
+	    echo -n "Setting up linker cache (/etc/ld.so.cache) using ldconfig"
+	    /sbin/ldconfig -X 2>/dev/null || \
+	        { echo ; echo -e "ldconfig $rc_failed" ; }
+	    rc_status -v -r
+	}
+	;;
+    status)
+	# assume we have been run
+	rc_reset
+	rc_status -v
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|restart}"
+	exit 1
+	;;
+esac
+
+rc_exit
+

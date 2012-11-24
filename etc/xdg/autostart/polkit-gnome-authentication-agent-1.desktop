@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Name=PolicyKit Authentication Agent
+Comment=PolicyKit Authentication Agent
+Exec=/usr/lib/polkit-gnome-authentication-agent-1
+Terminal=false
+Type=Application
+Categories=
+NoDisplay=true
+NotShowIn=KDE;
+AutostartCondition=GNOME3 unless-session gnome
+

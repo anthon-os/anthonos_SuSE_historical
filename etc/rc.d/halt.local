@@ -1,0 +1,15 @@
+#! /bin/sh
+#
+# Copyright (c) 2002 SuSE Linux AG Nuernberg, Germany.  All rights reserved.
+#
+# Author: Werner Fink, 1998
+#         Burchard Steinbild, 1998
+#
+# /etc/init.d/halt.local
+#
+# script with local commands to be executed from init on system shutdown
+#
+# Here you should add things, that should happen directly before shuting
+# down.
+#
+

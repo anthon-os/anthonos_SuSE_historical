@@ -1,0 +1,81 @@
+#! /bin/sh
+#
+# Copyright (c) 2001-2002 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# /etc/init.d/boot.localnet
+#
+### BEGIN INIT INFO
+# Provides:          boot.localnet
+# Required-Start:    boot.rootfsck
+# Required-Stop:     $null
+# Default-Start:     B
+# Default-Stop:
+# Short-Description: setup hostname and yp
+# Description:       setup hostname and yp
+### END INIT INFO
+
+. /etc/rc.status
+. /etc/sysconfig/cron
+
+rc_reset
+
+case "$1" in
+  start)
+	# clean up old yp bindings
+	rm -f /var/yp/binding/*.[12]
+	
+	#
+	# set hostname and domainname
+	#
+	XHOSTNAME=""
+	test -f /etc/HOSTNAME && {
+	    read XHOSTNAME < /etc/HOSTNAME
+	}
+	test -n "$HOSTNAME" -a "$HOSTNAME" != '(none)' && {
+	    echo Using boot-specified hostname \'${HOSTNAME}\'
+	    XHOSTNAME="$HOSTNAME"
+	}
+	test -n "$XHOSTNAME" && {
+	    echo -n Setting up hostname \'${XHOSTNAME%%.*}\'
+	    hostname ${XHOSTNAME%%.*}
+	    rc_status -v -r
+	}
+	
+	XDOMAINNAME=""
+	test -f /etc/defaultdomain && {
+	    read XDOMAINNAME < /etc/defaultdomain
+	}
+        test -n "$XDOMAINNAME" && {
+	    echo -n Setting up NIS domainname \'$XDOMAINNAME\'
+        }
+	domainname "$XDOMAINNAME"
+        test -n "$XDOMAINNAME" && {
+	rc_status -v -r
+        }
+	
+	unset XHOSTNAME
+	unset XDOMAINNAME
+
+	echo -n "Setting up loopback interface "
+	#/sbin/ifconfig lo 127.0.0.1 up
+	/sbin/ip addr add 127.0.0.1/8 brd + dev lo
+	/sbin/ip link set lo up
+	rc_status -v -r
+	;;
+    stop|restart)
+        # skip / nothing to do
+	;;
+    status)
+	# assume we have been run
+	rc_reset
+	rc_status -v
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|restart}"
+	exit 1
+	;;
+esac
+
+rc_exit
+	

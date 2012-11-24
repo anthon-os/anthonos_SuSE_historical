@@ -1,0 +1,38 @@
+## Path:	System/Backup
+## Description:	
+## Type:	string(/var/adm/backup/rpmdb)
+## Default:	/var/adm/backup/rpmdb
+## Config:
+#
+# If you want cron.daily to backup the rpm database, specify a directory
+# where the backups will be stored. (This is recommended!) The backups
+# will be made every time cron.daily is called and the db has changed.
+# Setting the variable to "" disables this feature.
+#
+RPMDB_BACKUP_DIR="/var/adm/backup/rpmdb"
+
+## Type:	integer
+## Default:	5
+#
+# Here you can set the maximum number of backup files for the rpm
+# database.
+#
+MAX_RPMDB_BACKUPS="5"
+
+## Type:	string
+## Default:	/var/adm/backup/rpmdb
+#
+# If you want cron.daily to backup /etc/rc.config and the files in 
+# /etc/sysconfig, specify a directory where the backups will be stored.
+# (This is recommended!) The backups will be made every time cron.daily is
+# called and the the content of those files has changed.
+# Setting the variable to "" disables this feature.
+#
+RCCONFIG_BACKUP_DIR="/var/adm/backup/sysconfig"
+
+## Type:	integer
+## Default:	5
+#
+# Here you can set the maximum number of backup files for the rc.config files.
+#
+MAX_RCCONFIG_BACKUPS="5"

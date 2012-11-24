@@ -1,0 +1,18 @@
+
+## Path:	   Network/WWW/Apache/SuSEhelp
+## Description:	   SuSE help doc server configuration
+## Type:	   yesno
+## Default:	   no
+## Config:         apache
+## ServiceRestart: apache
+## Command:
+#
+# Set this to yes on the central documentation server
+# or to configure apache for local use of susehelp. 
+# Then the online-help-system indices are automatically adjusted
+# and access to the help-files is allowed as specified in DOC_ALLOW.
+# To run as a client for the central documentation server who's name
+# is specified in DOC_HOST, just set DOC_SERVER to no.
+# The DOC_HOST and DOC_ALLOW variables are in the file /etc/sysconfig/susehelp.
+#
+DOC_SERVER="no"

@@ -1,0 +1,62 @@
+#! /bin/sh
+# Copyright (c) 1995-2001 SuSE GmbH Nuernberg, Germany.
+#
+# Author: Dirk Lerner <feedback@suse.de>
+#
+# /etc/init.d/raw
+#
+#   and symbolic its link
+#
+# /usr/sbin/rcraw
+#
+### BEGIN INIT INFO
+# Provides:       raw
+# Required-Start: $local_fs $remote_fs 
+# Required-Stop:  $local_fs $remote_fs 
+# Default-Start:  2 3 5
+# Default-Stop:   0 1 6
+# Short-Description: raw devices
+# Description:    raw-devices
+### END INIT INFO
+
+. /etc/rc.status
+
+CONFIG=/etc/raw
+RAW_BIN=/sbin/raw
+RAW_MODULE=raw
+test -x $RAW_BIN || exit 5
+
+if [ ! -f $CONFIG ];then
+ echo "file: $CONFIG not found"
+ exit 6
+fi
+
+rc_reset
+case "$1" in
+    start)
+      /sbin/modprobe $RAW_MODULE && sleep 2
+      line=`grep -v ^# < $CONFIG`
+      
+      for i in $line;do
+        rawdev=`echo $i | cut -f1 -d:`
+        rawbind=`echo $i | cut -f2- -d:`
+        echo -n "bind /dev/raw/$rawdev to /dev/$rawbind..."
+        $RAW_BIN /dev/raw/$rawdev /dev/$rawbind > /dev/null 2>&1 
+	rc_status -v
+      done
+      ;;
+    stop)
+      echo -n "to unbind the rawdevice please perform a system shutdown"
+      rc_failed 3
+      rc_status -v
+      ;;
+    status)
+      $RAW_BIN -qa 2> /dev/null
+      rc_status -v
+      ;;
+    *)
+      echo "Usage: $0 {start|stop|status}"
+      exit 1
+      ;;
+esac
+rc_exit

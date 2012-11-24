@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# TakeDevices:  Take the current virtual and and logging console back.
+#               Any other device which was given away should be taken
+#               back herein. Called by Xreset.
+#
+# Copyright (c) 2000,2004 SuSE GmbH Nuernberg, Germany.
+# please report bugfixes or comments at http://www.suse.de/feedback.
+#
+# Author: Werner Fink,   <werner@suse.de>
+#
+
+if test -c /dev/tty0 && type -p showconsole > /dev/null 2>&1 ; then
+    device="`(exec showconsole < /dev/tty0) 2>/dev/null`"
+    if test -n "$device" -a -c "$device" ; then
+	chown root:tty  "$device"
+	chmod 620	"$device"
+    fi
+fi
+
+case "$DISPLAY" in
+    :0|:0.0)
+	if test -p /dev/xconsole ; then
+	    chown root:tty  /dev/xconsole
+	    chmod 400	    /dev/xconsole
+	fi
+	;;
+    *)
+esac

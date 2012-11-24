@@ -1,0 +1,27 @@
+[Desktop Entry]
+X-SuSE-translate=true
+X-SuSE-DocTeamID=ycc_online_update
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Software;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+X-SuSE-YaST-Call=online_update
+
+X-SuSE-YaST-Group=Software
+X-SuSE-YaST-Argument=
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-Geometry=
+X-SuSE-YaST-SortKey=10
+X-SuSE-YaST-AutoInstResource=
+X-SuSE-YaST-AutoInst=
+X-SuSE-YaST-Keywords=software,update,online
+
+Icon=yast-online_update
+Exec=xdg-su -c "/sbin/yast2 online_update"
+
+Name=Online Update
+GenericName=Get patches to correct and improve your existing installation
+StartupNotify=true
+

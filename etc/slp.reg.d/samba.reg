@@ -1,0 +1,19 @@
+#############################################################################
+#
+# OpenSLP registration file
+#
+# register Samba and SWAT
+#
+#############################################################################
+
+# Register the samba server, if it is running
+service:smb://$HOSTNAME,en,65535
+tcp-port=139
+description=Samba file and print server
+
+# Register the web administration front-end for samba
+service:Samba-Swat:http://$HOSTNAME:901,en,65535
+tcp-port=901
+description=Samba web administration front end
+
+

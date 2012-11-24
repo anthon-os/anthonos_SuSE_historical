@@ -1,0 +1,36 @@
+## Path:	System/Yast2/Ldap
+## Description:	YaST2 Ldap-client configuration
+## Type:	string
+## Default:	none
+#
+# Main configuration DN. At these place (in the LDAP directory) the
+# configuration objects (like userConfiguration or groupConfiguration)
+# are saved as default.
+#
+#
+BASE_CONFIG_DN=""
+
+
+## Path:	System/Yast2/Ldap
+## Description:	YaST2 Ldap-client configuration
+## Type:	string
+## Default:	none
+#
+# Administrator bind DN. With this DN you will bind to LDAP server to
+# configure directory contens.
+#
+#
+BIND_DN=""
+
+
+## Path:	System/Yast2/Ldap
+## Description:	YaST2 Ldap-client configuration
+## Type:        yesno
+## Default:     no
+#
+# If this machine acts as a file server for LDAP users home directories.
+# Value is used by YaST2 Users module to check if managing home directories
+# of LDAP users is possible.
+#
+#
+FILE_SERVER="no"

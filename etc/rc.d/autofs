@@ -1,0 +1,159 @@
+#!/bin/bash
+#
+# Copyright (C) 2011 SUSE Linux Products GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+
+### BEGIN INIT INFO
+# Provides:       autofs
+# Required-Start: $network $syslog $remote_fs
+# Should-Start:   $portmap ypbind keyserv ldap nfsserver network-remotefs
+# Required-Stop:  $network $syslog $remote_fs
+# Should-Stop:    $portmap ypbind keyserv ldap nfsserver network-remotefs
+# Default-Start:  3 5
+# Default-Stop:
+# Short-Description: automatic mounting of filesystems
+# Description:    Start the autofs daemon for automatic mounting of filesystems.
+### END INIT INFO
+
+#
+# Location of the automount daemon and the init directory
+#
+DAEMON=/usr/sbin/automount
+prog=`basename $DAEMON`
+MODULE="autofs4"
+DEVICE="autofs"
+confdir=/etc/sysconfig
+PIDFILE=/var/run/automount.pid
+
+test -x $DAEMON || exit 5
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+export PATH
+
+. /etc/rc.status
+
+#
+# Load customized configuration settings
+#
+if [ -r $confdir/autofs ]; then
+	. $confdir/autofs
+fi
+
+function start() {
+	# Make sure autofs4 module is loaded
+	if ! grep -q autofs /proc/filesystems; then
+		# Try load the autofs4 module fail if we can't
+		modprobe -q $MODULE >/dev/null 2>&1
+		if [ $? -eq 1 ]; then
+			echo "Error: failed to load $MODULE module."
+			return 1
+		fi
+	fi
+
+	# Use the AutoFS misc device unless it is explicitly disabled
+	if [ -z "$USE_MISC_DEVICE" -o "x$USE_MISC_DEVICE" = "xyes" ]; then
+		if [ -e "/proc/misc" ]; then
+			if ! grep -q autofs /proc/misc; then
+				sleep 1
+			fi
+			MINOR=`awk "/$DEVICE/ {print \\$1}" /proc/misc`
+			if [ -n "$MINOR" -a ! -c "/dev/$DEVICE" ]; then
+				mknod -m 0600 /dev/$DEVICE c 10 $MINOR
+			fi
+		fi
+		if [ -x /sbin/restorecon -a -c /dev/$DEVICE ]; then
+			/sbin/restorecon /dev/$DEVICE
+		fi
+	else
+		if [ -c /dev/$DEVICE ]; then
+			rm /dev/$DEVICE
+		fi
+	fi
+
+	if [ "$LOCAL_OPTIONS" ]; then
+		AUTOFS_OPTIONS="-O $LOCAL_OPTIONS $AUTOFS_OPTIONS"
+	fi
+	/sbin/startproc -w $DAEMON -p $PIDFILE $AUTOFS_OPTIONS
+
+	return $?
+}
+
+function stop() {
+	# Send SIGTERM first and set a maximum wait time of 45 seconds
+	# before sending SIGKILL
+	/sbin/killproc -t 45 -p $PIDFILE $DAEMON
+}
+
+RETVAL=0
+
+case "$1" in
+	start)
+		echo -n "Starting $prog "
+		# Check if already running
+		if ! /sbin/checkproc $DAEMON; then
+			start
+		fi
+
+		rc_status -v
+		;;
+	stop)
+		echo -n "Shutting down $prog "
+		stop
+
+		rc_status -v
+		;;
+	try-restart|condrestart)
+		## Do a restart only if the service was active before.
+		## Note: try-restart is now part of LSB (as of 1.9).
+		if test "$1" = "condrestart"; then
+			echo "${attn}Use try-restart ${done}(LSB)${attn}${norm}"
+		fi
+		$0 status
+		if test $? = 0; then
+			$0 restart
+		else
+			rc_reset	# Not running is not a failure.
+		fi
+		# Remember status and be quiet
+		rc_status
+		;;
+	restart)
+		$0 stop
+		$0 start
+
+		rc_status
+		;;
+	force-reload|reload)
+		echo -n "Reload service $prog "
+		/sbin/killproc -HUP $DAEMON
+
+		rc_status -v
+		;;
+	status)
+		echo -n "Checking for service $prog "
+		/sbin/checkproc $DAEMON
+		# NOTE: rc_status knows that we called this init script with
+		# "status" option and adapts its messages accordingly.
+		rc_status -v
+		;;
+	*)
+		echo "Usage: $0 {start|stop|status|try-restart|restart|reload}"
+		exit 1
+		;;
+esac
+
+rc_exit

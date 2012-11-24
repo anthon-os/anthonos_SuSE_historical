@@ -1,0 +1,5 @@
+
+Things have changed massively regarding pcmcia. You will probably miss some
+files in this directory. Read /usr/share/doc/packages/pcmciautils/README.SUSE
+to learn more about the changes.
+

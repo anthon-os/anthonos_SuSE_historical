@@ -1,0 +1,23 @@
+[Desktop Entry]
+Version=1.0
+Terminal=false
+NoDisplay=true
+Icon=libreoffice-math
+Type=Application
+Categories=Office;Education;Science;Math;X-Red-Hat-Base;
+Exec=libreoffice --math %U
+MimeType=application/vnd.oasis.opendocument.formula;application/vnd.sun.xml.math;application/vnd.oasis.opendocument.formula-template;text/mathml;
+Name=公式
+GenericName=Formula Editor
+GenericName[zu]=Formula Editor
+Comment=Create and edit scientific formulas and equations by using Math.
+Comment[zu]=Yenza futhi ulungise amafomula ezesayensi nama-ikhuweyjini ngokusebenzisa into yeziBalo.
+InitialPreference=5
+X-Ayatana-Desktop-Shortcuts=X-New
+
+[X-New Shortcut Group]
+Name=New Formula
+Name[zu]=New Formula
+Exec=libreoffice --math %U
+TargetEnvironment=Unity
+

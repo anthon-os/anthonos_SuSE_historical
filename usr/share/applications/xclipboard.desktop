@@ -1,0 +1,13 @@
+[Desktop Entry]
+X-SuSE-translate=true
+NoDisplay=true
+Categories=Utility;X-SuSE-DesktopUtility;
+Encoding=UTF-8
+Name=X剪切板
+GenericName=Clipboard Viewer
+Exec=xclipboard
+Icon=xclipboard
+Type=Application
+Terminal=false
+X-KDE-StartupNotify=true
+

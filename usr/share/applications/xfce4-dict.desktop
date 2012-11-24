@@ -1,0 +1,13 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Type=Application
+Version=1.0
+Name=字典
+GenericName=Dictionary Client
+Comment=A client program to query different dictionaries.
+Icon=xfce4-dict
+Exec=xfce4-dict
+Terminal=false
+StartupNotify=true
+Categories=Office;Dictionary;GTK;
+

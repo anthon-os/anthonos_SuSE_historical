@@ -1,0 +1,236 @@
+#!/bin/bash
+#
+# Copyright (c) 2001-2002 SuSE Linux AG, Nuernberg, Germany.
+# Copyright (c) 2008-2012 SuSE LINUX Products GmbH, Nuernberg, Germany.
+#
+# /etc/init.d/boot.clock
+#
+### BEGIN INIT INFO
+# Provides:          boot.clock
+# Required-Start:    boot.rootfsck boot.udev
+# Required-Stop:     boot.rootfsck
+# Should-Start:      $null
+# Should-Stop:       apparmor
+# X-Start-Before:    boot.localfs
+# X-Stop-After:      $null
+# Default-Start:     B S
+# Default-Stop:
+# X-Interactive:     true
+# Description:       Read hardware clock and set system clock
+# Short-Description: Read hardware clock and set system clock
+### END INIT INFO
+
+. /etc/rc.status
+. /etc/sysconfig/clock
+
+: ${SYSTOHC:=yes}
+: ${USE_HWCLOCK:=yes}
+: ${BADYEAR:=no}
+
+adjtimex=$(PATH=/sbin:/bin:/usr/sbin:/usr/bin type -p adjtimex)
+    date=$(PATH=/sbin:/bin:/usr/sbin:/usr/bin type -p date)
+    grep=$(PATH=/sbin:/bin:/usr/sbin:/usr/bin type -p grep)
+   uname=$(PATH=/sbin:/bin:/usr/sbin:/usr/bin type -p uname)
+ hwclock=$(PATH=/sbin:/bin:/usr/sbin:/usr/bin type -p hwclock)
+
+#
+# If the system adminstrator has deleted the /etc/adjtime create
+# a template with its defaults
+#
+if test -w /etc -a ! -s /etc/adjtime ; then
+    echo -e '0.0 0 0.0\n0\nUTC' > /etc/adjtime
+fi
+
+#
+# Determine the HW/CMOS clock reference
+#
+HWREFERENCE=--utc
+$grep -q LOCAL /etc/adjtime && HWREFERENCE=""
+
+#
+# Do not use hwclock if not valid on this platform
+#
+case "$($uname -i)" in
+s390*) USE_HWCLOCK=no 
+esac
+if test -r /proc/xen/capabilities ; then
+    read -t1 caps < /proc/xen/capabilities
+    test "$caps" = "${caps%control_d*}" && USE_HWCLOCK=no
+fi
+
+#
+# Handle broken hardware clock
+#
+case "$BADYEAR" in
+yes) BADYEAR="--badyear" ;;
+*)   BADYEAR=""
+esac
+case "$USE_ADJUST" in
+yes) USE_ADJUST=--adjust ;;
+*)   USE_ADJUST=""
+esac
+
+#
+# If rtc device is not overwritten, determine it
+#
+if test -z "$HCTOSYS_DEVICE" ; then
+    if test -h /dev/rtc ; then
+	readlink=$(PATH=/sbin:/bin:/usr/sbin:/usr/bin type -p readlink)
+	HCTOSYS_DEVICE=$(readlink /dev/rtc)
+	HCTOSYS_DEVICE=${HCTOSYS_DEVICE##*/}
+    fi
+    : ${HCTOSYS_DEVICE:=rtc0}
+fi
+
+#
+# Get current status of kernel time variables, if kernel
+# is within "11 minute mode" do not adjust HW clock nor
+# write system time back to HW clock, bug bnc#492921.
+#
+ELEVENMIN_MODE=no
+if test -e /sys/class/rtc/${HCTOSYS_DEVICE}/since_epoch -a -x "$adjtimex" -a -x "$date" ; then
+    typeset -i STA_DIFF=0
+    read -t 1 STA_DIFF < /sys/class/rtc/${HCTOSYS_DEVICE}/since_epoch
+    let STA_DIFF-=$(TZ=UTC $date +'%s')
+    if ((STA_DIFF > -900 && STA_DIFF < 900)) ; then
+	typeset -i STA_CLOCK=64
+	while IFS=: read tag value ; do
+	    value=${value##* }
+	    case "${tag}" in
+	    *status)
+		let STA_CLOCK=$value ;;
+	    *return\ value*)
+		let 'STA_CLOCK|=64'
+	    esac
+	done < <(TZ=UTC $adjtimex $HWREFERENCE --print)
+    fi
+    unset tag value
+    ((STA_CLOCK & 64)) || ELEVENMIN_MODE=yes
+    unset STA_CLOCK STA_DIFF
+fi
+
+#
+# Without having rtc_cmos module loaded hwclock will fail on at least x86
+#
+rtc_rule()
+{
+    local temprules=/run/udev/rules.d
+    local uevseqnum=/sys/kernel/uevent_seqnum
+    local rule=$temprules/95-rtc-cmos.rules
+    local -i start=0 end=0
+
+    if test -e /dev/rtc ; then
+	${1+"$@"}
+	return $?
+    fi
+    local modprobe=$(PATH=/sbin:/bin:/usr/sbin:/usr/bin type -p modprobe)
+
+    if test -z "$($modprobe -l rtc_cmos)" ; then
+	${1+"$@"}
+	return $?
+    fi
+    local mkdir=$(PATH=/sbin:/bin:/usr/sbin:/usr/bin type -p mkdir)
+
+    $mkdir -m 0755 -p $temprules
+    echo ACTION==\"add\", KERNEL==\"${HCTOSYS_DEVICE}\", RUN=\"${1+"$@"}\" > $rule
+
+    test -e $uevseqnum && read -t 1 start < $uevseqnum
+
+    if $modprobe -q rtc_cmos ; then
+	local udevadm=$(PATH=/sbin:/bin:/usr/sbin:/usr/bin type -p udevadm)
+	test -e $uevseqnum && read -t 1 end < $uevseqnum
+	if test $start -lt $end ; then
+	    $udevadm settle --quiet --seq-start=$start --seq-end=$end
+	else
+	    $udevadm settle --quiet
+	fi
+    else
+	rm -f $rule
+	${1+"$@"}
+    fi
+}
+
+rc_reset
+
+case "$1" in
+    start|restart|reload|force-reload)
+	#
+	# mkinitrd will set this variable if the system time was older than
+	# the mkinitrd.rpm build time.
+	if test -n "$SYSTEM_TIME_INCORRECT" ; then
+	    echo -n "The system time was incorrect: '${warn}$SYSTEM_TIME_INCORRECT${norm}'"
+	    rc_status -s
+	    rc_exit
+	fi
+	if test "$USE_HWCLOCK" != yes ; then
+
+	    echo -n Setting up the System Clock
+
+	    unset TZ
+
+	    case "$1$HWREFERENCE" in
+	    start)
+		$date --set "$($date --utc +'%Y-%m-%d %H:%M:%S.%N')"
+		rc_status
+		;;
+	    esac
+
+	    rc_status -v
+	    rc_exit
+	fi
+	if test "$ELEVENMIN_MODE" = yes ; then
+	    echo "The System Time is in sync with Hardware Clock ${stat}${done}good${norm}"
+	    rc_status
+	    rc_exit
+	fi
+	#
+	# Set and adjust the hardware clock
+	#	
+	echo -n "Set System Time to the current Hardware Clock"
+	#
+	# If not already done in (mk)initrd by warpclock:
+	#   Reset the System Time based on the current timezone.  Please note that
+	#   the old --hctosys is only valid for older kernels below 2.6 as for recent
+	#   kernels the System Time contains the Hardware Clock time.
+	#
+	SYSTZ="--systz"
+	test -e /dev/shm/warpclock && SYSTZ=""
+	rtc_rule $hwclock --rtc=/dev/$HCTOSYS_DEVICE $SYSTZ $USE_ADJUST $BADYEAR
+	rc_status -v
+	;;
+    stop)
+	if test "$ELEVENMIN_MODE" = yes -a "$FORCE_SYSTOHC" = no ; then
+	    echo "The System Time is in sync with Hardware Clock ${stat}${done}good${norm}"
+	    rc_status
+	    rc_exit
+	fi
+	if test "$USE_HWCLOCK" = yes -a \( "$SYSTOHC" = yes -o "$FORCE_SYSTOHC" = yes \) ; then
+	    echo -n "Set Hardware Clock to the current System Time"
+	    #
+	    # Write system time back to hardware clock
+	    #
+	    $hwclock --rtc=/dev/$HCTOSYS_DEVICE --systohc $USE_ADJUST $BADYEAR
+	    rc_status -v
+	fi
+	;;
+    timezone)
+	echo -n "Set Hardware Clock to the current System Time"
+	if test "$USE_HWCLOCK" = yes ; then
+	    $hwclock --rtc=/dev/$HCTOSYS_DEVICE --systohc $USE_ADJUST $BADYEAR
+	    $hwclock --rtc=/dev/$HCTOSYS_DEVICE --hctosys $USE_ADJUST $BADYEAR
+	else
+	    rc_status -u
+	fi
+	;;
+    status|show)
+	echo -n "Current Hardware Clock: "
+	$hwclock --rtc=/dev/$HCTOSYS_DEVICE --show $USE_ADJUST $BADYEAR
+	rc_status -v1
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|restart|reload|force-reload|timezone}"
+	exit 1
+	;;
+esac
+
+rc_exit

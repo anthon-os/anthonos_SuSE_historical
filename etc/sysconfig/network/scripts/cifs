@@ -1,0 +1,119 @@
+#! /bin/bash
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+# Place, Suite 330, Boston, MA 02111-1307 USA
+#
+# Author: Andreas Schneider <anschneider@suse.de>
+
+# cifs
+#
+# Script to restart cifs
+
+unset ${!LC_*} LANGUAGE
+export LANG="POSIX"
+export PATH="/sbin:/usr/sbin:/bin/:/usr/bin"
+
+numArgs=$#
+configname="$1"
+shift
+interface="$1"
+if [ $interface = "lo" ]; then
+  exit 0
+fi
+shift
+# And shift away the '-o'.
+shift
+options="$@"
+
+# Log functions
+function log_dbg()
+{
+  	case "${options}" in
+		*debug*)
+			logger -t $0 -p daemon.debug "$1"
+			;;
+	esac
+}
+function log_err()
+{
+	logger -t $0 -p daemon.err "$1"
+	exit 1
+}
+
+systemd_running () {
+	# We simply test whether systemd cgroup hierarchy is mounted
+	# where we return 0, non-zero if not.
+	/bin/mountpoint -q /sys/fs/cgroup/systemd
+}
+systemd_booting () {
+	# returns 0 when we boot, 1 in running system
+	systemctl show -p ActiveState default.target | grep -qi inactive
+}
+in_systemd_service () {
+	# returns 1 when we are started from a systemd service, 1 if not
+	grep -q -E ':name=systemd:/system/' /proc/$$/cgroup
+}
+
+SD_RUNNING="no"
+SD_BOOTING="no"
+IN_SYSTEMD_SERVICE="no"
+if systemd_running; then
+	SD_RUNNING="yes"
+	systemd_booting && SD_BOOTING="yes"
+	in_systemd_service && IN_SYSTEMD_SERVICE="yes"
+fi
+
+source /etc/rc.status
+
+# Main case switch
+case "$0" in
+	*if-up.d*)
+		. /etc/sysconfig/network/scripts/functions
+		state=`read_cached_config_data dhcp4_state "$interface"`
+
+		if rc_active nmb; then
+			# let systemd start nmb directly on boot
+			if [ "${SD_RUNNING}" = "yes" -a "${SD_BOOTING}" != "yes" ]; then
+				log_msg=$( systemctl --ignore-dependencies start nmb.service 2>&1)
+			elif [ "${SD_RUNNING}" != "yes" ]; then
+				log_msg=$( rcnmb start 2>&1)
+			fi
+			log_dbg "${log_msg}"
+		fi
+		# Restart cifs only if IPaddress changes and cifs is active
+		if [ "$state" == "new" ] && rc_active cifs; then
+			# prevent deadlock in systemd
+			if [ "${IN_SYSTEMD_SERVICE}" ]; then
+				log_msg=$( systemctl --ignore-dependencies restart cifs.service 2>&1)
+			else
+				log_msg=$( rccifs restart 2>&1)
+			fi
+			log_dbg "${log_msg}"
+		fi
+		;;
+	*if-down.d*)
+		if rc_active cifs; then
+			# prevent deadlock in systemd
+			if [ "${IN_SYSTEMD_SERVICE}" ]; then
+				log_msg=$( systemctl --ignore-dependencies stop cifs.service 2>&1)
+			else
+				log_msg=$( rccifs stop 2>&1)
+			fi
+			log_dbg "${log_msg}"
+		fi
+		;;
+	*)
+		log_err "Don't know what to do.  This script used to be called from dir if-{up,down}.d/."
+		;;
+esac

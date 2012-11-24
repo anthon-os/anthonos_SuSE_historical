@@ -1,0 +1,11 @@
+! proxy manager config file
+!
+! Each line has the format:
+!    <serviceName> managed <startCommand>
+!        or
+!    <serviceName> unmanaged <proxyAddress>
+!
+lbx managed /usr/bin/lbxproxy
+!
+! substitute site-specific info
+!xfwp unmanaged firewall:4444

@@ -1,0 +1,35 @@
+#!/bin/sh
+
+# Run "mdadm --monitor --oneshot" once a day to ensure
+# degraded arrays don't go unnoticed.
+
+mdadm_BIN=/sbin/mdadm
+mdadm_CONFIG=/etc/sysconfig/mdadm
+
+[ -x $mdadm_BIN ] || exit 0
+
+[ -r $mdadm_CONFIG ] && . $mdadm_CONFIG
+
+if [ x$MDADM_MAIL != x"" ]; then
+  MDADM_MAIL="-m \"$MDADM_MAIL\""
+fi
+ 
+if [ x$MDADM_PROGRAM != x"" ]; then
+  MDADM_PROGRAM="-p \"$MDADM_PROGRAM\""
+fi
+
+if [ x$MDADM_SCAN = x"yes" ]; then
+  MDADM_SCAN="-s"
+else
+  MDADM_SCAN=""
+fi
+
+if [ x$MDADM_CONFIG != x"" ]; then
+  MDADM_CONFIG="-c \"$MDADM_CONFIG\""
+fi
+
+# using --syslog avoids annoying warnings if no MAIL or PROGRAM are given
+# in sysconfig or mdadm.conf
+eval $mdadm_BIN -F $MDADM_RAIDDEVICES --oneshot --syslog $MDADM_MAIL $MDADM_PROGRAM $MDADM_SCAN $MDADM_SEND_MAIL $MDADM_CONFIG 
+
+exit 0

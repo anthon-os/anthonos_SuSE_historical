@@ -1,0 +1,42 @@
+#! /bin/sh
+#
+# /etc/init.d/bluez-coldplug
+#
+# Copyright (c) 2009, SUSE Linux Products GmbH Nuernberg, Germany.  All rights reserved.
+#
+#
+### BEGIN INIT INFO
+# Provides:		bluez-coldplug
+# Required-Start:	dbus $remote_fs
+# Should-Start:		$network $syslog
+# Required-Stop:	$null
+# Should-Stop:		$null
+# Default-Start:	2 3 5
+# Default-Stop:
+# Short-Description:
+# Description: handles udev coldplug of bluetooth dongles
+### END INIT INFO
+
+. /etc/rc.status
+
+case "$1" in
+	start|restart|try-restart)
+		udevadm trigger --subsystem-match=bluetooth --action=add
+		rc_status -v
+		;;
+	stop)   
+		rc_status -v
+		;;
+	force-reload|reload)
+		rc_status -v
+		;;
+	status)
+		rc_status -v
+		;;
+	*)
+		echo "Usage: $0" \
+		     "{start|stop|status|try-restart|restart|force-reload|reload}"
+		exit 1
+		;;
+esac
+rc_exit

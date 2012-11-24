@@ -1,0 +1,2 @@
+set asksub append dot save crt=20
+ignore Received Message-Id Resent-Message-Id Status Mail-From Return-Path Via

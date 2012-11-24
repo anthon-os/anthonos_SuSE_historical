@@ -1,0 +1,62 @@
+#!/bin/bash
+#
+#  Copyright (c) 2008 SUSE LINUX Products GmbH
+#  Author:  Bernhard Walle <bwalle@suse.de>
+#
+### BEGIN INIT INFO
+# Provides:       kexec
+# Required-Start: $null
+# Should-Start:
+# Should-Stop:
+# Required-Stop:  $local_fs $remote_fs
+# Default-Start:  1 2 3 5 S
+# Default-Stop:   1 2 3 5 S
+# Short-Description: Enables reboot through kexec
+# Description:    Enables reboot through kexec
+### END INIT INFO
+
+. /etc/rc.status
+
+KEXEC_BOOTLOADER=/usr/sbin/kexec-bootloader
+
+case "$1" in
+  start)
+        ;;
+  stop)
+        # Only execute that script if we're going to reboot the system.
+        if [ "$RUNLEVEL" -eq 6 ] ; then
+            if ! [ -f /sys/kernel/kexec_loaded ] ; then
+                echo -n "Cannot check if kexec kernel has been loaded."
+                rc_failed
+            else
+                read -t 2 kexec_loaded < /sys/kernel/kexec_loaded
+                if [ "$kexec_loaded" -ne 0 ] ; then
+                    echo -n "kexec kernel already loaded."
+                    rc_status -s
+                else
+                    echo -n "Loading kexec kernel for reboot ..."
+                    $KEXEC_BOOTLOADER
+                    rc_status -v
+                fi
+            fi
+        else
+            echo "Loading kexec kernel ..."
+            rc_status -s
+        fi
+        ;;
+  status)
+        echo "not implemented"
+        rc_status -s
+        ;;
+  restart|reload)
+        $0 stop
+        $0 start
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|restart|reload|try-reload}"
+        exit 1
+esac
+
+rc_exit
+
+# vim: set ts=4 sw=4 et: :mode=shellscript:

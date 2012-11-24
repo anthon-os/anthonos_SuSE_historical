@@ -1,0 +1,72 @@
+#!/bin/sh
+#
+#
+# backup_rpmdb. This script was split off cron.daily
+# Please add your local changes to cron.daily.local
+# since this file will be overwritten, when updating your system.
+#
+# Copyright (c) 1996-2002 SuSE Linux AG, Nuernberg, Germany.
+#
+# please send bugfixes or comments to http://www.suse.de/feedback.
+#
+# Author: Burchard Steinbild, 1996
+#         Florian La Roche, 1996
+#
+#
+# paranoia settings
+#
+umask 022
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+export PATH
+
+#
+# get information from /etc/sysconfig
+#
+if [ -f /etc/sysconfig/backup ] ; then
+    . /etc/sysconfig/backup
+fi
+#
+#
+PACKAGEDBFILE=packages.rpm
+if test -e /var/lib/rpm/Packages ; then
+    PACKAGEDBFILE=Packages
+fi
+#
+# create backups of rpm data base
+#
+if test -n "$RPMDB_BACKUP_DIR" -a -e /var/lib/rpm/$PACKAGEDBFILE ; then
+    mkdir -p $RPMDB_BACKUP_DIR
+    OLD_MD5=""
+    test -e $RPMDB_BACKUP_DIR/rpmdb_recent_md5 && \
+        OLD_MD5="`cat $RPMDB_BACKUP_DIR/rpmdb_recent_md5`"
+    NEW_MD5="`cat /var/lib/rpm/$PACKAGEDBFILE | md5sum`"
+    if test "$OLD_MD5" != "$NEW_MD5" ; then
+        DATESTRING=`date +"%Y%m%d"`
+
+        NEWNAME=$RPMDB_BACKUP_DIR/$PACKAGEDBFILE-$DATESTRING
+        NUMBER=2
+        while [ -e $NEWNAME -o -e $NEWNAME.gz ] ; do
+            NEWNAME=$RPMDB_BACKUP_DIR/$PACKAGEDBFILE-$DATESTRING-$NUMBER
+            NUMBER=`expr $NUMBER + 1`
+        done
+
+        if gzip -9 < /var/lib/rpm/$PACKAGEDBFILE > $NEWNAME.gz; then
+            echo "$NEW_MD5" > $RPMDB_BACKUP_DIR/rpmdb_recent_md5
+            test "$MAX_RPMDB_BACKUPS" -gt 0 2> /dev/null || MAX_RPMDB_BACKUPS=0
+            NUMBER=1
+            for BACKUPFILE in `ls -1 -t $RPMDB_BACKUP_DIR/$PACKAGEDBFILE-*` ; do
+                if test "$NUMBER" -gt "$MAX_RPMDB_BACKUPS" ; then
+                    rm -f $BACKUPFILE
+                fi
+                NUMBER=`expr $NUMBER + 1`
+            done
+        else
+            echo "ERROR!! can not backup RPM Database to $RPMDB_BACKUP_DIR."
+            echo "Maybe there is not enough disk space."
+            rm -f $NEWNAME $NEWNAME.gz
+        fi
+    fi
+fi
+
+exit 0

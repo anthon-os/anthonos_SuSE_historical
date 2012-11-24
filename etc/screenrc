@@ -1,0 +1,4 @@
+# this is the global screenrc file. Handle with care.
+
+termcapinfo xterm* G0:is=\E[?4l\E>:ti@:te@
+termcapinfo linux me=\E[m:AX

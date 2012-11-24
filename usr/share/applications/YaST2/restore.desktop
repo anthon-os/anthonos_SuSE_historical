@@ -1,0 +1,25 @@
+[Desktop Entry]
+X-SuSE-DocTeamID=ycc_restore
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-System;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+X-SuSE-YaST-Call=restore
+
+X-SuSE-YaST-Group=System
+X-SuSE-YaST-Argument=
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-AutoInst=all
+X-SuSE-YaST-Geometry=
+X-SuSE-YaST-SortKey=
+X-SuSE-YaST-AutoInstResource=
+
+Icon=yast-restore
+Exec=xdg-su -c "/sbin/yast2 restore"
+
+Name=System Restoration
+GenericName=Restore files from a backup archive
+StartupNotify=true
+

@@ -1,0 +1,13 @@
+
+[Desktop Entry]
+X-SuSE-translate=true
+Name=配置管理器（不推荐更改）
+Comment=Graphical settings editor for Xfconf
+Exec=xfce4-settings-editor
+Icon=preferences-system
+Terminal=false
+Type=Application
+Categories=XFCE;GTK;Settings;DesktopSettings;X-XFCE-SettingsDialog;X-XFCE;
+OnlyShowIn=XFCE;
+X-XfceSettingsManagerHidden=true
+

@@ -1,0 +1,48 @@
+
+## Path:        Network/Mail/General
+## Description: Basic general MTA configuration
+## Type:        yesno
+## Default:     yes
+## Config:      postfix,sendmail
+#
+# If you don't want to let SuSEconfig generate your
+# configuration file, set this to no
+#
+MAIL_CREATE_CONFIG="yes"
+## Path:		Network/Mail/General
+## Description:
+## Type:        string
+## Default:     ""
+## Config:      postfix
+## ServiceReload:	sendmail,postfix
+#
+# From:-Line in email and News postings
+# (otherwise the FQDN is used)
+FROM_HEADER=""
+
+## Type:        yesno
+## Default:     no
+## Config:      postfix
+#
+# Set this to "yes" if mail from remote should be accepted
+# this is necessary for any mail server.
+# If set to "no" or empty then only mail from localhost
+# will be accepted.
+#
+SMTPD_LISTEN_REMOTE="no"
+
+## Type:        yesno
+## Default:     no
+#
+# Set this to "yes" if the yast2 mail module must not
+# start with the wizard for asking the 
+# configuration type of the mail server.
+#
+SKIP_ASK="no"
+
+## Type:        string(standard,advanced,undef)
+## Default:     undef
+#
+# This variable contains the type of the mail server configuration.
+#
+CONFIG_TYPE="undef"

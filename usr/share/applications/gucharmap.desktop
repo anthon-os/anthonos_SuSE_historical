@@ -1,0 +1,17 @@
+[Desktop Entry]
+X-SuSE-translate=true
+GenericName=Character Map
+DocPath=gucharmap
+Name=字符
+Comment=Insert special characters into documents
+Exec=gucharmap
+Icon=accessories-character-map
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;Utility;X-SuSE-Editor;
+X-GNOME-Bugzilla-Bugzilla=GNOME
+X-GNOME-Bugzilla-Product=gucharmap
+X-GNOME-Bugzilla-Component=general
+X-GNOME-Bugzilla-Version=3.4.1.1
+StartupNotify=true
+

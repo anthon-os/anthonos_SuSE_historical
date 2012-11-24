@@ -1,0 +1,292 @@
+#! /bin/sh
+# Copyright (c) 2000-2001 SuSE GmbH Nuernberg, Germany.
+# Copyright (c) 2002 SuSE Linux AG
+# Copyright (c) 2005 SUSE LINUX Products GmbH
+#
+# Author: Carsten Hoeger
+# Please send feedback to http://www.suse.de/feedback/
+#
+# /etc/init.d/postfix
+#
+### BEGIN INIT INFO
+# Provides:       smtp sendmail postfix
+# Required-Start: $network $named $syslog $time $remote_fs
+# Should-Start:   cyrus ldap ypbind openslp amavisd mysql
+# Required-Stop:  $network $named $syslog $time $remote_fs
+# Should-Stop:    cyrus ldap ypbind openslp amavisd mysql
+# Default-Start:  3 5
+# Default-Stop:
+# Description:    start the Postfix MTA
+### END INIT INFO
+
+# Determine the base and follow a runlevel link name.
+base=${0##*/}
+link=${base#*[SK][0-9][0-9]}
+
+MASTER_BIN=/usr/lib/postfix/master
+PIDFILE=/var/spool/postfix/pid/master.pid
+POSTFIX_BIN=/usr/sbin/postfix
+POSTCONF=/usr/sbin/postconf
+OPENSLP_BIN=/usr/bin/slptool
+PF_CHROOT=/var/spool/postfix
+print_defaults=/usr/bin/my_print_defaults
+
+test -x $POSTFIX_BIN || exit 5
+test -x $MASTER_BIN || exit 5
+test -f /etc/sysconfig/postfix && . /etc/sysconfig/postfix
+
+warn_user(){
+  tput bold
+  echo -e "\t*** WARNING ***"
+  echo -e $1
+  echo -e "\t*** WARNING ***"
+  tput sgr0
+}
+
+cond_slp() {
+    cmd=$1
+    PIFACES=$($POSTCONF -h inet_interfaces|sed -e 's/\(127.0.0.1\|::1\|[[:space:]]\)//g')
+    PSERVICES=$(grep -E '^smtp.*smtpd' /etc/postfix/master.cf| cut -d" " -f1)
+    if [ -n "${POSTFIX_REGISTER_SLP/[yY][Ee][Ss]/}" ]; then
+	return
+    fi
+    if [ -x $OPENSLP_BIN -a -n "$PIFACES" ]; then
+	FQHN=$($POSTCONF -h myhostname)
+	for srv in $PSERVICES; do
+	    sport=$(sed -ne "/^$srv/Is/^$srv[[:space:]]\+\([0-9]\+\)\/tcp.*/\1/gp" /etc/services)
+	    if [ -n "$sport" ]; then
+		$OPENSLP_BIN $cmd service:$srv://$FQHN:$sport > /dev/null 2>&1
+	    fi
+	done
+    fi
+}
+
+chk_mysql_sock(){
+  if [ -n "$($print_defaults mysqld)" ]; then
+    MYSQL_SOCKET=$($print_defaults mysqld | grep -e '--socket[[:blank:]=]' | awk -F"=" '{print $2}')
+    MYSQL_SOCKET_DIR=$(dirname $MYSQL_SOCKET)
+    CHR_MYSQL_SOCKET=${PF_CHROOT}${MYSQL_SOCKET}
+    CHR_MYSQL_SOCKET_DIR=$(dirname $CHR_MYSQL_SOCKET)
+    if [ -S $MYSQL_SOCKET ]; then
+	if [ -d $CHR_MYSQL_SOCKET_DIR ]; then
+	  if grep $CHR_MYSQL_SOCKET_DIR /proc/mounts &> /dev/null; then
+		RET=0
+	  else
+		RET=8
+	  fi
+	else
+	  RET=4
+	fi
+    else
+	RET=2
+    fi
+  else
+    RET=1
+  fi
+  return $RET
+}
+
+chk_sasl_sock(){
+  SASL_SOCKET=/var/run/sasl2/mux
+  SASL_SOCKET_DIR=$(dirname $SASL_SOCKET)
+  CHR_SASL_SOCKET=${PF_CHROOT}${SASL_SOCKET}
+  CHR_SASL_SOCKET_DIR=$(dirname $CHR_SASL_SOCKET)
+  if  [ -S $SASL_SOCKET ]; then
+    if [ -d $CHR_SASL_SOCKET_DIR ]; then
+      if grep $CHR_SASL_SOCKET_DIR /proc/mounts &> /dev/null; then
+        RET=0
+      else
+        RET=4
+      fi
+    else
+      RET=2
+    fi
+  else
+    RET=1
+  fi
+  return $RET
+}
+
+# Shell functions sourced from /etc/rc.status:
+#      rc_check         check and set local and overall rc status
+#      rc_status        check and set local and overall rc status
+#      rc_status -v     ditto but be verbose in local rc status
+#      rc_status -v -r  ditto and clear the local rc status
+#      rc_failed        set local and overall rc status to failed
+#      rc_failed <num>  set local and overall rc status to <num><num>
+#      rc_reset         clear local rc status (overall remains)
+#      rc_exit          exit appropriate to overall rc status
+. /etc/rc.status
+
+# First reset status of this service
+rc_reset
+
+# Return values acc. to LSB for all commands but status:
+# 0 - success
+# 1 - generic or unspecified error
+# 2 - invalid or excess argument(s)
+# 3 - unimplemented feature (e.g. "reload")
+# 4 - insufficient privilege
+# 5 - program is not installed
+# 6 - program is not configured
+# 7 - program is not running
+# 
+# Note that starting an already running service, stopping
+# or restarting a not-running service as well as the restart
+# with force-reload (in case signalling is not supported) are
+# considered a success.
+
+case "$1" in
+    start)
+        echo -n "Starting mail service (Postfix)"
+	if [ "$(echo "$POSTFIX_UPDATE_CHROOT_JAIL" | tr 'A-Z' 'a-z' )" != "no" ]; then
+	  if [ "$(echo "$POSTFIX_MYSQL_CONN" | tr 'A-Z' 'a-z' )" == "socket" -a \
+		"$(echo "$POSTFIX_WITH_MYSQL" | tr 'A-Z' 'a-z' )" != "no" ]; then
+		chk_mysql_sock
+		case $? in
+		  1)
+warn_user "\t/etc/my.cnf does not exist!!\n\
+\tThis should not happen!\n\
+\tPlease check if postfix-mysql is installed and check for package mysql."
+		  rc_failed 5; rc_status -v; rc_exit;
+		;;
+		  2)
+warn_user "\tMySQL not started\n\
+\tPlease check if MySQL is started on boot"
+		  rc_failed 7; rc_status -v; rc_exit;
+		;;
+		  4)
+warn_user "\t$CHR_MYSQL_SOCKET_DIR does not exist!!\n\
+\tThis should not happen!\n\
+\tPlease run SuSEconfig."
+		  rc_failed 6; rc_status -v; rc_exit;
+		;;
+		  8)
+		  /bin/mount -o bind $MYSQL_SOCKET_DIR $CHR_MYSQL_SOCKET_DIR &> /dev/null
+		  [ $? -ne 0 ] && {
+		    echo -n " ... can not mount $MYSQL_SOCKET_DIR to $CHR_MYSQL_SOCKET_DIR"
+		    rc_failed 1; rc_status -v; rc_exit;
+		  }
+		;;
+		esac
+	  fi
+	  if [ "$(echo "$POSTFIX_SMTP_AUTH_SERVER" | tr 'A-Z' 'a-z' )" != "no" ]; then
+		chk_sasl_sock
+		case $? in
+		  1)
+warn_user "\tsaslauthd not started\n\
+\tPlease check if saslauthd is started on boot"
+		  rc_failed 7; rc_status -v; rc_exit;
+		;;
+		  2)
+warn_user "\t$CHR_SASL_SOCKET_DIR does not exist!!\n\
+\tThis should not happen!\n\
+\tPlease run SuSEconfig."
+		  rc_failed 6; rc_status -v; rc_exit;
+		;;
+		  4)
+		  /bin/mount -o bind $SASL_SOCKET_DIR $CHR_SASL_SOCKET_DIR &> /dev/null
+		  [ $? -ne 0 ] && {
+		    echo -n " ... can not mount $SASL_SOCKET_DIR to $SASL_SOCKET_DIR"
+		    rc_failed 1; rc_status -v; rc_exit;
+		  }
+		;;
+		esac
+	  fi
+	fi
+        ## Start daemon with startproc(8). If this fails
+        ## the echo return value is set appropriate.
+
+	if ! checkproc -p $PIDFILE $MASTER_BIN; then
+		/etc/postfix/system/update_postmaps
+        	$POSTFIX_BIN start > /dev/null 2>&1
+	else
+		rc_reset
+	fi
+
+	# Remember status and be verbose
+	rc_status -v
+
+        ( i=60
+        # waiting for qmgr
+        while [ -z "$(pidof qmgr)" -a $i -gt 0 ]; do
+            i=$(( $i - 1 ))
+            sleep 1
+        done
+        $POSTFIX_BIN flush ) > /dev/null 2>&1 &
+	cond_slp "register" &
+        ;;
+    stop)
+        echo -n "Shutting down mail service (Postfix)"
+
+       	$POSTFIX_BIN stop > /dev/null 2>&1
+
+	# Remember status and be verbose
+	cond_slp "deregister" &
+	rc_status -v
+        ;;
+    try-restart)
+	## Stop the service and if this succeeds (i.e. the 
+	## service was running before), start it again.
+	## Note: try-restart is not (yet) part of LSB (as of 0.7.5)
+	$0 status >/dev/null &&  $0 restart
+
+	# Remember status and be quiet
+	rc_status
+	;;
+    restart)
+	## Stop the service and regardless of whether it was
+	## running or not, start it again.
+	$0 stop
+	$0 start
+
+	# Remember status and be quiet
+	rc_status
+        ;;
+    force-reload)
+
+	echo -n "Reload mail service (Postfix)"
+
+	/etc/postfix/system/update_postmaps
+	$POSTFIX_BIN reload > /dev/null 2>&1
+	rc_status -v
+	POSTFIX_BIN flush > /dev/null 2>&1
+
+	## Otherwise:
+	#$0 stop  &&  $0 start
+	#rc_status
+	;;
+    reload)
+        echo -n "Reload mail service (Postfix)"
+
+	/etc/postfix/system/update_postmaps
+	$POSTFIX_BIN reload > /dev/null 2>&1
+	rc_status -v
+	$POSTFIX_BIN flush > /dev/null 2>&1
+	
+	## Otherwise if it does not support reload:
+	#rc_failed 3
+	#rc_status -v
+        ;;
+    status)
+        echo -n "Checking for service Postfix: "
+	## Check status with checkproc(8), if process is running
+	## checkproc will return with exit status 0.
+
+	# Status has a slightly different for the status command:
+	# 0 - service running
+	# 1 - service dead, but /var/run/  pid  file exists
+	# 2 - service dead, but /var/lock/ lock file exists
+	# 3 - service not running
+
+	# NOTE: checkproc returns LSB compliant status values.
+        /sbin/checkproc -p $PIDFILE $MASTER_BIN
+	rc_status -v
+        ;;
+    *)
+	echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload}"
+        exit 1
+        ;;
+esac
+rc_exit
+

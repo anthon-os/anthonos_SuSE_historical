@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<gconf>
+	<dir name="schemas">
+		<dir name="apps">
+			<dir name="sound-juicer">
+				<entry name="volume">
+					<local_schema short_desc="Hučnaść">
+					</local_schema>
+				</entry>
+				<entry name="musicbrainz_server">
+					<local_schema short_desc="Užyvany server MusicBrainz">
+						<longdesc>Kali akreślena, vartaść zamienić zmoŭčany server MusicBrainz.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="strip-special">
+					<local_schema short_desc="Ci vydalać admysłovyja znaki z nazvaŭ fajłaŭ">
+						<longdesc>Kali ŭklučana, admysłovyja znaki, takija jak prabieły, šablony j zvarotnyja skosy, buduć vydalenyja z nazvy paŭstałaha fajłu.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="paranoia">
+					<local_schema short_desc="Užyvany režym paranoi">
+						<longdesc>Režym paranoi: 0) vyklučana 2) frahment 4) nakładańnie 8) scratch 16) vypraŭleńnie 255) poŭny</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="file_pattern">
+					<local_schema short_desc="Uzor nazvy dla fajłaŭ">
+						<longdesc>Nie akreślaj pašyreńnia. %at -- nazva albomu %aT -- nazva albomu (małymi litarami) %aa -- vykanaŭca albomu %aA -- vykanaŭca albomu (małymi litarami) %as -- vykanaŭca albomu (dla paradkavańnia) %aS -- vykanaŭca albomu (dla paradkavańnia j małymi litarami) %tn -- numar ściežki (napr. 8) %tN -- numar ściežki, z dadadzienym nulom (napr. 08) %tt -- nazva ściežki %tT -- nazva ściežki (małymi litarami) %ta -- vykanaŭca ściežki %tA -- vykanaŭca ściežki (małymi litarami) %ts -- vykanaŭca ściežki (dla paradkavańnia) %tS -- vykanaŭca ściežki (dla paradkavańnia j małymi litarami) %dn -- numar dysku j ściežki (napr., Dysk 2 - 6, ci 6) %dN -- numar dysku, dapoŭnieny nulami (napr., d02t06, ci 06)</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="path_pattern">
+					<local_schema short_desc="Struktura katalohaŭ dla fajłaŭ">
+						<longdesc>%at -- nazva albomu %aT -- nazva albomu (małymi litarami) %aa -- vykanaŭca albomu %aA -- vykanaŭca albomu (małymi litarami) %as -- vykanaŭca albomu (dla paradkavańnia) %aS -- vykanaŭca albomu (dla paradkavańnia j małymi litarami) %ay -- hod albomu %tt -- nazva ściežki %tT -- nazva ściežki (małymi litarami) %ta -- vykanaŭca ściežki %tA -- vykanaŭca ściežki (małymi litarami) %ts -- vykanaŭca ściežki (dla paradkavańnia) %tS -- vykanaŭca ściežki (dla paradkavańnia j małymi litarami)</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="open_completed">
+					<local_schema short_desc="Ci adčyniać metavy kataloh paśla zakančeńnia kapijavańnia.">
+					</local_schema>
+				</entry>
+				<entry name="eject">
+					<local_schema short_desc="Ci vysunuć dysk CD paśla zakančeńnia kapijavańnia.">
+					</local_schema>
+				</entry>
+			</dir>
+		</dir>
+	</dir>
+</gconf>

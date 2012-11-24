@@ -1,0 +1,43 @@
+# This file is automatically maintained by lvm.
+
+persistent_filter_cache {
+	valid_devices=[
+		"/dev/disk/by-id/ata-VBOX_HARDDISK_VB6ffa82a1-b88db3af-part2",
+		"/dev/disk/by-uuid/ab935ab1-6f25-401c-84eb-cee1cb26586d",
+		"/dev/disk/by-path/pci-0000:00:1f.4-usb-0:2:1.0-scsi-0:0:0:0",
+		"/dev/disk/by-uuid/B4D9-887E",
+		"/dev/loop0",
+		"/dev/disk/by-label/READYBOOST",
+		"/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:0:0-part1",
+		"/dev/block/8:32",
+		"/dev/loop1",
+		"/dev/disk/by-id/ata-VBOX_HARDDISK_VB6ffa82a1-b88db3af-part1",
+		"/dev/sdb",
+		"/dev/loop3",
+		"/dev/block/7:6",
+		"/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:0:0-part2",
+		"/dev/loop2",
+		"/dev/loop8",
+		"/dev/loop9",
+		"/dev/block/7:5",
+		"/dev/disk/by-id/scsi-SATA_VBOX_HARDDISK_VB6ffa82a1-b88db3af-part2",
+		"/dev/block/8:1",
+		"/dev/disk/by-uuid/bf290298-1a1f-4024-a0da-b9e69809bad0",
+		"/dev/sda1",
+		"/dev/block/7:1",
+		"/dev/sdc",
+		"/dev/block/8:16",
+		"/dev/block/7:0",
+		"/dev/disk/by-id/scsi-SATA_VBOX_HARDDISK_VB6ffa82a1-b88db3af-part1",
+		"/dev/root",
+		"/dev/block/8:2",
+		"/dev/sda2",
+		"/dev/loop5",
+		"/dev/disk/by-id/usb-aigo_Miniking_10ABCFC425F6C8B-0:0",
+		"/dev/block/7:2",
+		"/dev/block/7:8",
+		"/dev/block/7:9",
+		"/dev/loop6",
+		"/dev/block/7:3"
+	]
+}

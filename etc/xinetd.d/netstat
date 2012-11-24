@@ -1,0 +1,16 @@
+# netstat (like the services finger and systat) give out user information which
+# may be valuable to potential "system crackers." Many sites choose to disable
+# some or all of these services to improve security.  Try "telnet localhost
+# systat" and "telnet localhost netstat" to see that information yourself!
+#
+service netstat
+{
+	disable         = yes
+	socket_type     = stream
+	protocol        = tcp
+	wait            = no
+	user            = root
+	server = /bin/netstat
+	server_args = -a
+}
+

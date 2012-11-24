@@ -1,0 +1,39 @@
+#!/bin/bash
+#
+# /etc/postfix/system/cond_slp
+#
+# Description:
+#
+
+POSTCONF=/usr/sbin/postconf
+OPENSLP_BIN=/usr/bin/slptool
+
+test -f /etc/sysconfig/postfix && . /etc/sysconfig/postfix
+
+[ "${POSTFIX_REGISTER_SLP,,[A-Z]}" != yes ] && exit 0
+[ -x $OPENSLP_BIN ] || exit 1
+
+PIFACES=$($POSTCONF -h inet_interfaces|sed -e 's/\(127.0.0.1\|::1\|[[:space:]]\)//g')
+[ -n "$PIFACES" ] || exit 0
+
+PSERVICES=$(grep -E '^smtp.*smtpd' /etc/postfix/master.cf| cut -d" " -f1)
+[ -n "$PSERVICES" ] || exit 0
+
+cond_slp()
+{
+    local cmd=$1
+    local srv
+    local FQHN=$($POSTCONF -h myhostname)
+    for srv in $PSERVICES; do
+	sport=$(sed -ne "/^$srv/Is/^$srv[[:space:]]\+\([0-9]\+\)\/tcp.*/\1/gp" /etc/services)
+	[ -n "$sport" ] || continue
+	$OPENSLP_BIN $cmd service:$srv://$FQHN:$sport > /dev/null 2>&1
+    done
+}
+
+cond_slp $1 &
+
+exit 0
+
+#
+# end /etc/postfix/system/cond_slp

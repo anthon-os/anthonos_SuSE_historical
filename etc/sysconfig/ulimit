@@ -1,0 +1,270 @@
+## Path: System/Limits
+## Description: Set single process limits (memory, CPU, core ...)
+## Command: killall mingetty	
+#
+# Both hard and soft limits may be set. Soft limits are enough if you
+# trust the users. Then, the soft limits may protect your machine 
+# against suffering too much from an application leaking memory.
+# If you don't trust your users, you may use hard limits to prevent
+# the amount of harm they can do to the machine. Note that this is
+# only partially effective: Memory limits are per process, not per
+# user. 
+# A setting of 0 will skip the adjustment of the particular limit
+# (except for core file sizes), thus the default will remain in place,
+# which is "unlimited" for most (but not all) limits. If a value is
+# undefined, no adjustment will be made either.
+# The memory sizes are percentages, the other values are absolute
+# numbers. You can force absolute values for memory limits (in kB)
+# by prefixing the limit with @.
+# Additionally, the limits can be set to "unlimited" which will 
+# set them to unlimited. (Soft limits only if the hard limit allows it.)
+# Note that the limits only get effective after a session is 
+# restarted by init. Thus exiting mingetty (^D on console login)
+# or changing runlevel to 3 and back to 5 for xdm is needed.
+# Rebooting helps as well, of course.
+#  
+## Type:	string
+## Default:	0
+# 
+# Limit the amount of virtual memory a single process may allocate.
+# Hard limit: Can not be increased by non-root.
+# This value corresponds to ulimit -Hv
+# Parameter is in percent of virtual (phys+swap) memory (unless you 
+# prefix it by @, in which case it means kilobytes), 0 means 
+# no adjustment.
+#
+HARDVIRTUALLIMIT="0"
+
+## Type:	string
+## Default:	80
+# 
+# Limit the amount of virtual memory a single process may allocate.
+# Soft limit: Can be increased by non-root up to the hard limit.
+# This value corresponds to ulimit -Sv
+# Parameter is in percent of virtual (phys+swap) memory (unless you 
+# prefix it by @, in which case it means kilobytes), 0 means 
+# no adjustment. "unlimited" will attempt to set this to umlimited.
+#
+SOFTVIRTUALLIMIT="80"
+
+## Type:	string
+## Default:	0
+#
+# Limit the amount of resident memory a single process may occupy.
+# The process virtual memory can grow larger than this limit, but
+# it can not get more resident memory. 
+# Hard limit: Can not be increased by non-root.
+# This value corresponds to ulimit -Hm
+# Parameter is in percent of physical memory (unless you prefix
+# it by @, in which case it means kilobytes), 0 means no adjustment.
+#
+HARDRESIDENTLIMIT="0"
+
+## Type:	string
+## Default:	85
+#
+# Limit the amount of resident memory a single process may occupy.
+# The process virtual memory can grow larger than this limit, but
+# it can not get more resident memory. 
+# Soft limit: Can be increased by non-root up to the hard limit.
+# This value corresponds to ulimit -Sm
+# Parameter is in percent of physical memory (unless you prefix
+# it by @, in which case it means kilobytes), 0 means no adjustment.
+# "unlimited" will attempt to set this to unlimited.
+#
+SOFTRESIDENTLIMIT="85"
+
+## Type:	string
+## Default:	0
+#
+# Limit the size of the stack that a single process may allocate.
+# Normally, it should be enough to limit virtual and resident size.
+# Note that with NPTL, the stack limit determines the stack SIZE
+# of multithreaded programs and should thus better not be set.
+# Hard limit: Can not be increased by non-root.
+# This value corresponds to ulimit -Hs
+# Parameter is in percent of physical memory (unless you prefix
+# it by @, in which case it means kilobytes), 0 means no adjustment
+# (the kernel default, arch-dependent, typically 8192kB).
+#
+HARDSTACKLIMIT="0"
+
+## Type:	string
+## Default:	0
+#
+# Limit the size of the stack that a single process may allocate.
+# Normally, it should be enough to limit virtual and resident size.
+# Note that with NPTL, the stack limit determines the stack SIZE
+# of multithreaded programs and should thus better not be set.
+# Soft limit: Can be increased by non-root up to the hard limit.
+# This value corresponds to ulimit -Ss
+# Parameter is in percent of physical memory (unless you prefix
+# it by @, in which case it means kilobytes), 0 means no adjustment
+# (the kernel default, arch-dependent, typically 8192kB).
+# "unlimited" will attempt to set this to unlimited.
+#
+SOFTSTACKLIMIT="0"
+
+## Type:	string
+## Default:	0
+#
+# Limit the size of the data segment that a single process may allocate.
+# Normally, it should be enough to limit virtual and resident size.
+# Hard limit: Can not be increased by non-root.
+# This value corresponds to ulimit -Hd
+# Parameter is in percent of physical memory (unless you prefix
+# it by @, in which case it means kilobytes), 0 means no adjustment.
+#
+HARDDATALIMIT="0"
+
+## Type:	string
+## Default:	0
+#
+# Limit the size of the data segment that a single process may allocate.
+# Normally, it should be enough to limit virtual and resident size.
+# Soft limit: Can be increased by non-root up to the hard limit.
+# This value corresponds to ulimit -Sd
+# Parameter is in percent of physical memory (unless you prefix
+# it by @, in which case it means kilobytes), 0 means no adjustment.
+# "unlimited" will attempt to set this to unlimited.
+#
+SOFTDATALIMIT="0"
+
+## Type:	string
+## Default:	5
+#
+# Limit the size of the memory that a single process may lock in
+# physical memory (thus preventing it to be swapped out).
+# Hard limit: Can not be increased by non-root.
+# This value corresponds to ulimit -Hl
+# Parameter is in percent of physical memory (unless you prefix
+# it by @, in which case it means kilobytes), 0 means no adjustment.
+#
+HARDLOCKLIMIT="@256"
+
+## Type:	string
+## Default:	@128
+#
+# Limit the size of the memory that a single process may lock in
+# physical memory (thus preventing it to be swapped out).
+# Soft limit: Can be increased by non-root up to the hard limit.
+# This value corresponds to ulimit -Sl
+# Parameter is in percent of physical memory (unless you prefix
+# it by @, in which case it means kilobytes), 0 means no adjustment.
+# (Kernel default is architecture dependent, typically 32 or 64kB.)
+# "unlimited" will attempt to set this to unlimited -- not a good idea.
+#
+SOFTLOCKLIMIT="@64"
+
+## Type:	string
+## Default:	0
+#
+# Limit the amount of CPU time for a single process.
+# Should not normally be set to non-zero values.
+# Hard limit: Process will be killed.
+# Corresponds to ulimit -Ht.
+# Parameter is in seconds, 0 means no adjustment.
+# 
+HARDCPULIMIT="unlimited"
+
+## Type:	string
+## Default:	0
+#
+# Limit the amount of CPU time for a single process.
+# Should not normally be set to non-zero values.
+# Soft limit: Process will be sent SIGXCPU.
+# Corresponds to ulimit -St.
+# Parameter is in seconds, 0 means no adjustment.
+# "unlimited" will attempt to set this to unlimited.
+# 
+SOFTCPULIMIT="0"
+
+## Type:	string
+## Default:	8192
+#
+# Limit the amount of file descriptors that a process 
+# may have open at any time. Linux default is 1024.
+# Hard limit: Can not be increased by non-root.
+# Corresponds to ulimit -Hn.
+# 0 means no adjustment (system default: 1024).
+# 
+HARDFDLIMIT="8192"
+
+## Type:	string
+## Default:	1024
+#
+# Limit the amount of file descriptors that a process 
+# may have open at any time. Linux default is 1024.
+# Soft limit: Can be increased by non-root up to the hard limit.
+# Corresponds to ulimit -Sn.
+# 0 means no adjustment (system default: 1024).
+# 
+SOFTFDLIMIT="1024"
+
+## Type:	string
+## Default:	"unlimited"
+#
+# Limit the size of core dump files. 0 turns them off.
+# Hard limit: Can not be increased by non-root.
+# Corresponds to ulimit -Hc.
+# Parameter is in blocks (1k), 0 means turning core files off.
+# 
+HARDCORELIMIT="unlimited"
+
+## Type:	string
+## Default:	"0"
+#
+# Limit the size of core dump files. 0 turns them off.
+# Soft limit: Can be increased by non-root up to the hard limit.
+# Corresponds to ulimit -Sc.
+# Parameter is in blocks (1k), 0 means turning core files off,
+# "unlimited" allows arbitrarily huge core files.
+# 
+SOFTCORELIMIT="0"
+
+## Type:	string
+## Default:	"unlimited"
+#
+# Limit the size of files a user may create.
+# Hard limit: Can not be increased by non-root.
+# Corresponds to ulimit -Hf.
+# Parameter is in blocks (1k), 0 means no adjustment
+# "unlimited" will set this to unlimited.
+# 
+HARDFILESZLIMIT="unlimited"
+
+## Type:	string
+## Default:	"unlimited"
+#
+# Limit the size of files a user may create.
+# Soft limit: Can be increased by non-root up to the hard limit.
+# Corresponds to ulimit -Sf.
+# Parameter is in blocks (1k), 0 means no adjustment.
+# "unlimited" will attempt to set this to unlimited.
+# 
+SOFTFILESZLIMIT="unlimited"
+
+## Type:	string
+## Default:	"0"
+#
+# Limit the number of processes that a single user may have at the
+# same time.
+# Hard limit: Can not be increased by non-root.
+# Corresponds to ulimit -Hu.
+# 0 means no adjustment (system default is a few thousands, exact 
+# value depends on the architecture).
+# 
+HARDPROCESSLIMIT="0"
+
+## Type:	string
+## Default:	"0"
+#
+# Limit the number of processes that a single user may have at the
+# same time.
+# Soft limit: Can be increased by non-root up to the hard limit.
+# Corresponds to ulimit -Su.
+# 0 means no adjustment (system default is a few thousands, exact 
+# value depends on the architecture).
+# "unlimited" will attempt to set this to unlimited.
+# 
+SOFTPROCESSLIMIT="0"

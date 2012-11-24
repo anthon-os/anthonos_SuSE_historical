@@ -1,0 +1,19 @@
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 0.8//EN"
+ "http://www.freedesktop.org/standards/menu-spec/menu-0.8.dtd">
+
+<Menu>
+ <Name>GGZ Gaming Zone</Name>
+ <Directory>ggz.directory</Directory>
+ <Include>
+  <Category>X-GGZ</Category>
+ </Include>
+
+ <Menu>
+  <Name>GGZ Games</Name>
+  <Directory>ggz-games.directory</Directory>
+  <Include>
+   <Category>X-GGZ-Games</Category>
+  </Include>
+ </Menu>
+
+</Menu>

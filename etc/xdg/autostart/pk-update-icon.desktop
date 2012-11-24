@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Name=PackageKit Update Applet
+GenericName=Update Applet
+Comment=PackageKit Update Applet
+Icon=system-software-update
+Exec=pk-update-icon
+Terminal=false
+Type=Application
+Categories=Utility;GTK;TrayIcon;
+NotShowIn=KDE;GNOME;
+

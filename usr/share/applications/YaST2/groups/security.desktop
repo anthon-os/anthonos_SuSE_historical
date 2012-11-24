@@ -1,0 +1,19 @@
+[Desktop Entry]
+X-SuSE-DocTeamID=ycc_security
+Type=Application
+Categories=Qt;X-SuSE-YaST;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+
+X-SuSE-YaST-Group=Security
+X-SuSE-YaST-SortKey=50
+
+OnlyShowIn=X-SuSE-YaST;
+Icon=yast-security
+
+Name=Security and Users
+
+Exec=/sbin/yast2
+

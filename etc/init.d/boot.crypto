@@ -1,0 +1,129 @@
+#!/bin/bash
+# Copyright (C) 1996-2009 SUSE Linux Products GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# Author:  Werner Fink <werner@suse.de>, 2001-2006
+#          Chris Rivera <crivera@novell.com> 2006
+#          Matthias Koenig <mkoenig@novell.com> 2008
+#          Ludwig Nussel <lnussel@novell.com> 2007-2009
+#
+# /etc/init.d/boot.crypto
+#
+### BEGIN INIT INFO
+# Provides:          boot.crypto
+# Required-Start:    boot.localfs
+# Should-Start:      boot.crypto-early
+# Required-Stop:     boot.localfs
+# Should-Stop:       $null
+# Default-Start:     B
+# Default-Stop:      $null
+# X-Interactive:     true
+# Description:       crypto file systems, part 2
+# Short-Description: Enables crypto file systems that couldn't be enabled in first part
+### END INIT INFO
+
+. /etc/rc.status
+
+trap "echo" SIGINT SIGSEGV
+set +e
+
+unset CRYPT_EARLY
+
+. /lib/cryptsetup/boot.crypto.functions
+
+rc_reset
+
+if test ! -s $CRYPTTAB; then
+	report 6 "no crypto partitions configured"
+	rc_exit
+fi
+
+case "$1" in
+    start|b)
+
+	if ! /sbin/modprobe -q dm-crypt; then
+	    echo "kernel lacks dm-crypt support"
+	    rc_failed 5
+	    rc_status -v
+	    rc_exit
+	fi
+
+	tostart="$2"
+	foundit=''
+	failed=0
+
+	if test -s /etc/cryptotab; then
+		echo -n "/etc/cryptotab is no longer supported!"
+		rc_failed 3
+		rc_status -v
+	fi
+
+	if test -s $CRYPTTAB; then
+	    start_crypttab
+	fi
+
+	test -n "$foundit" || report 6 "$tostart ..."
+
+	restore
+
+	rc_failed $failed
+
+	customize_start_hook
+	;;
+    stop)
+
+	tostop="$2"
+	foundit=''
+	failed=0
+
+	customize_pre_stop_hook
+
+	if test -s $CRYPTTAB; then
+	    stop_crypttab
+	fi
+
+	test -n "$foundit" || report 6 "$tostop ..."
+
+	rc_failed $failed
+
+	customize_stop_hook
+	;;
+    status)
+
+	tostatus="$2"
+	foundit=''
+
+	if test -s $CRYPTTAB; then
+	    status_crypttab
+	fi
+
+	test -n "$foundit" || report 3 "$tostatus ..."
+
+	rc_failed 0
+
+	;;
+    restart)
+	shift
+	$0 stop "$@"
+	$0 start "$@"
+	rc_status
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|restart} [DEVICE]"
+	exit 1
+	;;
+esac
+rc_exit

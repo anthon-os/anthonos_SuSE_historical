@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<channel name="xfwm4" version="1.0">
+  <property name="general" type="empty">
+    <property name="theme" type="string" value="Kelabu"/>
+    <property name="title_font" type="string" value="Sans Bold 10"/>
+    <property name="double_click_time" type="int" value="400"/>
+    <property name="use_compositing" type="bool" value="true"/>
+    <property name="show_dock_shadow" type="bool" value="false"/>
+    <property name="show_frame_shadow" type="bool" value="true"/>
+    <property name="show_popup_shadow" type="bool" value="true"/>
+    <property name="workspace_count" type="int" value="2"/>
+    <property name="wrap_windows" type="bool" value="false"/>
+    <property name="tile_on_move" type="bool" value="true"/>
+  </property>
+</channel>

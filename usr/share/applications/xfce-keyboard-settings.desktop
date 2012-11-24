@@ -1,0 +1,16 @@
+
+[Desktop Entry]
+X-SuSE-translate=true
+Version=1.0
+Name=键盘
+Comment=Edit keyboard settings and application shortcuts
+Exec=xfce4-keyboard-settings
+Icon=preferences-desktop-keyboard
+Terminal=false
+Type=Application
+Categories=XFCE;GTK;Settings;DesktopSettings;X-XFCE-SettingsDialog;X-XFCE-HardwareSettings;X-XFCE;
+StartupNotify=true
+OnlyShowIn=XFCE;
+X-XfcePluggable=true
+X-XfceHelpPage=keyboard
+

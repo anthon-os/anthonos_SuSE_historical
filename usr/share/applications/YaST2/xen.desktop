@@ -1,0 +1,26 @@
+[Desktop Entry]
+X-SuSE-DocTeamID=ycc_xen
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Virtualization;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+X-SuSE-YaST-Call=xen
+
+X-SuSE-YaST-Group=Virtualization
+X-SuSE-YaST-Argument=
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-Geometry=
+X-SuSE-YaST-SortKey=
+X-SuSE-YaST-AutoinstResource=
+
+Icon=yast-vm-install
+Exec=/usr/bin/xdg-su -c "/sbin/yast2 xen"
+
+Name=Install Hypervisor and Tools
+GenericName=Install Xen or KVM with Management Tools
+X-KDE-SubstituteUID=true
+StartupNotify=true
+
+

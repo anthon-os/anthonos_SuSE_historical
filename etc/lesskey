@@ -1,0 +1,65 @@
+#command
+\e[A	back-line     
+\e[B	forw-line      
+\eO5A	back-line
+\eO5B	forw-line
+\eO5C	right-scroll
+\eO5D	left-scroll
+\e[6~	forw-scroll
+\e[5~	back-scroll 
+\177	back-screen
+^H	back-screen
+\e[3~	back-screen
+\e[3;5~	back-screen
+\e[2~	visual
+\e[2;5~	visual
+\e[1~	goto-line
+\eOH	goto-line
+\eO5H	goto-line
+\e[4~	goto-end
+\eOF	goto-end
+\eO5F	goto-end
+\eOM	forw-line
+#line-edit
+\eO5A	up
+\eO5B	down
+\eO5C	right
+\eO5D	left
+\177	backspace
+^H	backspace
+\e[3~	delete
+\e[3;5~	delete
+\e[1~	home
+\eOH	home
+\eO5H	home
+\e[4~	end
+\eOF	end
+\eO5F	end
+\e[5~	up
+\e[6~	down
+\e[5;5~	up
+\e[6;5~	down
+\e[2~	insert
+\e[2;5~	insert
+\e[E	insert
+\e[G	insert
+\eOE	insert
+\eOo	insert :
+\eOj	insert *
+\eOm	insert -
+\eOk	insert +
+\eOl	insert ,
+\eOM	insert 
+\eOw	insert 7
+\eOx	insert 8
+\eOy	insert 9
+\eOt	insert 4
+\eOu	insert 5
+\eOv	insert 6
+\eOq	insert 1
+\eOr	insert 2
+\eOs	insert 3
+\eOp	insert 0
+\eOn	insert .
+#env
+LESSBINFMT=*s\%o

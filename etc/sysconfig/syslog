@@ -1,0 +1,75 @@
+## Path:		System/Logging
+## Description:		System logging
+## Type:		list(syslogd,syslog-ng,rsyslogd,"")
+## Default:		""
+## Config:		""
+## ServiceRestart:	syslog
+#
+# The name of the syslog daemon to use as syslog service:
+# "syslogd", "syslog-ng", "rsyslogd" or "" for autodetect.
+#
+SYSLOG_DAEMON=""
+
+## Type:                list(yes,no,"")
+## Default:             ""
+## Config:              ""
+## ServiceRestart:      syslog
+#
+# Specify whether the syslog configuration requires network.
+# Set to "yes" to delay the syslog daemon start until network
+# is already started, set to "no" to start it earlier.
+#
+# The behavior of the default setting "" depends on the daemon
+# specified in the SYSLOG_DAEMON variable and on the current
+# implementation of the init / systemd scripts. It may cause
+# a try to detect whether network is required for the config
+# or choose one of the above modi.
+#
+SYSLOG_REQUIRES_NETWORK=""
+
+## Type:           integer(0:5)
+## Default:        ""
+## Config:         ""
+## ServiceRestart: syslog
+#
+# Version compatibility level to run rsyslogd with (-c parameter).
+# Set to the desired version number rsyslogd shall be compatible with.
+#
+# Default is to run in native mode if the currently installed rsyslog
+# daemon version.
+#
+# Note: Changes to this variable may need adoption of the config file
+# or break features used in the /etc/init.d/syslog script by default.
+#
+RSYSLOGD_COMPAT_VERSION=""
+
+## Type:           string
+## Default:        ""
+## Config:         ""
+## ServiceRestart: syslog
+#
+# Parameters for rsyslogd, except of the version compatibility (-c)
+# and the config file (-f), because they're used by sysconfig and
+# earlysysconfig init scripts.
+#
+# See also the RSYSLOGD_COMPAT_VERSION variable in this file, the
+# documentation provided in /usr/share/doc/packages/rsyslog/doc by
+# the rsyslog-doc package and the rsyslogd(8) and rsyslog.conf(5)
+# manual pages.
+#
+RSYSLOGD_PARAMS=""
+
+## Type:           list(5)
+## Default:        "5"
+## Config:         ""
+## ServiceRestart: syslog
+#
+# The native version compatibility level of the current rsyslogd.
+#
+# Note, that this variable is read-only -- please do not change it!
+# Instead, please adopt the RSYSLOGD_COMPAT_VERSION variable.
+#
+# This variable will be updated while every installation/upgrade of
+# the rsyslog daemon package.
+#
+RSYSLOGD_NATIVE_VERSION="5"

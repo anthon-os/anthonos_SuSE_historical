@@ -1,0 +1,9 @@
+TARGETS = halt dbus acpid SuSEfirewall2_init reboot network syslog bluez-coldplug vboxadd alsasound avahi-daemon single xdm smartd SuSEfirewall2_setup
+INTERACTIVE = single
+network: SuSEfirewall2_init
+syslog: network
+bluez-coldplug: syslog dbus
+avahi-daemon: network dbus
+xdm: syslog dbus acpid
+smartd: syslog
+SuSEfirewall2_setup: smartd xdm bluez-coldplug vboxadd alsasound avahi-daemon SuSEfirewall2_init

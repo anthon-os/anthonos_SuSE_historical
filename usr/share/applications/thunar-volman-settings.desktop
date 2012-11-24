@@ -1,0 +1,14 @@
+
+[Desktop Entry]
+X-SuSE-translate=true
+Name=可移动介质
+Comment=Configure management of removable drives and media
+Exec=thunar-volman-settings
+Icon=drive-removable-media
+Terminal=false
+StartupNotify=true
+Type=Application
+Categories=XFCE;GTK;Settings;DesktopSettings;X-XFCE-SettingsDialog;X-XFCE-HardwareSettings;
+
+# vi:set encoding=UTF-8:
+

@@ -1,0 +1,117 @@
+#!/bin/sh
+#
+# Copyright (c) 2009 by Thomas Renninger <trenn@suse.de>
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+#
+### BEGIN INIT INFO
+# Provides:       mcelog
+# Required-Start: 
+# Should-Start: $remote_fs $network $syslog
+# Required-Stop:  
+# Should-Stop: $remote_fs $network $syslog
+# Default-Start:  2 3 5
+# Default-Stop:
+# Short-Description: Machine Check Architecture/Error (MCA/MCE) implementations
+# Description:    Depending on the configuration, the mcelog service will log
+#    HW initiated Machine Check Exceptions or also react on them intelligently
+### END INIT INFO
+
+. /etc/rc.status
+[ -r /etc/sysconfig/mcelog ] && . /etc/sysconfig/mcelog
+
+# Shell functions sourced from /etc/rc.status:
+#      rc_check         check and set local and overall rc status
+#      rc_status        check and set local and overall rc status
+#      rc_status -v     ditto but be verbose in local rc status
+#      rc_status -v -r  ditto and clear the local rc status
+#      rc_failed        set local and overall rc status to failed
+#      rc_reset         clear local rc status (overall remains)
+#      rc_exit          exit appropriate to overall rc status
+
+# First reset status of this service
+rc_reset
+
+mcelog="/usr/sbin/mcelog"
+mcelog_pid="/var/run/mcelog.pid"
+mcelog_params=" --daemon --pidfile ${mcelog_pid}"
+if [ "${MCELOG_ADMIN_EMAIL}x" != "x"  ];then
+    mcelog_params="$mcelog_params --email $MCELOG_ADMIN_EMAIL"
+fi
+mcedev=/dev/mcelog
+
+check="checkproc ${mcelog}"
+kill="killproc ${mcelog}"
+start="startproc ${mcelog} ${mcelog_params}"
+
+test_kernel_support()
+{
+    if [ ! -c ${mcedev} ];then
+	echo -n "$mcedev not found - no kernel or HW support "
+	return 1
+    else
+	return 0
+    fi
+}
+
+case "$1" in
+    start)
+        echo -n "Starting mcelog... "
+        if ! test_kernel_support; then
+            rc_status -u
+	elif ${check};then
+	    echo -n "already running"
+	else
+	    ${start}
+	fi
+        rc_status -v
+        ;;
+    stop)
+        echo -n "Shutting down mcelog... "
+	${kill}
+        rc_status -v
+        ;;
+    try-restart)
+        ## Do a restart only if the service was active before.
+        $0 status
+        if test $? = 0; then
+                $0 restart
+        else
+                rc_reset        # Not running is not a failure.
+        fi
+        # Remember status and be quiet
+        rc_status
+        ;;
+    reload|restart)
+	/etc/init.d/mcelog stop
+	/etc/init.d/mcelog start
+	;;
+    status)
+        echo -n "Checking for service mcelog... "
+        if ! test_kernel_support; then
+            rc_status -u
+	else
+            ${check}
+	    rc_status -v
+	fi
+        ;;
+    *)
+	echo "Usage: $0 {start|stop|restart|reload|status}"
+        exit 1
+	;;
+esac
+
+rc_exit

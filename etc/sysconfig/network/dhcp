@@ -1,0 +1,300 @@
+## Path:	Network/DHCP/DHCP client
+## Description:	DHCP configuration tweaking
+#
+# Note: 
+# To configure one or more interfaces for DHCP configuration, you have to
+# change the BOOTPROTO variable in /etc/sysconfig/network/ifcfg-<interface>
+# to 'dhcp' (and possibly set STARTMODE='onboot'). 
+#
+# Most of these options are used only by dhcpcd, not by the ISC dhclient
+# (which uses a config file).
+#
+# Most of the options can be overridden by setting them in the ifcfg-* files,
+# too.
+#
+# Note: The ISC dhclient started by the NetworkManager is not using any
+# of these options -- NetworkManager is not using any sysconfig settings.
+#
+
+## Type:	list(dhcpcd,dhclient,)
+## Default:	""
+## ServiceRestart: network
+#
+# Which DHCPv4 client should be used? 
+# Currently the following client are supported:
+# 	dhcpcd   (DHCP client daemon)
+# 	dhclient (ISC dhclient)
+# If empty, dhcpcd is tried, then dhclient 
+DHCLIENT_BIN=""
+
+## Type:	list(dhclient6,)
+## Default:	""
+## ServiceRestart: network
+#
+# Which DHCPv6 client should be used? 
+# Currently the following client are supported:
+#       dhclient6  (ISC dhcp 4.x client)
+#       dhcp6c     (dhcpv6 client -- deprecated, package dropped)
+# If empty, dhclient6 is tried, then dhcp6c
+#
+DHCLIENT6_BIN=""
+
+## Type:        string
+## Default:     ""
+## ServiceRestart: network
+#
+# Additional user start options to use when the 'dhcpcd' DHCPv4 client
+# is enabled in the DHCLIENT_BIN variable (default).
+#
+DHCPCD_USER_OPTIONS=""
+
+## Type:        string
+## Default:     ""
+## ServiceRestart: network
+#
+# Additional user start options to use when the 'dhclient' ISC DHCPv4
+# client is enabled in the DHCLIENT_BIN variable.
+#
+DHCLIENT_USER_OPTIONS=""
+
+## Type:        string
+## Default:     ""
+## ServiceRestart: network
+#
+# Additional user start options to use when the 'dhcp6c' DHCPv6 client
+# is enabled in the DHCLIENT6_BIN variable (default).
+#
+DHCP6C_USER_OPTIONS=""
+
+## Type:	yesno
+## Default:	no
+#
+# Start in debug mode? (yes|no)
+# (debug info will be logged to /var/log/messages for dhcpcd, or to
+# /var/log/dhclient-script for ISC dhclient)
+#
+DHCLIENT_DEBUG="no"
+
+## Type: list("",yes,no,first)
+## Default: ""
+#
+# Multiple DHCP clients:
+#
+# With two or more DHCP clients running, they would concurrently try to replace
+# the default route or set the hostname. There are several ways of dealing with
+# this conflict (and it is a conflict, because you can have only one default
+# route even though routes are stackable and the dhcp clients would change it
+# while every lease renew):
+#
+#  1) Allow both clients to do that stuff. This would work in many cases if
+#     only one of the interfaces is used at a time. However, it would lead to
+#     undefined behaviour such as changing default route e.g. on dhcp renew.
+#
+#  2) When both interfaces are connected to the same network, you may configure
+#     a bonding interface in active-backup mode (or another, e.g. 802.3ad, when
+#     supported and configured by the switch) and configure dhcp on the bonding
+#     instead.
+#
+#  3) When only one of the interfaces is used at time, you may set STARTMODE to
+#     ifplugd and specify the priority of the interfaces in IFPLUGD_PRIORITY.
+#     This is a common scenario for notebooks to use the wired interface when
+#     connected, wireless otherwise.
+#
+#  4) allow only one of the DHCP clients to do that stuff.
+#     This implies that there would be a "primary" interface and a "secondary".
+#     This is the assumption the default configuration is based on. But since
+#     the system often can't guess which interface is "more important", we
+#     simply choose one depending on related configuration or take the first
+#     interface that is started with DHCP to be primary ("authoritative").
+#     This can be configured by setting DHCLIENT_PRIMARY_DEVICE=yes in one of
+#     the /etc/sysconfig/network/ifcfg-* files and DHCLIENT_PRIMARY_DEVICE=no
+#     in /etc/sysconfig/network/dhcp (or in all other ifcfg files using DHCP).
+#
+# When DHCLIENT_PRIMARY_DEVICE is not explicitly configured to yes/no, the
+# "primary" interface is choosed as follows:
+#
+# - On systems with iSCSI Boot Firmare Table, the iBFT primary interface
+#   is used as the primary DHCP interface by default.
+# - On systems booting via PXE, the interface specified by the BOOTIF kernel
+#   parameter is used as primary DHCP interface. Set the global "ipappend 2"
+#   parameter in pxelinux.cfg/* files, so the BOOTIF kernel parameter is set.
+# - Otherwise, the DHCP client that is started first will be "primary" and
+#   allowed the set the default route and hostname ("first up wins" mode,
+#   the only one before openSUSE 11.4). To force this "first up wins" mode,
+#   set DHCLIENT_PRIMARY_DEVICE="first" in /etc/sysconfig/network/dhcp.
+#
+# All other running dhcp clients will only configure the interface with an
+# address and network routes, but not change the "global" default route or
+# hostname.
+# See also DHCLIENT_SET_DEFAULT_ROUTE and DHCLIENT_SET_HOSTNAME variables,
+# that allow to modify the DHCLIENT_PRIMARY_DEVICE parameter behaviour once
+# again.
+#
+# Thus, to specifically allow an interface's DHCP client to change "global"
+# configuration, set the following variable to "yes". Or you can make an
+# interface's DHCP client never change these settings if you set it to "no".
+# If you leave it empty then ifup-dhcp will decide.
+#
+DHCLIENT_PRIMARY_DEVICE=""
+
+## Type:	yesno
+## Default:	no
+#
+# Should the DHCP client set the hostname? (yes|no)
+# 
+# When it is likely that this would occur during a running X session, 
+# your DISPLAY variable could be screwed up and you won't be able to open
+# new windows anymore, then this should be "no". 
+#
+# If it happens during booting it won't be a problem and you can 
+# safely say "yes" here. For a roaming notebook with X kept running, "no"
+# makes more sense. 
+#
+DHCLIENT_SET_HOSTNAME="no"
+
+## Type:	yesno
+## Default:	yes
+#
+# Should the DHCP client set a default route (default Gateway) (yes|no)
+#
+# When multiple copies of dhcpcd run, it would make sense that only one
+# of them does it. 
+#
+DHCLIENT_SET_DEFAULT_ROUTE="yes"
+
+## Type:	integer
+## Default:	""
+#
+# Lease time to request ( -l option)
+#
+# Specifies (in seconds) the lease that is suggested to the server. 
+# The default is 1 hour, use -1 to request infinite lease time.
+#
+DHCLIENT_LEASE_TIME=""
+
+## Type:        yesno
+## Default:     yes
+#
+# dhcpcd -E/--lastlease option
+#
+# This setting controls whether dhcpcd should try to use DHCP settings
+# provided in its last lease when the dhcp-server is not reachable and
+# the lease hasn't expired yet.
+# Set this variable to "no" to disable the fallback to the last lease.
+#
+DHCLIENT_USE_LAST_LEASE="yes"
+
+## Type:	integer
+## Default:	"0"
+#
+# dhcpcd -t/--timeout option
+#
+# You can set the timeout - dhcpcd will terminate after this time when
+# does not get a reply from the dhcp server. The dhcpcd default timeout
+# is 20 seconds, we set it to 0 to and wait forever to get a lease.
+#
+# Note: In the past, this setting was set to a much higher value (999999)
+# by default, because the dhcpcd < 3.2.3 didn't provided a infinite one.
+#
+DHCLIENT_TIMEOUT="0"
+
+## Type:	string
+## Default:	AUTO
+#
+# specify a hostname to send ( -h option)
+#
+# specifies a string used for the hostname option field when dhcpcd sends DHCP
+# messages. Some DHCP servers will update nameserver entries (dynamic DNS).
+# Also, some DHCP servers, notably those used by @Home Networks, require the
+# hostname option field containing a specific string in the DHCP messages from
+# clients.
+#
+# By default the current hostname is sent ("AUTO"), if one is defined in 
+# /etc/HOSTNAME. 
+# Use this variable to override this with another hostname, or leave empty
+# to not send a hostname.
+#
+DHCLIENT_HOSTNAME_OPTION="AUTO"
+
+## Type:	string
+## Default:	""
+#
+# specify a client ID ( -I option)
+#
+# Specifies a client identifier string. By default the hardware address of the
+# network interface is sent as client identifier string, if none is specified
+# here.
+#
+# Note that dhcpcd will prepend a zero to what it sends to the server. In the
+# server configuration, you need to write the following to match on it:
+#  option dhcp-client-identifier "\0foo";
+#
+DHCLIENT_CLIENT_ID=""
+
+## Type:	string("dhcpcd dhclient")
+## Default:	""
+#
+# specify a vendor class ID ( -i option)
+#
+# Specifies the vendor class identifier string. The default is dhcpcd-<version>.
+#
+DHCLIENT_VENDOR_CLASS_ID=""
+
+## Type:	yesno
+## Default:	no
+#
+# Send a DHCPRELEASE to the server (sign off the address)? (yes|no)
+# This may lead to getting a different address/hostname next time an address
+# is requested. But some servers require it.
+#
+DHCLIENT_RELEASE_BEFORE_QUIT="no"
+
+## Type:	yesno
+## Default:	no
+#
+# Send a DHCPv6 RELEASE to the server (sign off the address)? (yes|no)
+# This may lead to getting a different address/hostname next time an address
+# is requested. But some servers require it.
+#
+DHCLIENT6_RELEASE_BEFORE_QUIT="no"
+
+## Type:	integer
+## Default:	0
+#
+# Some interfaces need time to initialize. Add the latency time in seconds
+# so these can be handled properly. Should probably set per interface rather than here.
+#
+DHCLIENT_SLEEP="0"
+
+## Type:	integer
+## Default:	15
+#
+# When the DHCP client is started at boot time, the boot process will stop
+# until the interface is successfully configured, but at most for
+# DHCLIENT_WAIT_AT_BOOT seconds.
+#
+# Note: RFC 2131 specifies, that the dhcp client should wait a random time
+# between one and ten seconds to desynchronize the use of DHCP at startup.
+#
+DHCLIENT_WAIT_AT_BOOT="15"
+
+## Type:        yesno
+## Default:     no
+## ServiceRestart: yast2
+#
+# This option is read by YaST during network configuration.
+#
+# If set, then the hostname is added to /etc/hosts with IP address
+# 127.0.0.2. This allows the hostname to be resolved (and thus, the
+# host to be reached), if the real network is not reachable.
+#
+# If unset, YaST will not touch /etc/hosts.
+WRITE_HOSTNAME_TO_HOSTS="no"
+## Path:	Network/DHCP/DHCP client
+## Description:	DHCP client configuration
+## Type:	yesno
+## Default:	yes
+#
+# Should the DHCP client modify /etc/samba/dhcp.conf? 
+#
+DHCLIENT_MODIFY_SMB_CONF="yes"

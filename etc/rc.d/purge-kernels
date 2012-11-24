@@ -1,0 +1,35 @@
+#! /bin/sh
+#
+# Copyright (c) 2011 Novell, Inc.
+#
+### BEGIN INIT INFO
+# Provides:          purge-kernels
+# Required-Start:    $local_fs
+# Required-Stop:     $null
+# Default-Start:     3 5
+# Default-Stop:      $null
+# Short-Description: Purge old kernels
+# Description:       Purge old kernel as configured in /etc/zypp/zypp.conf
+### END INIT INFO
+
+case "$1" in
+start)
+	;;
+stop|try-restart|restart|force-reload|reload|status)
+	# not applicable
+	exit 0
+	;;
+*)
+	echo "Usage: $0 start"
+	exit 1
+esac
+if test ! -e /boot/do_purge_kernels; then
+	exit 0
+fi
+
+. /etc/rc.status
+echo "Removing old kernel packages..."
+rm -f /boot/do_purge_kernels
+/sbin/purge-kernels
+rc_status -v
+rc_exit

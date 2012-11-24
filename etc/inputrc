@@ -1,0 +1,755 @@
+################################################################################
+## /etc/inputrc
+##
+## Attempt to put different TERMs together in one readline init file.
+## Copyright (c) 1997,2000,2002 SuSE Linux AG, Nuernberg, Germany.
+## Copyright: 2007 SuSE  LINUX Products GmbH, Nuernberg, Germany.
+##
+## Author: Werner Fink
+## Please send feedback to http://www.suse.de/feedback
+##
+################################################################################
+#
+# Eight bit compatible: Umlaute
+#
+set meta-flag on
+set output-meta on
+set convert-meta off
+set enable-meta-key off
+set term xy
+#
+# VI line editing
+#
+$if mode=vi
+set editing-mode vi
+set keymap vi
+$endif
+#
+# Common standard keypad and cursor
+#
+"\e[1~":	beginning-of-line
+"\e[2~":	yank
+"\e[3~":	delete-char
+"\e[4~":	end-of-line
+"\e[5~":	history-search-backward
+"\e[6~":	history-search-forward
+$if term=xterm
+"\e[2;2~":	yank
+"\e[3;2~":	delete-char
+"\e[5;2~":	history-search-backward
+"\e[6;2~":	history-search-forward
+"\e[2;3~":	yank
+"\e[3;3~":	delete-char
+"\e[5;3~":	history-search-backward
+"\e[6;3~":	history-search-forward
+"\e[2;4~":	yank
+"\e[3;4~":	delete-char
+"\e[5;4~":	history-search-backward
+"\e[6;4~":	history-search-forward
+"\e[2;5~":	yank
+"\e[3;5~":	delete-char
+"\e[5;5~":	history-search-backward
+"\e[6;5~":	history-search-forward
+"\e[2;6~":	yank
+"\e[3;6~":	delete-char
+"\e[5;6~":	history-search-backward
+"\e[6;6~":	history-search-forward
+"\e[2;7~":	yank
+"\e[3;7~":	delete-char
+"\e[5;7~":	history-search-backward
+"\e[6;7~":	history-search-forward
+"\e[2;8~":	yank
+"\e[3;8~":	delete-char
+"\e[5;8~":	history-search-backward
+"\e[6;8~":	history-search-forward
+$endif
+"\e[C":		forward-char
+"\e[D":		backward-char
+"\e[A":		previous-history
+"\e[B":		next-history
+$if term=xterm
+"\e[E":		re-read-init-file
+"\e[1;2E":	re-read-init-file
+"\e[1;3E":	re-read-init-file
+"\e[1;4E":	re-read-init-file
+"\e[1;5E":	re-read-init-file
+"\e[1;6E":	re-read-init-file
+"\e[1;7E":	re-read-init-file
+"\e[1;8E":	re-read-init-file
+"\e[2C":	forward-word
+"\e[2D":	backward-word
+"\e[2A":	history-search-backward
+"\e[2B":	history-search-forward
+"\e[1;2C":	forward-word
+"\e[1;2D":	backward-word
+"\e[1;2A":	history-search-backward
+"\e[1;2B":	history-search-forward
+"\e[1;3C":	forward-word
+"\e[1;3D":	backward-word
+"\e[1;3A":	history-search-backward
+"\e[1;3B":	history-search-forward
+"\e[1;4C":	forward-word
+"\e[1;4D":	backward-word
+"\e[1;4A":	history-search-backward
+"\e[1;4B":	history-search-forward
+"\e[5C":	forward-word
+"\e[5D":	backward-word
+"\e[5A":	history-search-backward
+"\e[5B":	history-search-forward
+"\e[1;5C":	forward-word
+"\e[1;5D":	backward-word
+"\e[1;5A":	history-search-backward
+"\e[1;5B":	history-search-forward
+"\e[1;6C":	forward-word
+"\e[1;6D":	backward-word
+"\e[1;6A":	history-search-backward
+"\e[1;6B":	history-search-forward
+"\e[1;7C":	forward-word
+"\e[1;7D":	backward-word
+"\e[1;7A":	history-search-backward
+"\e[1;7B":	history-search-forward
+"\e[1;8C":	forward-word
+"\e[1;8D":	backward-word
+"\e[1;8A":	history-search-backward
+"\e[1;8B":	history-search-forward
+$else
+"\e[G":		re-read-init-file
+$endif
+#
+# Avoid network problems
+#   ... \177 (ASCII-DEL) and \010 (ASCII-BS)
+#       do `backward-delete-char'
+# Note: `delete-char' is maped to \033[3~
+#       Therefore xterm's responce on pressing
+#       key Delete or KP-Delete should be
+#       \033[3~ ... NOT \177
+#
+"\C-?":		backward-delete-char
+"\C-H":		backward-delete-char
+$if term=xterm
+"\e\303\277":	backward-delete-word
+"\eÿ":		backward-delete-word
+$endif
+#
+# Home and End
+#
+$if term=xterm
+#
+# Normal keypad and cursor of xterm
+#
+"\e[1~":	history-search-backward
+"\e[4~":	set-mark
+"\e[H":		beginning-of-line
+"\e[F":		end-of-line
+"\e[1;2H":	beginning-of-line
+"\e[1;2F":	end-of-line
+"\e[1;3H":	beginning-of-line
+"\e[1;3F":	end-of-line
+"\e[1;4H":	beginning-of-line
+"\e[1;4F":	end-of-line
+"\e[1;5H":	beginning-of-line
+"\e[1;5F":	end-of-line
+"\e[1;6H":	beginning-of-line
+"\e[1;6F":	end-of-line
+"\e[1;7H":	beginning-of-line
+"\e[1;7F":	end-of-line
+"\e[1;8H":	beginning-of-line
+"\e[1;8F":	end-of-line
+"\e[2H":	beginning-of-line
+"\e[2F":	end-of-line
+"\e[5H":	beginning-of-line
+"\e[5F":	end-of-line
+# Home and End of application keypad and cursor of xterm
+"\eOH":		beginning-of-line
+"\eOF":		end-of-line
+"\eO2H":	beginning-of-line
+"\eO2F":	end-of-line
+"\eO5H":	beginning-of-line
+"\eO5F":	end-of-line
+$else
+$if term=kvt
+"\e[1~":	history-search-backward
+"\e[4~":	set-mark
+"\eOH":		beginning-of-line
+"\eOF":		end-of-line
+$endif
+#
+# TERM=linux or console or gnome
+#
+"\e[1~":	beginning-of-line
+"\e[4~":	end-of-line
+$endif
+#
+# Application keypad and cursor of xterm
+#
+$if term=xterm
+"\eOD":         backward-char
+"\eOC":         forward-char
+"\eOA":         previous-history
+"\eOB":         next-history
+"\eOE":         re-read-init-file
+"\eO2D":        backward-word
+"\eO2C":        forward-word
+"\eO2A":        history-search-backward
+"\eO2B":        history-search-forward
+"\eO3D":        backward-word
+"\eO3C":        forward-word
+"\eO3A":        history-search-backward
+"\eO3B":        history-search-forward
+"\eO4D":        backward-word
+"\eO4C":        forward-word
+"\eO4A":        history-search-backward
+"\eO4B":        history-search-forward
+"\eO5D":        backward-word
+"\eO5C":        forward-word
+"\eO5A":        history-search-backward
+"\eO5B":        history-search-forward
+"\eO6D":        backward-word
+"\eO6C":        forward-word
+"\eO6A":        history-search-backward
+"\eO6B":        history-search-forward
+"\eO7D":        backward-word
+"\eO7C":        forward-word
+"\eO7A":        history-search-backward
+"\eO7B":        history-search-forward
+"\eO8D":        backward-word
+"\eO8C":        forward-word
+"\eO8A":        history-search-backward
+"\eO8B":        history-search-forward
+# DEC keyboard KP_F1 - KP_F4 or
+# XTerm of XFree86 in VT220 mode F1 - F4
+"\eOP":		"\e"
+"\eOQ":		undo
+"\eOR":		""  
+"\eOS":		kill-line
+"\eO2P":	"\e"
+"\eO2Q":	undo
+"\eO2R":	""  
+"\eO2S":	kill-line
+"\eO3P":	"\e"
+"\eO3Q":	undo
+"\eO3R":	""  
+"\eO3S":	kill-line
+"\eO4P":	"\e"
+"\eO4Q":	undo
+"\eO4R":	""  
+"\eO4S":	kill-line
+"\eO5P":	"\e"
+"\eO5Q":	undo
+"\eO5R":	""  
+"\eO5S":	kill-line
+"\eO6P":	"\e"
+"\eO6Q":	undo
+"\eO6R":	""  
+"\eO6S":	kill-line
+"\eO7P":	"\e"
+"\eO7Q":	undo
+"\eO7R":	""  
+"\eO7S":	kill-line
+"\eO8P":	"\e"
+"\eO8Q":	undo
+"\eO8R":	""  
+"\eO8S":	kill-line
+"\eO1;2P":	"\e"
+"\eO1;2Q":	undo
+"\eO1;2R":	""  
+"\eO1;2S":	kill-line
+"\eO1;3P":	"\e"
+"\eO1;3Q":	undo
+"\eO1;3R":	""  
+"\eO1;3S":	kill-line
+"\eO1;4P":	"\e"
+"\eO1;4Q":	undo
+"\eO1;4R":	""  
+"\eO1;4S":	kill-line
+"\eO1;5P":	"\e"
+"\eO1;5Q":	undo
+"\eO1;5R":	""  
+"\eO1;5S":	kill-line
+"\eO1;6P":	"\e"
+"\eO1;6Q":	undo
+"\eO1;6R":	""  
+"\eO1;6S":	kill-line
+"\eO1;7P":	"\e"
+"\eO1;7Q":	undo
+"\eO1;7R":	""  
+"\eO1;7S":	kill-line
+"\eO1;8P":	"\e"
+"\eO1;8Q":	undo
+"\eO1;8R":	""  
+"\eO1;8S":	kill-line
+$endif
+$if term=gnome
+# or gnome terminal F1 - F4
+"\eOP":		"\e"
+"\eOQ":		undo
+"\eOR":		""
+"\eOS":		kill-line
+$endif
+#
+# Function keys F1 - F12
+#
+$if term=linux
+#
+# On console the first five function keys
+#
+"\e[[A":	"\e"
+"\e[[B":	undo
+"\e[[C":	""
+"\e[[D":	kill-line
+"\e[[E":	""
+$else
+#
+# The first five standard function keys
+#
+"\e[11~":	"\e"
+"\e[12~":	undo
+"\e[13~":	""
+"\e[14~":	kill-line
+"\e[15~":	""
+$endif
+"\e[17~":	""
+"\e[18~":	""
+"\e[19~":	""
+"\e[20~":	""
+"\e[21~":	""
+"\e[23~":	""
+"\e[24~":	""
+"\e[25~":	""
+"\e[26~":	""
+# DEC keyboard: F15=\e[28~ is Help
+"\e[28~":	""
+# DEC keyboard: F16=\e[29~ is Menu
+"\e[29~":	""
+"\e[31~":	""
+"\e[32~":	""
+"\e[33~":	""
+"\e[34~":	""
+"\e[35~":	""
+"\e[36~":	""
+$if term=xterm
+"\e[1;2P":	""
+"\e[1;2Q":	""
+"\e[1;2R":	""
+"\e[1;2S":	""
+"\e[15;2~":	""
+"\e[17;2~":	""
+"\e[18;2~":	""
+"\e[19;2~":	""
+"\e[20;2~":	""
+"\e[21;2~":	""
+"\e[23;2~":	""
+"\e[24;2~":	""
+"\e[1;3P":	""
+"\e[1;3Q":	""
+"\e[1;3R":	""
+"\e[1;3S":	""
+"\e[15;3~":	""
+"\e[17;3~":	""
+"\e[18;3~":	""
+"\e[19;3~":	""
+"\e[20;3~":	""
+"\e[21;3~":	""
+"\e[23;3~":	""
+"\e[24;3~":	""
+"\e[1;4P":	""
+"\e[1;4Q":	""
+"\e[1;4R":	""
+"\e[1;4S":	""
+"\e[15;4~":	""
+"\e[17;4~":	""
+"\e[18;4~":	""
+"\e[19;4~":	""
+"\e[20;4~":	""
+"\e[21;4~":	""
+"\e[23;4~":	""
+"\e[24;4~":	""
+"\e[1;5P":	""
+"\e[1;5Q":	""
+"\e[1;5R":	""
+"\e[1;5S":	""
+"\e[15;5~":	""
+"\e[17;5~":	""
+"\e[18;5~":	""
+"\e[19;5~":	""
+"\e[20;5~":	""
+"\e[21;5~":	""
+"\e[23;5~":	""
+"\e[24;5~":	""
+"\e[1;6P":	""
+"\e[1;6Q":	""
+"\e[1;6R":	""
+"\e[1;6S":	""
+"\e[15;6~":	""
+"\e[17;6~":	""
+"\e[18;6~":	""
+"\e[19;6~":	""
+"\e[20;6~":	""
+"\e[21;6~":	""
+"\e[23;6~":	""
+"\e[24;6~":	""
+"\e[1;7P":	""
+"\e[1;7Q":	""
+"\e[1;7R":	""
+"\e[1;7S":	""
+"\e[15;7~":	""
+"\e[17;7~":	""
+"\e[18;7~":	""
+"\e[19;7~":	""
+"\e[20;7~":	""
+"\e[21;7~":	""
+"\e[23;7~":	""
+"\e[24;7~":	""
+"\e[1;8P":	""
+"\e[1;8Q":	""
+"\e[1;8R":	""
+"\e[1;8S":	""
+"\e[15;8~":	""
+"\e[17;8~":	""
+"\e[18;8~":	""
+"\e[19;8~":	""
+"\e[20;8~":	""
+"\e[21;8~":	""
+"\e[23;8~":	""
+"\e[24;8~":	""
+$endif
+#
+$if term=xterm
+#
+# Application keypad and cursor of xterm
+# with NumLock ON
+#
+# Operators
+"\eOo":		"/"
+"\eOj":		"*"
+"\eOm":		"-"
+"\eOk":		"+"
+"\eOl":		","
+"\eOM":		accept-line
+"\eOn":		"."
+# Numbers
+"\eOp":		"0"
+"\eOq":		"1"
+"\eOr":		"2"
+"\eOs":		"3"
+"\eOt":		"4"
+"\eOu":		"5"
+"\eOv":		"6"
+"\eOw":		"7"
+"\eOx":		"8"
+"\eOy":		"9"
+$endif
+#
+$if term=kterm
+"\e[\000":	""
+$endif
+#
+$if term=mlterm
+"\e[E":		re-read-init-file
+"\eOH":		beginning-of-line
+"\eOF":		end-of-line
+"\e\eOH":	beginning-of-line
+"\e\eOF":	end-of-line
+"\e[1;2C":	forward-word
+"\e[1;2D":	backward-word
+"\e[1;2A":	history-search-backward
+"\e[1;2B":	history-search-forward
+"\e[1;3C":	forward-word
+"\e[1;3D":	backward-word
+"\e[1;3A":	history-search-backward
+"\e[1;3B":	history-search-forward
+"\e[1;4C":	forward-word
+"\e[1;4D":	backward-word
+"\e[1;4A":	history-search-backward
+"\e[1;4B":	history-search-forward
+"\e[1;5C":	forward-word
+"\e[1;5D":	backward-word
+"\e[1;5A":	history-search-backward
+"\e[1;5B":	history-search-forward
+"\e[1;6C":	forward-word
+"\e[1;6D":	backward-word
+"\e[1;6A":	history-search-backward
+"\e[1;6B":	history-search-forward
+"\e[1;7C":	forward-word
+"\e[1;7D":	backward-word
+"\e[1;7A":	history-search-backward
+"\e[1;7B":	history-search-forward
+"\e[1;8C":	forward-word
+"\e[1;8D":	backward-word
+"\e[1;8A":	history-search-backward
+"\e[1;8B":	history-search-forward
+"\e[11;2~":	""
+"\e[12;2~":	""
+"\e[13;2~":	""
+"\e[14;2~":	""
+"\e[15;2~":	""
+"\e[17;2~":	""
+"\e[18;2~":	""
+"\e[19;2~":	""
+"\e[20;2~":	""
+"\e[21;2~":	""
+"\e[23;2~":	""
+"\e[24;2~":	""
+"\e[11;3~":	""
+"\e[12;3~":	""
+"\e[13;3~":	""
+"\e[14;3~":	""
+"\e[15;3~":	""
+"\e[17;3~":	""
+"\e[18;3~":	""
+"\e[19;3~":	""
+"\e[20;3~":	""
+"\e[21;3~":	""
+"\e[23;3~":	""
+"\e[24;3~":	""
+"\e[11;4~":	""
+"\e[12;4~":	""
+"\e[13;4~":	""
+"\e[14;4~":	""
+"\e[15;4~":	""
+"\e[17;4~":	""
+"\e[18;4~":	""
+"\e[19;4~":	""
+"\e[20;4~":	""
+"\e[21;4~":	""
+"\e[23;4~":	""
+"\e[24;4~":	""
+"\e[11;5~":	""
+"\e[12;5~":	""
+"\e[13;5~":	""
+"\e[14;5~":	""
+"\e[15;5~":	""
+"\e[17;5~":	""
+"\e[18;5~":	""
+"\e[19;5~":	""
+"\e[20;5~":	""
+"\e[21;5~":	""
+"\e[23;5~":	""
+"\e[24;5~":	""
+"\e[11;6~":	""
+"\e[12;6~":	""
+"\e[13;6~":	""
+"\e[14;6~":	""
+"\e[15;6~":	""
+"\e[17;6~":	""
+"\e[18;6~":	""
+"\e[19;6~":	""
+"\e[20;6~":	""
+"\e[21;6~":	""
+"\e[23;6~":	""
+"\e[24;6~":	""
+"\e[11;7~":	""
+"\e[12;7~":	""
+"\e[13;7~":	""
+"\e[14;7~":	""
+"\e[15;7~":	""
+"\e[17;7~":	""
+"\e[18;7~":	""
+"\e[19;7~":	""
+"\e[20;7~":	""
+"\e[21;7~":	""
+"\e[23;7~":	""
+"\e[24;7~":	""
+"\e[11;8~":	""
+"\e[12;8~":	""
+"\e[13;8~":	""
+"\e[14;8~":	""
+"\e[15;8~":	""
+"\e[17;8~":	""
+"\e[18;8~":	""
+"\e[19;8~":	""
+"\e[20;8~":	""
+"\e[21;8~":	""
+"\e[23;8~":	""
+"\e[24;8~":	""
+$endif
+#
+$if term=rxvt-unicode
+"\e[23$":	""
+"\e[24$":	""
+"\e[11^":	""
+"\e[12^":	""
+"\e[13^":	""
+"\e[14^":	""
+"\e[15^":	""
+"\e[17^":	""
+"\e[18^":	""
+"\e[19^":	""
+"\e[20^":	""
+"\e[21^":	""
+"\e[23^":	""
+"\e[24^":	""
+"\eOo":		"/"
+"\eOj":		"*"
+"\eOm":		"-"
+"\eOk":		"+"
+"\eOl":		","
+"\eOM":		accept-line
+"\eOn":		"."
+"\eOp":		"0"
+"\eOq":		"1"
+"\eOr":		"2"
+"\eOs":		"3"
+"\eOt":		"4"
+"\eOu":		"5"
+"\eOv":		"6"
+"\eOw":		"7"
+"\eOx":		"8"
+"\eOy":		"9"
+"\e\eOo":	""
+"\e\eOj":	""
+"\e\eOm":	""
+"\e\eOk":	""
+"\e\eOl":	delete-char
+"\e\eOM":	accept-line
+"\e\eOn":	delete-char
+"\e\eOp":	yank
+"\e\eOq":	end-of-line
+"\e\eOr":	down-history
+"\e\eOs":	history-search-forward
+"\e\eOt":	backward-char
+"\e\eOu":	re-read-init-file
+"\e\eOv":	forward-char
+"\e\eOw":	beginning-of-line
+"\e\eOx":	up-history
+"\e\eOy":	history-search-backward
+"\e[c":		forward-word
+"\e[d":		backward-word
+"\e[a":		history-search-backward
+"\e[b":		history-search-forward
+"\e\e[c":	forward-word
+"\e\e[d":	backward-word
+"\e\e[a":	history-search-backward
+"\e\e[b":	history-search-forward
+"\e\e[C":	forward-word
+"\e\e[D":	backward-word
+"\e\e[A":	history-search-backward
+"\e\e[B":	history-search-forward
+"\e[2^":	yank
+"\e[3^":	delete-char
+"\e[5^":	history-search-backward
+"\e[6^":	history-search-forward
+"\e[7^":	beginning-of-line
+"\e[8^":	end-of-line
+"\e[2$":	yank
+"\e[3$":	delete-char
+"\e[5$":	history-search-backward
+"\e[6$":	history-search-forward
+"\e[7$":	beginning-of-line
+"\e[8$":	end-of-line
+"\e\e[2$":	yank
+"\e\e[3$":	delete-char
+"\e\e[5$":	history-search-backward
+"\e\e[6$":	history-search-forward
+"\e\e[7$":	beginning-of-line
+"\e\e[8$":	end-of-line
+"\e=":		accept-line
+# Shift+Ctrl+(Alt+)KP_<0...9> generates
+# \000 ... \011 (^@ upto TAB) we ignore these
+$endif
+#
+# Screen
+#
+$if term=screen
+"\e[1;2D":	backward-word
+"\e[1;2C":	forward-word
+"\e[1;2A":	up-history
+"\e[1;2B":	down-history
+"\e[1;2H":	beginning-of-line
+"\e[1;2F":	end-of-line
+"\e[2;2~":	yank
+"\e[3;2~":	delete-char
+"\e[5;2~":	history-search-backward
+"\e[6;2~":	history-search-forward
+"\e[1;5D":	backward-word
+"\e[1;5C":	forward-word
+"\e[1;5A":	up-history
+"\e[1;5B":	down-history
+"\e[1;5H":	beginning-of-line
+"\e[1;5F":	end-of-line
+"\e[2;5~":	yank
+"\e[3;5~":	delete-char
+"\e[5;5~":	history-search-backward
+"\e[6;5~":	history-search-forward
+"\e[1;3D":	backward-word
+"\e[1;3C":	forward-word
+"\e[1;3A":	up-history
+"\e[1;3B":	down-history
+"\e[1;3H":	beginning-of-line
+"\e[1;3F":	end-of-line
+"\e[2;3~":	yank
+"\e[3;3~":	delete-char
+"\e[5;3~":	history-search-backward
+"\e[6;3~":	history-search-forward
+#
+"\e[1;2P":	""
+"\e[1;2Q":	""
+"\e[1;2R":	""
+"\e[1;2S":	""
+"\e[15;2~":	""
+"\e[17;2~":	""
+"\e[18;2~":	""
+"\e[19;2~":	""
+"\e[20;2~":	""
+"\e[21;2~":	""
+"\e[23;2~":	""
+"\e[24;2~":	""
+#
+"\e[1;5P":	""
+"\e[1;5Q":	""
+"\e[1;5R":	""
+"\e[1;5S":	""
+"\e[15;5~":	""
+"\e[17;5~":	""
+"\e[18;5~":	""
+"\e[19;5~":	""
+"\e[20;5~":	""
+"\e[21;5~":	""
+"\e[23;5~":	""
+"\e[24;5~":	""
+#
+"\e[1;3P":	""
+"\e[1;3Q":	""
+"\e[1;3R":	""
+"\e[1;3S":	""
+"\e[15;3~":	""
+"\e[17;3~":	""
+"\e[18;3~":	""
+"\e[19;3~":	""
+"\e[20;3~":	""
+"\e[21;3~":	""
+"\e[23;3~":	""
+"\e[24;3~":	""
+$endif
+#
+#  EMACS line editing
+#
+$if mode=emacs
+#
+# ... xterm application cursor
+#
+$if term=xterm
+"\e\eOD":	backward-word
+"\e\eOC":	forward-word
+"\e\eOA":	up-history
+"\e\eOB":	down-history
+"\C-\eOD":	backward-char
+"\C-\eOC":	forward-char
+"\C-\eOA":	up-history
+"\C-\eOB":	down-history
+$endif
+#
+# Standard cursor
+#
+"\e\e[D":	backward-word
+"\e\e[C":	forward-word
+"\e\e[A":	up-history
+"\e\e[B":	down-history
+"\C-\e[D":	backward-char
+"\C-\e[C":	forward-char
+"\C-\e[A":	up-history
+"\C-\e[B":	down-history
+$endif
+#
+# end
+#

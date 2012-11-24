@@ -1,0 +1,203 @@
+#! /bin/bash
+# Copyright (c) 1995-2003 SuSE Linux AG, Nuernberg, Germany.
+#
+# Author: Kurt Garloff
+#
+# /etc/init.d/fbset
+#
+#   and symbolic its link
+#
+# /usr/sbin/rcfbset
+#
+# System startup script for the fb modules and fb configuration
+#
+### BEGIN INIT INFO
+# Provides:          fbset
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Default-Start:     1 2 3 5
+# Default-Stop:      0 6
+# Description:       Framebuffer setup
+# Short-Description: Framebuffer setup
+### END INIT INFO
+
+# Source SuSE config
+. /etc/sysconfig/console
+
+# is anything to do?
+test -z "$FB_MODULES" -a -z "$FBSET_PARAMS" && exit 0
+
+# check for an already working framebuffer device (for example due to
+# a framebuffer driver compiled in kernel)
+fbdev_ok=""
+if (: < /dev/fb0) 2>/dev/null ; then
+  fbdev_ok="1"
+fi
+# if $FBSET_PARAMS is not empty then $FB_MODULES must be defined or
+# framebuffer device must be already working
+test -n "$FBSET_PARAMS" && test -z "$fbdev_ok" -a -z "$FB_MODULES" && exit 0
+
+FBSET_BIN=/sbin/fbset
+# if $FBSET_PARAMS is not empty then $FBSET_BIN must be installed
+test -n "$FBSET_PARAMS" -a ! -x $FBSET_BIN && exit 5
+
+# Shell functions sourced from /etc/rc.status:
+#      rc_check         check and set local and overall rc status
+#      rc_status        check and set local and overall rc status
+#      rc_status -v     ditto but be verbose in local rc status
+#      rc_status -v -r  ditto and clear the local rc status
+#      rc_failed        set local and overall rc status to failed
+#      rc_failed <num>  set local and overall rc status to <num><num>
+#      rc_reset         clear local rc status (overall remains)
+#      rc_exit          exit appropriate to overall rc status
+. /etc/rc.status
+
+# First reset status of this service
+rc_reset
+
+# Return values acc. to LSB for all commands but status:
+# 0 - success
+# 1 - generic or unspecified error
+# 2 - invalid or excess argument(s)
+# 3 - unimplemented feature (e.g. "reload")
+# 4 - insufficient privilege
+# 5 - program is not installed
+# 6 - program is not configured
+# 7 - program is not running
+# 
+# Note that starting an already running service, stopping
+# or restarting a not-running service as well as the restart
+# with force-reload (in case signalling is not supported) are
+# considered a success.
+
+case "$1" in
+    start)
+	echo -n "Framebuffer setup: "
+	## Start daemon with startproc(8). If this fails
+	## the echo return value is set appropriate.
+
+ 	if test ! -z "$FB_MODULES"; then
+		# $FB_MODULES needs parsing: It might contain several modules
+		# and module parameters. We identify params by the = sign.
+		unset mod modpar
+		for par in $FB_MODULES; do 
+			case $par in
+			    *=*) 
+				modpar="$modpar $par"
+				;;
+			    *) 
+				if test ! -z "$mod"; then
+					echo -n "$mod "
+					modprobe $mod $modpar
+					rc_status
+				fi
+				unset modpar
+				mod=$par
+				;;
+			esac
+		done
+		echo -n "$mod "
+		modprobe $mod $modpar
+		rc_status
+	fi
+
+	if test ! -z "$FBSET_PARAMS"; then
+		if test -x $FBSET_BIN; then
+			mode=`echo $FBSET_PARAMS | sed -e 's/^-[^ ]*//' -e 's/ -[^ ]*//g'`
+			echo -n "$mode "
+			$FBSET_BIN $FBSET_PARAMS
+			rc_status
+		else
+			echo -n "fbset not installed "
+			rc_failed 5
+		fi
+	fi
+
+	# Remember status and be verbose
+	rc_status -v
+	;;
+    stop)
+	# We don't unload the fb driver modules; this could be risky
+	# and will probably fail anyway
+	;;
+    try-restart)
+	## Stop the service and if this succeeds (i.e. the 
+	## service was running before), start it again.
+	## Note: try-restart is not (yet) part of LSB (as of 0.7.5)
+	$0 status >/dev/null &&  $0 restart
+
+	# Remember status and be quiet
+	rc_status
+	;;
+    restart)
+	## Stop the service and regardless of whether it was
+	## running or not, start it again.
+	$0 start
+
+	# Remember status and be quiet
+	rc_status
+	;;
+    force-reload)
+	## Signal the daemon to reload its config. Most daemons
+	## do this on signal 1 (SIGHUP).
+	## If it does not support it, restart.
+	$0 try-restart
+	rc_status
+	;;
+    reload)
+	$0 try-restart
+	rc_status
+	;;
+    status)
+	echo -n "Checking for framebuffer setup: "
+	## Check status with checkproc(8), if process is running
+	## checkproc will return with exit status 0.
+
+	# Status has a slightly different for the status command:
+	# 0 - service running
+	# 1 - service dead, but /var/run/  pid  file exists
+	# 2 - service dead, but /var/lock/ lock file exists
+	# 3 - service not running
+	
+	if test ! -z "$FB_MODULES"; then
+		# $FB_MODULES needs parsing: It might contain several modules
+		# and module parameters. We identify params by the = sign.
+		for par in $FB_MODULES; do
+			case $par in
+			    *=*) 
+				;;
+			    *) 
+				if test ! -z "$par"; then
+					if test -z "`lsmod | grep $par`";
+						then echo -n '!'"$par "
+						rc_failed 3
+					else
+						echo -n "$par "
+					fi
+				fi
+				;;
+			esac
+		done
+	fi
+	
+	if test -x $FBSET_BIN; then
+		mode=`$FBSET_BIN | grep -e "^mode" | sed 's/[^"]*"\([^"]*\)".*/\1/'`
+		rc_status
+		echo -n "$mode "
+	fi
+		
+	rc_status -v
+	;;
+    probe)
+	## Optional: Probe for the necessity of a reload,
+	## give out the argument which is required for a reload.
+	test -r /proc/uptime -a -x /bin/date -a ! -z "$FBSET_PARAMS" -a -x $FBSET_BIN || exit 0
+	boottm=$[`date -u +%s`-`cat /proc/uptime|sed 's/\([^\.]*\).*/\1/'`]
+	test $boottm -lt `date -r /etc/fb.modes -u +%s` -o $boottm -lt `date -r $FBSET_BIN -u +%s` && echo reload
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload|probe}"
+	exit 1
+	;;
+esac
+rc_exit

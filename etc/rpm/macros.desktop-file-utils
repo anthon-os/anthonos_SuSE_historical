@@ -1,0 +1,38 @@
+# RPM macros for packages installing desktop files
+#
+###
+#
+# When a package installs a desktop file, it should use both macros:
+#
+#  - %desktop_database_post in %post
+#  - %desktop_database_postun in %postun
+#
+# Note that these macros can optionally take as argument the directory
+# where the desktop file is installed. If no argument is passed, then
+# %{_datadir}/applications will be used (which is where applications
+# usually install their desktop file).
+#
+###
+
+# On install, update the desktop database
+%desktop_database_post()                                                          \
+if test -x %{_bindir}/update-desktop-database; then                               \
+%if "x%1" != "x%%1"                                                               \
+  %{_bindir}/update-desktop-database --quiet "%1" || true                         \
+%else                                                                             \
+  %{_bindir}/update-desktop-database --quiet "%{_datadir}/applications" || true   \
+%endif                                                                            \
+fi 
+
+# On uninstall, update the desktop database. Note: we ignore upgrades (already
+# handled in %post of the new package).
+%desktop_database_postun()                                                        \
+if [ $1 -eq 0 ]; then                                                             \
+  if test -x %{_bindir}/update-desktop-database; then                             \
+%if "x%1" != "x%%1"                                                               \
+    %{_bindir}/update-desktop-database --quiet "%1" || true                       \
+%else                                                                             \
+    %{_bindir}/update-desktop-database --quiet "%{_datadir}/applications" || true \
+%endif                                                                            \
+  fi                                                                              \
+fi

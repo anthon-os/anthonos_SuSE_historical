@@ -1,0 +1,17 @@
+## Name: Netbios Server
+## Description: Opens ports for Samba Netbios Server with broadcast allowed.
+
+# space separated list of allowed TCP ports
+TCP=""
+
+# space separated list of allowed UDP ports
+UDP="netbios-ns netbios-dgm"
+
+# space separated list of allowed RPC services
+RPC=""
+
+# space separated list of allowed IP protocols
+IP=""
+
+# space separated list of allowed UDP broadcast ports
+BROADCAST="netbios-ns netbios-dgm"

@@ -1,0 +1,54 @@
+## Path:           Hardware/Lirc
+## Description:    lirc (infrared remote control) configuration
+## ServiceRestart: lirc
+
+## Type:           string
+## Default:        "660"
+#
+# permissions for /dev/lircd
+#
+LIRCD_DEV_PERMISSIONS="660"
+
+## Type:        string
+## Default:     "root:video"
+#
+# owner and group for /dev/lircd
+#
+LIRCD_DEV_OWNER="root:video"
+
+## Type:        string
+## Default:     ""
+#
+# use given driver
+#
+LIRCD_DRIVER=""
+
+## Type:        string
+## Default:     ""
+#
+# read from given device
+#
+LIRCD_DEVICE=""
+
+## Type:        string(lirc_bt829,lirc_gpio,lirc_i2c,lirc_it87,lirc_parallel,lirc_sir,ir-kbd-i2c,ir-kbd-gpio)
+## Default:     ""
+#
+# load given lirc driver module
+#
+LIRC_MODULE=
+
+## Type:        string
+## Default:     ""
+#
+# listen for network connections on specified port.
+# WARNING: don't use this on a machine with an internet
+# connection as lircd is running as root!
+# 
+LIRCD_LISTENPORT=
+
+## Type:        string
+## Default:     ""
+#
+# connect lircd to specified host
+#
+LIRCD_CONNECT=

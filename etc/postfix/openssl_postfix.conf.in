@@ -1,0 +1,91 @@
+[ ca ]
+default_ca      = CA_default
+
+[ CA_default ]
+
+dir             = /etc/postfix/ssl
+certs           = $dir/certs
+crl_dir         = $dir/crl
+database        = $dir/index.txt
+new_certs_dir   = $dir/newcerts
+
+certificate     = $dir/cacert.pem
+serial          = $dir/serial
+crl             = $dir/crl.pem
+private_key     = $dir/private/cakey.pem
+RANDFILE        = $dir/private/.rand
+
+x509_extensions = usr_cert
+
+default_days    = 2000
+default_md      = md5
+policy          = policy_anything
+
+[ policy_anything ]
+countryName=optional
+stateOrProvinceName=optional
+localityName=optional
+organizationName=optional
+organizationalUnitName=optional
+commonName=optional
+emailAddress=optional
+
+[ req ]
+default_bits           = 1024
+default_keyfile        = privkey.pem
+distinguished_name     = req_distinguished_name
+attributes             = req_attributes
+x509_extensions        = v3_ca
+prompt                 = no
+output_password        = mypass
+
+[ req_distinguished_name ]
+countryName            = @POSTFIX_SSL_COUNTRY@
+stateOrProvinceName    = @POSTFIX_SSL_STATE@
+localityName           = @POSTFIX_SSL_LOCALITY@
+organizationName       = @POSTFIX_SSL_ORGANIZATION@
+organizationalUnitName = @POSTFIX_SSL_ORGANIZATIONAL_UNIT@
+commonName             = @POSTFIX_SSL_COMMON_NAME@
+emailAddress           = @POSTFIX_SSL_EMAIL_ADDRESS@
+
+[ req_attributes ]
+challengePassword              = @RANDOM@ challenge password
+
+[ server_cert ]
+
+basicConstraints=CA:FALSE
+nsCertType = server
+nsComment = @COMMENT@
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid,issuer:always
+subjectAltName=email:copy
+issuerAltName=issuer:copy
+
+
+[ client_cert ]
+
+basicConstraints=CA:FALSE
+nsCertType = client, email
+nsComment = @COMMENT@
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid,issuer:always
+subjectAltName=email:copy
+issuerAltName=issuer:copy
+
+[ v3_ca ]
+
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer:always
+basicConstraints = CA:true
+keyUsage = cRLSign, keyCertSign
+nsCertType = sslCA, emailCA
+subjectAltName=email:copy
+issuerAltName=issuer:copy
+
+[ usr_cert ]
+
+basicConstraints=CA:FALSE
+nsComment           = @COMMENT@
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid,issuer:always

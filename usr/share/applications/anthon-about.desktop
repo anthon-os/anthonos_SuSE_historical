@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=0.1
+Type=Application
+Exec=anthon_about
+Icon=/usr/share/anthon/image/Anthon.Branding.png
+StartupNotify=false
+Terminal=false
+Categories=X-XFCE;X-Xfce-Toplevel;
+OnlyShowIn=XFCE;
+Name=About Anthon
+Name[zh_CN]=关于安同
+Comment=Show Anthon Version
+Comment[zh_CN]=显示安同版本

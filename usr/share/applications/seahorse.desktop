@@ -1,0 +1,18 @@
+[Desktop Entry]
+X-SuSE-translate=true
+GenericName=Passwords and Keys
+DocPath=seahorse
+Name=凭证管理器
+Comment=Manage your passwords and encryption keys
+Exec=/usr/bin/seahorse
+Terminal=false
+Type=Application
+Icon=seahorse
+Categories=GNOME;GTK;Security;Utility;
+StartupNotify=true
+X-GNOME-Bugzilla-Bugzilla=GNOME
+X-GNOME-Bugzilla-Product=seahorse
+X-GNOME-Bugzilla-Component=general
+X-GNOME-Bugzilla-Version=3.4.1
+X-GNOME-DocPath=seahorse/seahorse.xml
+

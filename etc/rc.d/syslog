@@ -1,0 +1,255 @@
+#! /bin/sh
+#
+# Copyright (c) 1996-2001 SuSE GmbH Nuernberg, Germany.
+# Copyright (c) 2002-2003 SuSE Linux AG, Nuernberg, Germany.
+# Copyright (c) 2004-2008 SUSE LINUX Products GmbH, Nuernberg, Germany.
+#
+# Author: Florian La Roche <florian@suse.de>, 1996
+#	  Werner Fink <werner@suse.de>, 1998-2008
+#	 Stephan Kulow <coolo@suse.de>, 2005-2008
+#	 Marius Tomaschewski <mt@suse.de>, 2001-2008
+#
+# /etc/init.d/syslog
+#
+### BEGIN INIT INFO
+# Provides:       syslog
+# Required-Start: 
+# Should-Start:   earlysyslog network
+# Required-Stop:  
+# Should-Stop:    earlysyslog network
+# Default-Start:  2 3 5
+# Default-Stop:
+# Description:    Start the system logging daemons
+### END INIT INFO
+
+. /etc/sysconfig/syslog
+
+BINDIR=/sbin
+
+# update $SYSLOG_DAEMON if not up-to-date
+test -n "$SYSLOG_DAEMON" && \
+test -x "${BINDIR}/$SYSLOG_DAEMON" || {
+    for SYSLOG_DAEMON in rsyslogd syslog-ng syslogd ; do
+	test -x "${BINDIR}/$SYSLOG_DAEMON" && break
+    done
+}
+
+# set daemon dependent variables
+rsocks=""
+start_klogd=yes
+case "$SYSLOG_DAEMON" in
+    rsyslogd)
+	syslog=rsyslogd
+	config=/etc/rsyslog.conf
+	compat=${RSYSLOGD_COMPAT_VERSION:-${RSYSLOGD_NATIVE_VERSION}}
+	params="-c ${compat:-3} -f $config $RSYSLOGD_PARAMS"
+	rsocks="/var/run/rsyslog/additional-log-sockets.conf"
+	mkdir -p -m 0755 /var/run/rsyslog
+	test -r "$config" && \
+	while read one two rest ; do
+	    test "x$one" = 'x$ModLoad'  && \
+	    test "x$two" = 'ximklog.so' && {
+		start_klogd=no
+		break
+	    }
+	done < $config
+	;;
+    syslog-ng)
+	syslog=syslog-ng
+	config=/etc/syslog-ng/syslog-ng.conf
+	params="$SYSLOG_NG_PARAMS"
+	ngsocks="/var/run/syslog-ng/additional-log-sockets.conf"
+	ngsocksdir="/var/run/syslog-ng"
+	mkdir -p -m 0755 $ngsocksdir
+	test -r "$config" && \
+	while read line; do
+	    case $line in file*/proc/kmsg*)
+		start_klogd=no ; break ;;
+	    esac
+	done < $config
+	;;
+    *)
+	syslog=syslogd
+	config=/etc/syslog.conf
+	params="$SYSLOGD_PARAMS"
+	;;
+esac
+
+syslog_pid="/var/run/${syslog}.pid"
+syslog_bin=${BINDIR}/$syslog
+  klog_bin=${BINDIR}/klogd
+syslog_use=""
+
+# check config and programs
+test -s ${config}	  || {
+    echo "${config} does not exist" 1>&2
+    test "$1" == "stop" && exit 0
+    exit 6
+}
+test -x ${syslog_bin} || {
+    echo "${syslog_bin} is not installed" 1>&2
+    test "$1" == "stop" && exit 0
+    exit 5
+}
+test ! -x ${klog_bin} -a "$start_klogd" = yes && {
+    echo "${klog_bin} is not installed" 1>&2
+    test "$1" == "stop" && exit 0
+    exit 5
+}
+test -s /run/rcsyslog && {
+    read -t 5 syslog_use < /run/rcsyslog
+}
+test -z "$syslog_use" && syslog_use=${syslog_bin}
+syslog_use_pid="/var/run/${syslog_use##*\/}.pid"
+
+#
+# Do not translate symbol addresses for 2.6 kernel
+#
+case "$(uname -r)" in
+[01].*|2.[0-4].*) ;;
+*)  case "$KLOGD_PARAMS" in
+    *-x*) ;;
+    *)	  KLOGD_PARAMS="${KLOGD_PARAMS:+$KLOGD_PARAMS }-x" ;;
+    esac  ;;
+esac
+
+. /etc/rc.status
+rc_reset
+case "$1" in
+    start)
+	if test -e /run/rcearlysyslog ; then
+	    # Syslog service already done
+	    rm -f  /run/rcearlysyslog
+	    case "$SYSLOG_DAEMON" in
+		rsyslogd) ;; # switch to normal config
+		*) exit 0 ;;
+	    esac
+	elif test "$2" = "early" ; then
+	    # Start syslog service early
+	    > /run/rcearlysyslog
+ 	fi
+
+	if ! test -e /dev/xconsole ; then
+	    mknod -m 0600  /dev/xconsole p
+	    chown root:tty /dev/xconsole
+	fi
+	killproc -p /var/run/klogd.pid ${klog_bin}
+	if test -s ${syslog_use_pid} ; then
+	    killproc -p ${syslog_use_pid} ${syslog_use}
+	    echo -n "Re-"
+	    rm -f /run/rcsyslog
+	fi
+	echo -n "Starting syslog services"
+	test -z "$KERNEL_LOGLEVEL" && KERNEL_LOGLEVEL=1
+
+	case $syslog in
+	    rsyslogd)
+		if test -n "$rsocks" ; then
+		    rm -f "$rsocks"
+		    touch "$rsocks"
+		fi
+		;;
+	    syslog-ng)
+		echo 'source chroots{' > "$ngsocks"
+		;;
+	esac
+	# add additional sockets to params or similar
+	for variable in ${!SYSLOGD_ADDITIONAL_SOCKET*}; do
+	    eval value=\$$variable
+	    test -n "${value}" && test -d ${value%/*} && {
+		case $syslog in
+		    rsyslogd)
+			if test -n "$rsocks" ; then
+			    echo "\$AddUnixListenSocket $value" >> "$rsocks"
+			fi
+			;;
+		    syslog-ng)
+			echo "unix-dgram(\"$value\");" >> "$ngsocks"
+			;;
+		    *)
+			params="$params -a $value"
+			;;
+		esac
+	    }
+	done
+	case $syslog in
+	    syslog-ng)
+		echo "};" >> "$ngsocks"
+		;;
+	esac
+	startproc -p ${syslog_pid} ${syslog_bin} ${params}
+	rc_status
+
+	# Remember the currently used syslog daemon
+	echo ${syslog_bin} > /run/rcsyslog
+
+	if test $? -eq 0 ; then
+	    if test "$start_klogd" = yes ; then
+		startproc ${klog_bin} -c $KERNEL_LOGLEVEL $KLOGD_PARAMS
+		rc_status
+	    fi
+	fi
+	rc_status -v
+	;;
+    stop)
+	rm -f /run/rcearlysyslog
+	test "$2" = "early" && exit 0
+
+	echo -n "Shutting down syslog services"
+	if test "$start_klogd" = yes ; then
+	    killproc ${klog_bin}   ; rc_status
+	else
+	    killproc ${klog_bin}
+	fi
+	killproc -p ${syslog_use_pid} ${syslog_use} ; rc_status -v
+	rm -f /run/rcsyslog
+	;;
+    try-restart|condrestart)
+	if test "$1" = "condrestart"; then
+	    echo "${attn} Use try-restart ${done}(LSB)${attn} instead${norm}"
+	fi
+	$0 status
+	if test $? = 0; then
+	    $0 restart
+	else
+	    rc_reset	# Not running is not a failure.
+	fi
+	rc_status
+	;;
+    restart)
+	$0 stop
+	$0 start
+	rc_status
+	;;
+    reload|force-reload)
+	echo -n "Reload syslog service"
+	if test "$start_klogd" = yes ; then
+	    killproc		      -TSTP ${klog_bin}   ; rc_status
+	    killproc -p ${syslog_use_pid} -HUP  ${syslog_use} ; rc_status
+	    killproc		      -CONT ${klog_bin}   ; rc_status
+	    killproc		      -USR2 ${klog_bin}   ; rc_status -v
+	else
+	    killproc -p ${syslog_use_pid} -HUP  ${syslog_use} ; rc_status -v
+	fi
+	;;
+    status)
+	echo -n "Checking for service syslog:"
+	if test "$start_klogd" = yes ; then
+	    checkproc		  	${klog_bin}   ; rc_status
+	fi
+	checkproc -p ${syslog_use_pid}	${syslog_use} ; rc_status -v
+	;;
+    probe)
+	if test "${syslog_use_pid}" != "${syslog_pid}" ; then
+	    echo restart
+	else
+	    # Note: does not work when an included rsyslog config changed
+	    test ${config} -nt ${syslog_pid} && echo reload
+	fi
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload|probe}"
+	exit 1
+	;;
+esac
+rc_exit

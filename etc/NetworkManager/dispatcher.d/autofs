@@ -1,0 +1,20 @@
+#! /bin/sh
+#
+# autofs dispatcher script for NetworkManager
+#
+# Matthias Koenig <mkoenig@suse.de>
+#
+. /etc/rc.status
+
+case "$2" in
+    up)
+        if test -x /bin/systemctl && systemctl -q is-enabled autofs.service; then
+                systemctl restart autofs.service
+        elif rc_active autofs; then
+                /etc/init.d/autofs restart
+        fi
+        ;;
+    *)
+        exit 0
+        ;;
+esac

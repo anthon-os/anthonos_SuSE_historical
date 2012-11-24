@@ -1,0 +1,16 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Name=蓝牙设备设置
+Comment=Setup Bluetooth devices
+Icon=bluetooth
+Exec=bluetooth-wizard
+Terminal=false
+Type=Application
+Categories=GTK;GNOME;
+StartupNotify=true
+NoDisplay=true
+X-GNOME-Bugzilla-Bugzilla=GNOME
+X-GNOME-Bugzilla-Product=gnome-bluetooth
+X-GNOME-Bugzilla-Component=wizard
+X-GNOME-Bugzilla-Version=3.4.1
+

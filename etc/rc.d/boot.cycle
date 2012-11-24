@@ -1,0 +1,113 @@
+#! /bin/sh
+#
+# Copyright (c) 2003 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# File: /etc/init.d/boot.loadmodules
+# Author: Werner Fink <feedback@suse.de>
+#
+### BEGIN INIT INFO
+# Provides:          boot.cycle
+# Required-Start:    boot.localfs
+# Should-Start:      boot.loadmodules
+# Required-Stop:     boot.localfs
+# Should-Stop:       boot.loadmodules
+# Default-Start:     B
+# Default-Stop:
+# Description:       Set default boot entry if called
+### END INIT INFO
+
+# /usr might be mounted via NFS, so skip this if it is not available
+test -x /usr/sbin/grub || exit 5
+
+#
+# Sanity check
+#
+skip=""
+if test -e /etc/sysconfig/bootloader ; then
+    . /etc/sysconfig/bootloader
+else
+    skip=5
+fi
+
+#
+# Configure check
+#
+menulst=/boot/grub/menu.lst
+test "$LOADER_TYPE" = "grub" -a -r "$menulst"	|| skip=6
+test "$CYCLE_DETECTION" = "yes" -a \
+			 -n "$CYCLE_NEXT_ENTRY"	|| skip=6
+
+. /etc/rc.status
+rc_reset
+
+#
+# Not configured: go out here
+#
+if test -n "$skip" ; then
+    rc_failed $skip
+    rc_exit
+fi
+
+#
+# This one checks if halt entry is declared _and_ active by default
+#
+check_for_halt ()
+{
+    local line
+    local default=""
+    local found=no
+    local t
+    declare -i t=-1
+
+    while read line ; do
+	case "$line" in
+	default\ *) set -- $line ; default=$2 ;;
+	title\ *)
+	    : $((t++))
+	    set -- $line
+	    if test "$2" = "halt" ; then
+		found=yes
+		break
+	    fi
+	esac
+    done < $menulst
+
+    # The default in `$default' could be a string
+    test "$found" = "yes" -a "$default" = "$t" && return 0    
+    return 1
+}
+
+case "$1" in
+    start)
+	echo "Set up $LOADER_TYPE entry for next boot cycle"
+	if check_for_halt ; then
+	    map="--device-map=/boot/grub/device.map"
+	    test -e ${map#*=} || map=""
+	    set -f +B
+	    #
+	    # Use TABs only at line start between `-EOT' ... `EOT'!
+	    #
+	    /usr/sbin/grub --batch ${map+"$map"} <<-EOT &> /dev/null
+		savedefault --default=$CYCLE_NEXT_ENTRY --once 
+		quit
+		EOT
+	else
+	    rc_failed 1
+	fi
+	rc_status -v1
+	;;
+    stop)
+	# skip / do nothing
+	;;
+    status)
+	rc_failed 4
+	rc_status -v
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status}"
+	exit 1
+	;;
+esac
+
+rc_exit

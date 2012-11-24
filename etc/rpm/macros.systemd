@@ -1,0 +1,97 @@
+# RPM macros for packages installing systemd unit files
+#
+###
+#
+# When a package install systemd unit files, it should use the following macros:
+#
+# add %systemd_requires in the specfile
+#
+# %pre
+# %service_add_pre demo.service demo1.service
+#
+# %post
+# %service_add_post demo.service demo1.service
+#
+# %preun
+# %service_del_preun demo.service
+#
+# %postun
+# %service_del_postun demo.service
+# 
+###
+
+# This is for /bin/systemctl
+%systemd_requires									\
+Requires(pre): systemd									\
+Requires(post): systemd									\
+Requires(preun): systemd								\
+Requires(postun): systemd								\
+
+%_unitdir /lib/systemd/system
+
+%service_add_pre()									\
+test -n "$FIRST_ARG" || FIRST_ARG=$1							\
+# disable migration if initial install under systemd					\
+[ -d /var/lib/systemd/migrated ] || mkdir -p /var/lib/systemd/migrated || :		\
+if [ $FIRST_ARG -eq 1 ]; then 								\
+  for service in %{?*} ; do								\
+    sysv_service=${service%.*}								\
+    touch "/var/lib/systemd/migrated/$sysv_service" || :				\
+  done											\
+else											\
+  for service in %{?*} ; do								\
+    sysv_service=${service%.*}								\
+    if [ ! -e "/var/lib/systemd/migrated/$sysv_service" ]; then				\
+  	services_to_migrate="$services_to_migrate $sysv_service"			\
+    fi											\
+  done											\
+  if [ -n "$services_to_migrate" ]; then						\
+    /usr/sbin/systemd-sysv-convert --save $services_to_migrate >/dev/null 2>&1 || :	\
+  fi											\
+fi											\
+%{nil}
+
+# On install, tell systemd to reload its unit files
+%service_add_post()									\
+test -n "$FIRST_ARG" || FIRST_ARG=$1							\
+[ -d /var/lib/systemd/migrated ] || mkdir -p /var/lib/systemd/migrated || :		\
+for service in %{?*} ; do								\
+  sysv_service=${service%.*}								\
+  if [ ! -e "/var/lib/systemd/migrated/$sysv_service" ]; then				\
+	services_to_migrate="$services_to_migrate $sysv_service"			\
+	touch "/var/lib/systemd/migrated/$sysv_service" || :				\
+  fi											\
+done											\
+/bin/systemctl daemon-reload >/dev/null 2>&1 || :					\
+if [ -n "$services_to_migrate" ]; then							\
+  /usr/sbin/systemd-sysv-convert --apply $services_to_migrate >/dev/null 2>&1 || :	\
+elif [ $FIRST_ARG -eq 1 ]; then								\
+  /bin/systemctl preset %{?*} >/dev/null 2>&1 || :					\
+fi											\
+%{nil}
+
+# On uninstall, disable and stop services
+%service_del_preun()									\
+test -n "$FIRST_ARG" || FIRST_ARG=$1							\
+if [ $FIRST_ARG -eq 0 ]; then								\
+# Package removal, not upgrade								\
+ /bin/systemctl --no-reload disable %{?*} > /dev/null 2>&1 || :				\
+ /bin/systemctl stop %{?*} > /dev/null 2>&1 || :					\
+fi											\
+%{nil}
+
+# On uninstall, tell systemd to reload its unit files
+%service_del_postun()									\
+test -n "$FIRST_ARG" || FIRST_ARG=$1							\
+if [ $FIRST_ARG -ge 1 ]; then								\
+# Package upgrade, not uninstall							\
+  /bin/systemctl try-restart %{?*} >/dev/null 2>&1 || :					\
+else # package uninstall								\
+  for service in %{?*} ; do								\
+    sysv_service=${service%.*}								\
+    rm -f "/var/lib/systemd/migrated/$sysv_service" 2> /dev/null || :			\
+  done											\
+  /bin/systemctl daemon-reload >/dev/null 2>&1 || :					\
+fi											\
+%{nil}
+

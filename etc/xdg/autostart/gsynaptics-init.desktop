@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Encoding=UTF-8
+Name=Touchpad
+Comment=Set your touchpad preferences
+Exec=gsynaptics-init --sm-disable
+Icon=gsynaptics
+Terminal=false
+Type=Application
+Categories=
+X-GNOME-Autostart-enabled=true
+

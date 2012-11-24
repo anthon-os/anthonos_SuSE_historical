@@ -1,0 +1,8 @@
+#
+# This modules defines which plugins for logging should
+# be loaded and the options for the plugins. Plugins are
+# called in the order as defined in this file.
+#
+# Syntax: name <options>
+#
+syslog

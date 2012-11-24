@@ -1,0 +1,417 @@
+#!/bin/bash
+#
+# Copyright (c) 2008 SUSE LINUX Products GmbH, Nuernberg, Germany.
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Authors: Michael Calmer <mc@suse.de>
+#          Marius Tomaschewski <mt@suse.de>
+#
+
+r=$ROOT
+
+# builtin dns ranking defaults
+NETCONFIG_DNS_RANKING_DEFAULT="+strongswan +openswan +racoon +openvpn +vpnc -avahi"
+
+test -z "$MD5DIR" && {
+    MD5DIR=$r/var/adm/netconfig/md5
+    #echo "Using MD5DIR=\"$MD5DIR\"..."
+}
+
+debug () {
+    test "$VERBOSE" = "yes" || return
+    echo -e "debug: $*" >&2
+}
+
+warn () {
+    test "$QUIET" = "yes" && return
+    echo -e "$*" >&2
+}
+
+log () {
+    logger -t "$PROGNAME" "$*"
+    debug "$*"
+    if [ "$ACTION" = "cleanup" -a "$QUIET" != "yes" ] ; then
+        echo -e "$*" >&2
+    fi
+}
+
+function get_variable()
+{
+    local line
+    while read line; do
+        eval $line
+    done < <(grep "^[[:space:]]*$1=" $2 2>/dev/null)
+}
+
+get_ranking_idx()
+{
+    # + => 0 (preferred)
+    #   => 1 (normal, default)
+    # - => 2 (fallback)
+    test $# -le 1 && return 1
+    local s="$1" ; shift
+
+    local g=1
+    shopt -o -q noglob || g=0
+    [ $g ] && shopt -o -s noglob
+    for r in $@ ; do
+      case $r in
+      +\/*\/)
+            r=${r:2:$((${#r}-3))}
+            if [[ ${s} =~ ${r} ]] ; then
+                echo "0" ; return 0
+            fi
+      ;;
+      -\/*\/)
+            r=${r:2:$((${#r}-3))}
+            if [[ ${s} =~ ${r} ]] ; then
+                echo "2" ; return 0
+            fi
+      ;;
+      +*)
+            r=${r:1}
+            if [ "x${s}" = "x${r}" ] ; then
+                echo "0" ; return 0
+            fi
+      ;;
+      -*)
+            r=${r:1}
+            if [ "x${s}" = "x${r}" ] ; then
+                echo "2" ; return 0
+            fi
+      ;;
+      *)
+      ;;
+      esac
+    done
+    [ $g ] && shopt -o -u noglob
+
+    # use normal/default ranking
+    echo "1" ; return 0
+}
+
+function read_symlink()
+{
+    local name="$1"
+    local dest=""
+    if test "x$name" != x ; then
+        dest=`readlink -f "$name" 2>/dev/null`
+    fi
+    test "x$dest" != x && echo "$dest" || echo "$name"
+}
+
+#
+# Usage: netconfig_check_md5_and_move <srcfile> <destfile>
+#                                     [suffix] [err_var]
+#                                     [additional match regex]
+#
+# This function checks the existence of a file and a corresponding 
+# md5 checksum and tests whether the checksum of the file has changed.
+# If it has, nothing further will happen. If not, the "$srcfile"
+# will be moved to "$destfile".
+# The additional match regex parameter (default "^###") additionally
+# matches special comments in the generated config file an should avoid,
+# that the user created/modified config gets overwritten when netconfig
+# generates one with exactly same data inside (and modify it later).
+#
+# The return values of this function:
+# RET=0 : file successfuly copied
+# RET=1 : nothing changed ($srcfile == $destfile)
+# RET=2 : ERROR: somebody has changed the file. The file was not copied
+#         it still exists as $srcfile or in `readline $destfile`.$suffix;
+#         the err_var variable is set to the name.
+# RET=3 : ERROR: another error occured, e.g. some file operation failed
+netconfig_check_md5_and_move()
+{
+    local SRCFILE=${1}
+    local DSTFILE=${2}
+    local OSUFFIX=${3}
+    local ERR_VAR=${4}
+    local NEW_ERX=${5:-"^###"}
+    local MD5FILE="$MD5DIR/$DSTFILE"
+    # DSTFILE may be a symlink on a read only /-fs
+    local OUTFILE=`read_symlink "${DSTFILE}"`
+
+    # make sure that the source file exists
+    test -f "$SRCFILE" || return 3
+
+    # make sure that the directory exists
+    mkdir -p "${MD5FILE%/*}" || return 3
+
+    local RET=0
+    local NEWMD5SUM SRCMD5SUM DSTMD5SUM OLDMD5SUM DATE BAKFILE OLD_ERX
+
+    _read_erx_data()
+    {
+        test "x${1}" = x && return 1
+        gawk -v erx="${2}" '
+            { if(length(erx) && match($0, erx) > 0) { print $0; next; } }
+            !/^#|^[[:space:]]*$/     { print $0; }
+            ' "$1"
+    }
+
+    # use old erx if set
+    OLD_ERX="${NEW_ERX}"
+    if test -s "$MD5FILE" ; then
+        OLD_ERX=`gawk -- '/^#/ { if(NR==1) print substr($0,2); }' \
+            "$MD5FILE" 2>/dev/null`
+    fi
+    SRCMD5SUM=`_read_erx_data "$SRCFILE" "$OLD_ERX" | md5sum`
+    test "x${OLD_ERX}" = "x${NEW_ERX}" && NEWMD5SUM="$SRCMD5SUM" || \
+    NEWMD5SUM=`_read_erx_data "$SRCFILE" "$NEW_ERX" | md5sum`
+
+    # create empty DSTFILE (via OUTFILE) and reset md5
+    # when the DSTFILE is empty or does not exists ...
+    if test ! -s "$OUTFILE" ; then
+        touch "$OUTFILE"   || return 3
+        # check if it exists (via link)
+        test -e "$DSTFILE" || return 3
+        DSTMD5SUM=`echo "" |  md5sum`
+        OLDMD5SUM="$DSTMD5SUM"
+        rm -f "$MD5FILE"
+        { echo "#$OLD_ERX"; echo "$DSTMD5SUM"; } > "$MD5FILE"
+    else
+        DSTMD5SUM=`_read_erx_data "$DSTFILE" "$OLD_ERX" | md5sum`
+        OLDMD5SUM=`grep -Ev "^#" "$MD5FILE" 2>/dev/null`
+    fi
+
+    if test "$FORCE_REPLACE" = true ; then
+        # backup DSTFILE only if it exist with some content and
+        # was really changed by the user and the new generated
+        # file has a different content
+        if [ -s "$OUTFILE" -a \
+                "$DSTMD5SUM" != "$OLDMD5SUM" -a \
+                "$DSTMD5SUM" != "$SRCMD5SUM" ]; then
+            DATE=$(date +%Y%m%d-%H%M%S)
+            BAKFILE="${OUTFILE}.${DATE}"
+            cp -p --backup=existing "$OUTFILE" "$BAKFILE"
+            log "force replace set: backup created as $BAKFILE"
+        fi
+        cp -p "$SRCFILE" "$OUTFILE" # redundant, but...
+        DSTMD5SUM="$SRCMD5SUM"
+        OLDMD5SUM="$SRCMD5SUM"
+    fi
+
+    if test "$DSTMD5SUM" != "$OLDMD5SUM" -a \
+            "$DSTMD5SUM" != "$SRCMD5SUM" ; then
+        log "ATTENTION: You have modified $DSTFILE. Leaving it untouched..."
+        if test "x$OSUFFIX" != x -a \
+                "x$SRCFILE" != "${OUTFILE}${OSUFFIX}" && \
+           mv -f "$SRCFILE" "${OUTFILE}${OSUFFIX}" &>/dev/null ; then
+            log "You can find my version in ${OUTFILE}${OSUFFIX}"
+            test "x$ERR_VAR" != x && eval "$ERR_VAR='${OUTFILE}${OSUFFIX}'"
+        else
+            log "You can find my version in $SRCFILE ..."
+            test "x$ERR_VAR" != x && eval "$ERR_VAR='${SRCFILE}'"
+        fi
+        RET=2
+    else
+        if test "$DSTMD5SUM" != "$SRCMD5SUM" -o \
+                "$SRCMD5SUM" != "$NEWMD5SUM" -o \
+                "$FORCE_REPLACE" = "true" ; then
+            debug "Installing new $DSTFILE"
+            cp -p "$SRCFILE" "$OUTFILE"
+        else
+            debug "No changes for $DSTFILE"
+            RET=1
+        fi
+        rm -f "$SRCFILE"
+    fi
+    rm -f "$MD5FILE"
+    {
+        test "x${NEW_ERX}" != x && \
+            echo "#${NEW_ERX}"
+        echo "$NEWMD5SUM"
+    } > "$MD5FILE"
+
+    return $RET
+}
+
+netconfig_kv_filter()
+{
+    # force portable "C" locale to match valid identifiers
+    LANG=C LC_ALL=C gawk -- '/^[[:space:]]*$/ { next; }
+    /^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*='"'"'[^'"'"']*'"'"'[[:space:]]*$/ && \
+    !/^[[:space:]]*_+=/ {
+    	sub("^[[:space:]]+", "", $0);
+    	sub("[[:space:]]+$", "", $0);
+    	equ=index($0, "=");
+    	key=substr($0, 1, equ - 1);
+    	val=substr($0, equ + 2, length($0) - equ - 2)
+    	print key"="val;
+    	next;
+    }
+    { print "="NR; exit(NR); }' "$@"
+}
+
+#
+# try to open a lock (4 times) and wait if it failes
+# for the specified time
+#
+# $1 name of the program
+# $2 time to wait after a openLock failed
+#
+function openLockWait() {
+
+    test -z "$1" && return 1
+    test -z "$2" && return 1
+
+    for i in {0..3}; do
+
+        openLock "$1"
+        if [ "$?" = "0" ]; then
+            debug "lockfile created"
+            return 0;
+        fi
+
+        debug "sleep $2 (try $i)"
+        sleep $2
+    done
+
+    return 1;
+}
+
+#
+# open a lock file
+#
+# $1 program name
+#
+function openLock() {
+
+    test -z "$1" && return 1
+
+    PRGNAME=$1
+    PID=$$
+
+    PIDPATH="/var/run/$PRGNAME.pid"
+
+    if [ -e $PIDPATH ]; then
+
+        # check if the process is still running
+
+        OLDPID=`cat $PIDPATH`
+
+        if [ ! -e "/proc/$OLDPID/cmdline" ]; then
+            debug "pid does not exists; remove lock"
+            # pid does not exists; remove lock
+            rm $PIDPATH
+        else
+            
+            if grep "$PRGNAME" /proc/$OLDPID/cmdline >/dev/null 2>&1 ; then
+                debug "process still running"
+                # process still running
+                return 1;
+            else
+                debug "this pid is a different process; remove the lock"
+                # this pid is a different process; remove the lock
+                rm $PIDPATH
+            fi
+        fi
+    fi
+
+    echo -n "$PID" > $PIDPATH
+    debug "lockfile created ($PIDPATH) for PID $PID"
+    return 0
+}
+
+#
+# remove the lock
+#
+# $1 program name
+#
+function unLock() {
+
+    test -z "$1" && return 1
+    
+    PRGNAME=$1
+    PID=$$
+
+    PIDPATH="/var/run/$PRGNAME.pid"
+    
+    if [ ! -e $PIDPATH ]; then
+
+        return 0
+    fi
+      
+    OLDPID=`cat $PIDPATH`
+    
+    if [ "$OLDPID" != "$PID" ]; then
+        log "cannot remove the lockfile. PIDs do not match."
+        return 1
+    fi
+
+    msg=`rm $PIDPATH`
+    if [ "$?" != "0" ]; then
+        log "removing the lock file ($PIDPATH) failed: $msg"
+        return 0
+    fi
+    
+    return 1
+}
+
+function find_first_provides() {
+
+    test -z "$1" && return 1
+    test -z "$2" && return 1
+
+    REQVAR="$1"
+    STATEDIR="$2"
+    if [ -n "$3" ]; then
+        INTERFACE="$3"
+    fi
+
+    VALUE=""
+    CFG_TIME=0
+
+    for dir in `ls $STATEDIR/`; do 
+        
+        if [ ! -d $STATEDIR/$dir ]; then
+            debug "not a dir ... skip"
+            continue
+        fi
+      
+        if [ -n "$INTERFACE" -a "$INTERFACE" != "$dir" ]; then
+            debug "we are searching for a different dir ... skip"
+            continue
+        fi
+
+	test -d "/sys/class/net/${dir}" || continue
+
+        for file in `ls $STATEDIR/$dir/netconfig* 2>/dev/null`; do
+            
+            debug "searching in $file"
+
+            get_variable "CREATETIME" $file
+
+            get_variable "$REQVAR" $file
+
+            debug "got CREATETIME=$CREATETIME and $REQVAR=${!REQVAR}"
+
+            if [ "x$VALUE" = "x" -a "x${!REQVAR}" != "x" ]; then
+                CFG_TIME=$CREATETIME
+                VALUE=${!REQVAR}
+            elif [ -n "$CREATETIME" -a $CREATETIME -ne 0 -a \
+                   $CREATETIME -lt $CFG_TIME -a "x$REQVAR" != "x" ]; then
+                CFG_TIME=$CREATETIME
+                VALUE=${!REQVAR}
+            fi
+            # delete the variables
+            eval "$REQVAR=\"\""
+            CREATETIME=0
+        done
+    done
+    eval "$REQVAR=\"$VALUE\""
+}
+
+# vim: set ts=8 sts=4 sw=4 ai et:

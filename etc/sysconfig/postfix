@@ -1,0 +1,502 @@
+## Path:        Network/Mail/Postfix
+## Description: Basic configuration of the postfix MTA
+## Type:        string
+## Default:     ""
+## Config:      postfix
+#
+# Should we use a mailrelay?
+# NOTE: ALL mail that is not considered to be my destination
+# (POSTFIX_LOCALDOMAINS), will be sent to this host.
+# If this host is not your MX, then you have to use [square brackets]
+# around the hostname, e.g. [relay.example.com]
+# You may also specify an alternate port number, e.g.
+# relay.example.com:26 or [relay.example.com]:26 to prevent MX lookups.
+#
+POSTFIX_RELAYHOST=""
+
+## Type:        string
+## Default:     ""
+## Config:      postfix
+#
+# Comma separated list of IP's
+# NOTE: If not set, LISTEN on all interfaces
+#
+POSTFIX_LISTEN=""
+
+## Type:        string
+## Default:     "all"
+## Config:      postfix
+#
+# One Argument for proto to listen to
+# Example: POSTFIX_INET_PROTO="ipv4"
+# NOTE: If not set, LISTEN on all proto
+#
+POSTFIX_INET_PROTO=""
+
+## Type:        string
+## Default:     "$(hostname -f)"
+## Config:      postfix
+#
+# define HOSTNAME you want postfix to show
+# NOTE: If set, You should have a "MX Record" in DNS for that name
+# and have a valid reverse entry ;)
+#
+POSTFIX_MYHOSTNAME=""
+
+## Type:        string
+## Default:     ""
+## Config:      postfix
+#
+# Comma separated list of domains that must have their subdomain
+# structure stripped off.
+# NOTE: If set, FROM_HEADER will also be appended to this list
+#
+POSTFIX_MASQUERADE_DOMAIN=""
+
+## Type:        string
+## Default:     ""
+## Config:      postfix
+#
+# Comma separated list of host-/domainnames for which postfix
+# should accept mail for.
+# localhost and the own hostname is the default if POSTFIX_LOCALDOMAINS
+# is set empty.
+# Examples:
+#  POSTFIX_LOCALDOMAINS="\$myhostname, \$mydomain, localhost.\$mydomain"
+# if you want to use postfix internal variable substitutes or
+#  POSTFIX_LOCALDOMAINS="example.com, host.example.com, localhost.example.com"
+#
+POSTFIX_LOCALDOMAINS=""
+
+## Type:           yesno
+## Default:        no
+## Config:         postfix
+## ServiceRestart: postfix
+#
+# A null client is a machine that can only send mail. It receives no
+# mail from the network, and it does not deliver any mail locally.
+# A null client typically uses POP or NFS for mailbox access.
+# NOTE: This overrides the following variable: POSTFIX_LOCALDOMAINS
+#
+POSTFIX_NULLCLIENT="no"
+
+## Type:        yesno
+## Default:     no
+## Config:      postfix
+#
+# if set to yes, mail that will be delivered via smtp will stay
+# in the queue unless someone issues "sendmail -q" or equivalent.
+#
+POSTFIX_DIALUP="no"
+
+## Type:        yesno
+## Default:     no
+## Config:      postfix
+#
+# Some people use Postfix to deliver mail across a LAN that is disconnected
+# most of the time. Under such conditions, mail delivery can suffer from
+# delays while the Postfix SMTP client performs sender and recipient
+# domain DNS lookups in order to be standards-compliant. To prevent these
+# delays, set this to yes.
+#
+POSTFIX_NODNS="no"
+
+## Type:        yesno
+## Default:     no
+## Config:      postfix
+#
+# Start postfix services chrooted, that are able to run chrooted?
+# Note: if you want SuSEconfig.postfix to maintain the chroot jail, you
+# also have to set POSTFIX_UPDATE_CHROOT_JAIL to yes.
+# Note: if you want postfix runs in CHROOT enviroment, then the whole 
+# /var directory must be on one partition.
+#
+POSTFIX_CHROOT="no"
+
+## Type:        yesno
+## Default:     no
+## Config:      postfix
+#
+# Set this to yes, if SuSEconfig.postfix should setup the chroot jail itself
+#
+POSTFIX_UPDATE_CHROOT_JAIL="no"
+
+## Type:        yesno
+## Default:     no
+## Config:      postfix
+#
+# Set this to yes, if SuSEconfig.postfix should activate ldap stuff in main.cf
+# This extends virtual_alias_maps with "ldap:/etc/postfix/ldap_aliases.cf"
+#
+POSTFIX_WITH_LDAP="no"
+
+## Type:        yesno
+## Default:     no
+## Config:      postfix
+#
+# Set this to yes, if SuSEconfig.postfix should activate mysql stuff in main.cf
+# and having 'mysql.sock' inside chroot jail
+# Note: When POSTFIX_CHROOT="yes" then 'mysql.sock' will be available
+#       in postfix CHROOT
+#
+POSTFIX_WITH_MYSQL="no"
+
+## Type:        string(socket,tcp)
+## Default:     "socket"
+## Config:      postfix
+#
+# Set this to "tcp", if your MySQL is not on localhost
+# Note: When POSTFIX_CHROOT="yes" then MYSQL_SOCKET will also be available
+#       in postfix chroot, but you can use "tcp" just as well with MySQL
+#       on localhost
+#
+POSTFIX_MYSQL_CONN="socket"
+
+## Type:        yesno
+## Default:     no
+## Config:      postfix
+#
+# Some of the postfix services require a fifo to operate correctly at least
+# when the system load is high. Recurring fifo access will prevent the
+# disk to fall asleep, so you might want to use a unix domain socket
+# instead, if you are using a laptop.
+#
+POSTFIX_LAPTOP="no"
+
+## Type:        yesno
+## Default:     yes
+## Config:      postfix
+#
+# Should SuSEconfig.postfix update the different .db maps in /etc/postfix?
+#
+POSTFIX_UPDATE_MAPS="yes"
+
+## Type:        string
+## Default:     "virtual transport access canonical sender_canonical relocated sasl_passwd:600 relay_ccerts"
+## Config:      postfix
+#
+# The list of maps, which should be maintained, if
+# POSTFIX_UPDATE_MAPS=yes. POSTFIX_MAP_LIST must be a space seperated list of
+# file names without an absolute path. They are all to be exptected
+# within the directory /etc/postfix. Optionally a file mode can be appended
+# using a colon as separator
+#
+POSTFIX_MAP_LIST="virtual transport access canonical sender_canonical relocated sasl_passwd:600 relay_ccerts helo_access relay"
+
+## Type:        string
+## Default:     hash:/etc/postfix/transport
+#
+# The list of transport_maps postfix should look for
+#
+POSTFIX_TRANSPORT_MAPS=""
+
+## Type:        string
+## Default:     ""
+## Config:      postfix
+#
+# A comma seperated list of hosts that blacklist client IP addresses
+# Note: This only has effect, if POSTFIX_BASIC_SPAM_PREVENTION is set
+# to either "medium" or "hard" or "custom". If left empty, no RBL checks will take place.
+#
+# Example: POSTFIX_RBL_HOSTS="cbl.abuseat.org, dnsbl.sorbs.net, dnsbl.ahbl.org"
+#
+POSTFIX_RBL_HOSTS=""
+
+## Type:        string(off,medium,hard)
+## Default:     off
+## Config:      postfix
+#
+# POSTFIX_BASIC_SPAM_PREVENTION possible values:
+#    off    : postfix default configuration
+#    medium : medium UCE policy checks
+#    hard   : hard UCE policy checks
+#    custom : you can define your own stuff
+
+# Note: when setting to "custom" and no settings in 
+# "POSTFIX_SMTPD_CLIENT_RESTRICTIONS" 
+# "POSTFIX_HELO_RESTRICTIONS"
+# "POSTFIX_SENDER_RESTRICTIONS"
+# "POSTFIX_SMTPD_RECIPIENT_RESTRICTIONS" result is like setting to "medium"
+#
+# Setting this to medium or hard will activate some basic UCE controls
+# supported by postfix. This may lead to mails which are undeliverable
+# to your mailserver! USE THAT ON YOUR OWN RISC!!!
+# See http://www.postfix.org/uce.html for more details !
+#
+POSTFIX_BASIC_SPAM_PREVENTION="off"
+
+## Type:        string
+## Default:     "reject_unauth_pipelining, reject_unknown_client, $POSTFIX_RBL_HOSTS"
+## Config:      postfix
+#
+# Fill "POSTFIX_SMTPD_CLIENT_RESTRICTIONS" for completion of this RESTRICTION
+#
+# A comma or space separated list of restrictions
+# Note: "if set to "medium" default is "$POSTFIX_RBL_HOSTS"
+#
+#   "POSTFIX_RBL_HOSTS" will be placed by SuSEconfig.postfix. You do not need to define it here.
+#    Fill "POSTFIX_RBL_HOSTS" instead
+#
+# Example:
+# POSTFIX_SMTPD_CLIENT_RESTRICTIONS="reject_unauth_pipelining,
+#  check_client_access hash:/etc/postfix/pop-before-smtp,
+#  check_client_access hash:/etc/postfix/relay,
+#  check_client_access hash:/etc/postfix/access,
+#  reject_unknown_client"
+#
+POSTFIX_SMTPD_CLIENT_RESTRICTIONS=""
+
+## Type:        string
+## Default:     "reject_unauth_pipelining, reject_unknown_client"
+## Config:      postfix
+#
+# Fill "POSTFIX_SMTPD_HELO_RESTRICTIONS" for completion of this RESTRICTION
+#
+# A comma or space separated list of restrictions
+# Note: "if set to "medium" default is ""
+#
+# Example:
+# POSTFIX_SMTPD_HELO_RESTRICTIONS="reject_unauth_pipelining,
+#  check_client_access hash:/etc/postfix/pop-before-smtp,
+#  check_client_access hash:/etc/postfix/relay,
+#  check_client_access hash:/etc/postfix/access,
+#  check_helo_access hash:/etc/postfix/helo_access,
+#  reject_unknown_client"
+#
+POSTFIX_SMTPD_HELO_RESTRICTIONS=""
+
+## Type:        string
+## Default:     "hash:/etc/postfix/access, reject_unknown_sender_domain"
+## Config:      postfix
+#
+# Fill "POSTFIX_SMTPD_SENDER_RESTRICTIONS" for completion of this RESTRICTION
+#
+# A comma or space separated list of restrictions
+# Note: "if set to "medium" default is "hash:/etc/postfix/access, reject_unknown_sender_domain"
+#
+# Example:
+# POSTFIX_SMTPD_SENDER_RESTRICTIONS="reject_unauth_pipelining,
+#  check_client_access hash:/etc/postfix/pop-before-smtp,
+#  check_client_access hash:/etc/postfix/relay,
+#  check_client_access hash:/etc/postfix/access,
+#  reject_unknown_client"
+#
+POSTFIX_SMTPD_SENDER_RESTRICTIONS=""
+
+## Type:        string
+## Default:     "permit_mynetworks, reject_unauth_destination"
+## Config:      postfix
+#
+# Fill "POSTFIX_SMTPD_RECIPIENT_RESTRICTIONS" for completion of this RESTRICTION
+#
+# A comma or space separated list of restrictions
+# Note: "if set to "medium" default is "permit_mynetworks, reject_unauth_destination"
+# Note: "if set to "custom" just like medium
+#
+# Example:
+# POSTFIX_SMTPD_RECIPIENT_RESTRICTIONS="reject_unauth_pipelining,
+#  check_client_access hash:/etc/postfix/pop-before-smtp,
+#  check_client_access hash:/etc/postfix/relay,
+#  check_client_access hash:/etc/postfix/access,
+#  permit_mynetworks,
+#  warn_if_reject,
+#  reject_unknown_sender_domain,
+#  warn_if_reject,
+#  reject_unknown_recipient_domain,
+#  reject_unknown_hostname,
+#  reject_unknown_client,
+#  reject_non_fqdn_sender,
+#  reject_non_fqdn_recipient,
+#  reject_non_fqdn_hostname,
+#  reject_unauth_destination"
+#
+POSTFIX_SMTPD_RECIPIENT_RESTRICTIONS=""
+
+## Type:        list(procmail,cyrus,dovecot,local)
+## Default:     local
+## Config:      postfix
+#
+# POSTFIX_MDA possible values:
+# procmail: use procmail to deliver mail locally
+# cyrus   : use lmtp to deliver to cyrus-imapd
+# dovecot : use dovecot to deliver mail to dovecot
+# local   : use postfix local MDA
+#
+POSTFIX_MDA="local"
+
+## Type:        yesno 
+## Default:     no
+## Config:      postfix
+#
+# Configure postfix to enable users to auth against postfix
+# to be able to relay mail independent of being within
+# the local network/domain.
+# You may want to edit /etc/sasl2/smtpd.conf to fit your needs.
+# See /usr/share/doc/packages/postfix/README_FILES/SASL_README
+# for more details.
+#
+POSTFIX_SMTP_AUTH_SERVER="no"
+
+## Type:        yesno 
+## Default:     no
+## Config:      postfix
+#
+# Enable SMTP-AUTH for the postfix smtp client
+# you have to edit /etc/postfix/sasl_passwd and call
+# SuSEconfig.postfix afterwards
+#
+POSTFIX_SMTP_AUTH="no"
+
+## Type:        string
+## Default:     ""
+## Config:      postfix
+#
+# POSTFIX_SMTP_AUTH_OPTIONS possible values:
+# comma separated list of one or more of
+#
+# noplaintext:  disallow methods that use plaintext passwords
+# noactive:     disallow methods subject to active (non-dictionary) attack
+# nodictionary: disallow methods subject to passive (dictionary) attack
+# noanonymous:  disallow methods that allow anonymous authentication
+#
+POSTFIX_SMTP_AUTH_OPTIONS=""
+
+## Type:        yesno
+## Default:     no
+## Config:      postfix
+#
+# Do you want to use STARTTLS
+#
+POSTFIX_SMTP_TLS_SERVER="no"
+
+## Type:        yesno
+## Default:     no
+## Config:      postfix
+#
+# Do you want to use SMTP over SSL.
+# assigns port 465 to smtps in /etc/services
+# CAUTION: the IANA has assigned a different protocol to port 465
+# Usage of port 465 for smtps was not officially encouraged
+# If you enable this you need to make sure that it does not collide
+# with protocol urd
+#
+POSTFIX_SMTP_TLS_SERVER_LEGACY_SUPPORT="no"
+
+## Type:        yesno
+## Default:     no
+## Config:      postfix
+#
+# Do you want to enable postfix smtp client to use TLS
+#
+POSTFIX_SMTP_TLS_CLIENT="no"
+
+## Type:        string
+## Default:     "/etc/postfix/ssl"
+## Config:      postfix
+#
+# path to the directory where the CA can be found
+# 
+POSTFIX_SSL_PATH="/etc/postfix/ssl"
+
+## Type:        string
+## Default:     "cacert.pem"
+## Config:      postfix
+#
+# name of the CAfile (below POSTFIX_SSL_PATH)
+#
+# when having more than one CA you want to trust, then
+# leave it empty and CApath ( POSTFIX_SSL_PATH/cacerts )
+# is used instead. Do not forget to run c_rehash POSTFIX_SSL_PATH/cacerts
+# after storing the certs.
+# 
+POSTFIX_TLS_CAFILE="cacert.pem"
+
+## Type:        string
+## Default:     "certs/postfixcert.pem"
+## Config:      postfix
+#
+# name of the file containing the certificate (below POSTFIX_SSL_PATH)
+# 
+POSTFIX_TLS_CERTFILE="certs/postfixcert.pem"
+
+## Type:        string
+## Default:     "certs/postfixkey.pem"
+## Config:      postfix
+#
+# name of the file containing the key (below POSTFIX_SSL_PATH)
+# 
+POSTFIX_TLS_KEYFILE="certs/postfixkey.pem"
+
+#
+# The following options are used by SuSEconfig.postix and mkpostfixcert
+# to create a CA and certificates
+# POSTFIX_SSL_COUNTRY must be a two letter code defined by ISO 3166
+#
+## Type:        string
+## Default:     "XX"
+POSTFIX_SSL_COUNTRY="XX"
+
+## Type:        string
+## Default:     "Some state"
+POSTFIX_SSL_STATE="Some state"
+
+## Type:        string
+## Default:     "Some locality"
+POSTFIX_SSL_LOCALITY="Some locality"
+
+## Type:        string
+## Default:     "Some Organization"
+POSTFIX_SSL_ORGANIZATION="Some Organization"
+
+## Type:        string
+## Default:     "Some Organizational Unit"
+POSTFIX_SSL_ORGANIZATIONAL_UNIT="Some Organizational Unit"
+
+## Type:        string
+## Default:     "A common name"
+POSTFIX_SSL_COMMON_NAME="A common name"
+
+## Type:        string
+## Default:     "postmaster"
+POSTFIX_SSL_EMAIL_ADDRESS="postmaster"
+
+#
+# POSTFIX_ADD_*
+# You may add any existing postfix parameter here. Just execute the
+# postconf command to get a complete list. You then have to uppercase
+# the parameter and prepend POSTFIX_ADD_.
+# Example:
+# Let's say you want to add the postfix parameter mailbox_size_limit.
+# Then just add
+# POSTFIX_ADD_MAILBOX_SIZE_LIMIT=0
+# POSTFIX_ADD_MESSAGE_SIZE_LIMIT=30000000
+
+## Type:        string
+## Default:     0
+POSTFIX_ADD_MAILBOX_SIZE_LIMIT="0"
+
+## Type:        string
+## Default:     10240000
+POSTFIX_ADD_MESSAGE_SIZE_LIMIT="0"
+
+## Type:        yesno
+## Default:     yes
+## Config:      postfix
+#
+# Automatically register to slpd, if running?
+#
+POSTFIX_REGISTER_SLP="yes"
+
+## Type: list(subnet,host,class)
+## Default: subnet
+## Config: postfix
+#
+#
+# The postfix default for this setting is "subnet"
+# for security reasons you should use host
+# otherwise every user in the same subnet as you, can use
+# your postfix server as a mail relay for spam.
+# If you set POSTFIX_DIALUP to "yes" mynetworks_style
+# will be set to "host" by SuSEconfig.postfix.
+#
+POSTFIX_ADD_MYNETWORKS_STYLE="subnet"

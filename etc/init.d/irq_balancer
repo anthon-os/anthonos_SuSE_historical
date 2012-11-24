@@ -1,0 +1,129 @@
+#! /bin/sh
+# Copyright (c) 1995-2002 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# /etc/init.d/irqbalance
+#   and its symbolic link
+# /(usr/)sbin/rcirqbalance
+#
+### BEGIN INIT INFO
+# Provides:          irqbalance
+# Required-Start:    $remote_fs
+# Should-Start: 
+# Required-Stop:     $remote_fs
+# Should-Stop: 
+# Default-Start:     1 2 3 5
+# Default-Stop:      0 6
+# Short-Description: irqbalance daemon providing irq balancing on MP-machines
+# Description:       Start irqbalance to allow interrrupt balancing over multiple CPUs
+#	             usually all irqs are handled by cpu0, this daemon dynamcally 
+#	             uses all cpus for the irqs
+#	
+#	
+#	
+### END INIT INFO
+
+# Check for missing binaries (stale symlinks should not happen)
+IRQBALANCE_BIN=/usr/sbin/irqbalance
+test -x $IRQBALANCE_BIN || exit 5
+PROC=$(grep -c '^processor' /proc/cpuinfo)
+
+#
+# Checks if the irq balancer should be started at all on that system.
+# Returns 0 if the balancer should be started, 1 otherwise.
+should_start_irqbalance()
+{
+    # don't start on 1 core systems
+    # still check the number of processors here althought the irq
+    # balancer terminates automatically if number_cpus == 0
+    # simply to provide a better user output ('unused' vs. 'done')
+    if [ $PROC -le 1 ] ; then
+        return 1
+    fi
+
+    # don't start on IA64 SGI SN2 systems (bnc#441505)
+    if [ "$(uname -m)" = ia64 ] && [ -f /proc/sgi_sn/system_serial_number ] ; then
+        logger -t irq_balancer "Not starting irqbalance because we're running on a SGI SN2 system"
+        return 1
+    fi
+
+    # start on any other case
+    return 0
+}
+
+
+. /etc/rc.status
+. /etc/sysconfig/irqbalance
+
+if [ -n "$IRQBALANCE_BANNED_CPUS" ] ; then
+    export IRQBALANCE_BANNED_CPUS
+fi
+
+if [ "$IRQBALANCE_ONESHOT" != "auto" ] ; then
+    export IRQBALANCE_ONESHOT
+fi
+
+if [ -n "$IRQBALANCE_BANNED_INTERRUPTS" ] ; then
+    export IRQBALANCE_BANNED_INTERRUPTS
+fi
+
+# Reset status of this service
+rc_reset
+
+case "$1" in
+    start)
+	echo -n "Starting irqbalance "
+
+        if should_start_irqbalance ; then
+	    startproc $IRQBALANCE_BIN
+	    # Remember status and be verbose
+	    rc_status -v
+	else
+            # unused
+	    rc_status -u
+	fi
+	;;
+    stop)
+	echo -n "Shutting down irqbalance "
+	killproc -TERM $IRQBALANCE_BIN
+
+	# Remember status and be verbose
+	rc_status -v
+	;;
+    try-restart)
+	$0 status >/dev/null &&  $0 restart
+
+	# Remember status and be quiet
+	rc_status
+	;;
+    restart)
+	$0 stop
+	$0 start
+
+	# Remember status and be quiet
+	rc_status
+	;;
+    force-reload|reload)
+	echo -n "Reload service irqbalance "
+	if [ $PHYS -gt 1 ] || [ $PROC -gt 1 -a $PHYS -eq 0 ] ; then
+		## if it supports it:
+	    killproc -HUP $IRQBALANCE_BIN
+	    #touch /var/run/irqbalance.pid
+	    rc_status -v
+	else
+	    rc_status -u
+	fi
+	;;
+    status)
+	echo -n "Checking for service irqbalance "
+	checkproc $IRQBALANCE_BIN
+	rc_status -v
+	;;
+    probe)
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload|probe}"
+	exit 1
+	;;
+esac
+rc_exit

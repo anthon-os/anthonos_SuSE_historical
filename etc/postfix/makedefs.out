@@ -1,0 +1,16 @@
+# Do not edit -- this file documents how Postfix was built for your machine.
+SYSTYPE	= LINUX3
+AR	= ar
+ARFL	= rv
+RANLIB	= ranlib
+SYSLIBS	= -lldap -llber -lpcre -lsasl2 -lssl -lcrypto -ldb -lnsl -lresolv
+CC	= gcc $(WARN) -DHAS_LDAP -DHAS_PCRE -DUSE_SASL_AUTH -I/usr/include/sasl -DMAX_DYNAMIC_MAPS -DHAS_MYSQL -I/usr/include/mysql -DHAS_PGSQL -I/usr/include/pgsql -DUSE_CYRUS_SASL -DUSE_TLS -fmessage-length=0 -O2 -Wall -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables -g -Wno-comments
+OPT	= -O
+DEBUG	= 
+AWK	= awk
+STRCASE = 
+EXPORT	= AUXLIBS='-lldap -llber -lpcre -lsasl2 -lssl -lcrypto' CCARGS='-DHAS_LDAP -DHAS_PCRE -DUSE_SASL_AUTH -I/usr/include/sasl -DMAX_DYNAMIC_MAPS -DHAS_MYSQL -I/usr/include/mysql -DHAS_PGSQL -I/usr/include/pgsql -DUSE_CYRUS_SASL -DUSE_TLS -fmessage-length=0 -O2 -Wall -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables -g -Wno-comments' OPT='-O' DEBUG=''
+WARN	= -Wall -Wno-comment -Wformat -Wimplicit -Wmissing-prototypes \
+	-Wparentheses -Wstrict-prototypes -Wswitch -Wuninitialized \
+	-Wunused -Wno-missing-braces
+PIE	= -pie

@@ -1,0 +1,14 @@
+[Desktop Entry]
+X-SuSE-translate=true
+DocPath=gsynaptics
+Encoding=UTF-8
+Name=触摸板
+Comment=Set your touchpad preferences
+Exec=gsynaptics
+Icon=gsynaptics
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=GNOME;Application;Settings;X-SuSE-ControlCenter-Hardware;
+OnlyShowIn=GNOME;LXDE;
+

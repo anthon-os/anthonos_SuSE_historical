@@ -1,0 +1,122 @@
+#! /bin/bash
+# Copyright (c) 2002-2010 SUSE Linux Products GmbH, Nuernberg, Germany.
+# All rights reserved.
+#
+# Authors: Christian Zoz <zoz@suse.de>
+#          Timo Hoenig <thoenig@suse.de>
+#          Stefan Seyfried <seife@suse.de>
+#
+# /etc/init.d/acpid
+#   and its symbolic link
+# /usr/sbin/rcacpid
+#
+# LSB compliant service control script; see http://www.linuxbase.org/spec/
+# 
+### BEGIN INIT INFO
+# Provides:                   acpid
+# Required-Start:             $local_fs
+# Required-Stop:              $null
+# Default-Start:              2 3 5
+# Default-Stop:               0 1 6
+# Short-Description: Listen and dispatch ACPI events from the kernel
+# Description:       acpid reads events from /proc/acpi/event and dispatches
+#	them (by SuSE default) to other "users" like powersaved, HAL and IAL.
+#	Actions for those events are (by SUSE default) configured in the
+#	powersaved configuration.
+#	Additionally this start script loads all needed modules.
+### END INIT INFO
+
+# Check for missing binaries (stale symlinks should not happen)
+ACPID_BIN=/usr/sbin/acpid
+test -x $ACPID_BIN || exit 5
+
+# Shell functions sourced from /etc/rc.status:
+#      rc_check         check and set local and overall rc status
+#      rc_status        check and set local and overall rc status
+#      rc_status -v     ditto but be verbose in local rc status
+#      rc_status -v -r  ditto and clear the local rc status
+#      rc_status -s     display "skipped" and exit with status 3
+#      rc_status -u     display "unused" and exit with status 3
+#      rc_failed        set local and overall rc status to failed
+#      rc_failed <num>  set local and overall rc status to <num>
+#      rc_reset         clear local rc status (overall remains)
+#      rc_exit          exit appropriate to overall rc status
+#      rc_active	checks whether a service is activated by symlinks
+#      rc_splash arg    sets the boot splash screen to arg (if active)
+. /etc/rc.status
+
+# Reset status of this service
+rc_reset
+
+# Return values acc. to LSB for all commands but status:
+# 0	  - success
+# 1       - generic or unspecified error
+# 2       - invalid or excess argument(s)
+# 3       - unimplemented feature (e.g. "reload")
+# 4       - user had insufficient privileges
+# 5       - program is not installed
+# 6       - program is not configured
+# 7       - program is not running
+# 8--199  - reserved (8--99 LSB, 100--149 distrib, 150--199 appl)
+# 
+# Note that starting an already running service, stopping
+# or restarting a not-running service as well as the restart
+# with force-reload (in case signaling is not supported) are
+# considered a success.
+
+case "$1" in
+	start)
+		if [ ! -d /proc/acpi ] ; then
+			echo -n "acpid: no ACPI support in kernel"
+			rc_status -s
+			rc_exit
+		fi
+
+		echo -n "Starting acpid "
+		startproc $ACPID_BIN
+		rc_status -v
+		;;
+	stop)
+		echo -n "Shutting down acpid "
+		killproc -TERM $ACPID_BIN
+		rc_status -v
+		;;
+	try-restart)
+	        $0 status
+		if test $? = 0; then
+			$0 restart
+		else
+			rc_reset        # Not running is not a failure.
+		fi
+		rc_status
+		;;
+	restart)
+		$0 stop
+		$0 start
+		rc_status
+		;;
+	force-reload|reload)
+		echo -n "Reload service acpid "
+		killproc -HUP $ACPID_BIN
+		rc_status -v
+		;;
+	status)
+		echo -n "Checking for service acpid "
+		PID=`checkproc -v $ACPID_BIN`
+		if rc_status ; then
+			case `cat /proc/$PID/cmdline` in *events.ignore) rc_failed 3 ;; esac
+		fi
+		rc_status -v
+		;;
+	probe)
+		for i in /etc/acpi/events/*; do
+			test $i -nt /var/run/acpid.pid && echo restart && break
+		done
+		;;
+	*)
+		echo "Usage: $0" \
+		     "{start|stop|status|try-restart|restart|force-reload|reload|probe}"
+		exit 1
+		;;
+esac
+rc_exit

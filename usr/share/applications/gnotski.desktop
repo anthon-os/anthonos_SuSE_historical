@@ -1,0 +1,16 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Name=华容道
+Comment=滑动方块以解开迷局
+Exec=gnotski
+Icon=gnotski
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;Game;LogicGame;
+X-GNOME-Bugzilla-Bugzilla=GNOME
+X-GNOME-Bugzilla-Product=gnome-games
+X-GNOME-Bugzilla-Component=BugBuddyBugs
+X-GNOME-Bugzilla-Version=3.4.2
+StartupNotify=true
+
+Path=

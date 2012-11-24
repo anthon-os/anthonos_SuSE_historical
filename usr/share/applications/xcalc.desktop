@@ -1,0 +1,13 @@
+[Desktop Entry]
+X-SuSE-translate=true
+NoDisplay=true
+Categories=Utility;Calculator;
+Encoding=UTF-8
+Name=X计算器
+GenericName=Calculator
+Exec=xcalc
+Icon=xcalc
+Type=Application
+Terminal=false
+X-KDE-StartupNotify=true
+

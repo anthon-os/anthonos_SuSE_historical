@@ -1,0 +1,30 @@
+#!/bin/sh
+#
+# GiveDevices:  give the current virtual and logging consoles over
+#               to the user.  Any other device which should be given
+#               the user of local displays should be added herein.
+#               Called by Xstartup.
+#
+# Copyright (c) 2000,2004 SuSE GmbH Nuernberg, Germany.
+# please report bugfixes or comments at http://www.suse.de/feedback.
+#
+# Author: Werner Fink,   <werner@suse.de>
+#
+
+if test -c /dev/tty0 && type -p showconsole > /dev/null 2>&1 ; then
+    device="`(showconsole < /dev/tty0) 2>/dev/null`"
+    if test -n "$device" -a -c "$device" ; then
+	chown ${USER}:tty  "$device"
+	chmod 620	   "$device"
+    fi
+fi
+
+case "$DISPLAY" in
+    :0|:0.0)
+	if test -p /dev/xconsole ; then
+	    chown ${USER}:tty /dev/xconsole
+	    chmod 400	      /dev/xconsole
+	fi
+	;;
+    *)
+esac

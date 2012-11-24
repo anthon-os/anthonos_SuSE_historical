@@ -1,0 +1,128 @@
+!
+! Default mapping for Delete
+!
+*Text.Translations:	   #override \n ~Shift ~Meta ~Alt <Key>Delete: delete-next-character() \n
+*AxeText.Translations:	   #override \n ~Shift ~Meta ~Alt <Key>Delete: delete-next-character() \n
+*XmText.Translations:	   #override \n ~Shift ~Meta ~Alt <Key>Delete: delete-next-character() \n ~Shift ~Meta ~Alt <Key>osfDelete: delete-next-character() \n ~Shift ~Meta ~Alt <Key>osfBackSpace: delete-previous-character() \n
+*XmTextField.Translations: #augment \n ~Shift ~Meta ~Alt <Key>osfDelete: delete-next-character() \n ~Shift ~Meta ~Alt <Key>osfBackSpace: delete-previous-character() \n
+
+!
+! Defaults for 3D Athena Widgets library
+!
+*Form.background:			grey67
+*Form.foreground:			black
+*TransientShell*Dialog.background:	grey67
+*TransientShell*Dialog.foreground:	black
+*Command.background:			grey77
+*Command.foreground:			black
+*MenuButton.background:			grey77
+*MenuButton.foreground:			black
+*SimpleMenu*background:			grey77
+*SimpleMenu*foreground:			black
+*ScrollbarBackground:			grey67
+*ScrollbarForeground:			grey37
+*Scrollbar*background:			grey77
+*Scrollbar*foreground:			grey37
+*Scrollbar*pointerColor:		black
+*Scrollbar*pointerColorBackground:	white
+*beNiceToColormap:			False
+*Scrollbar*width:			15
+*Scrollbar*height:			15
+*Scrollbar*shadowWidth:			2
+*Scrollbar*borderWidth:			2
+*Scrollbar*cursorName:			top_left_arrow
+*Scrollbar*pushThumb:			false
+*Label*shadowWidth:			2
+*Label*borderWidth:			2
+*shapeStyle:				Rectangle
+*shadowWidth:				2
+*SmeBSB*shadowWidth:			2
+*Toggle*highlightThickness:		2
+*MenuButton*highlightThickness:		2
+*Command*highlightThickness:		2
+*Panner*shadowThickness:		2
+*SimpleMenu*shadowThickness:		2
+*topShadowContrast:			20
+*bottomShadowContrast:			45
+*PushThumb:				False
+
+*printCommand: lpr
+
+Mwm.interactivePlacement:	false
+
+Scrollbar.JumpCursor:	True
+
+
+Ghostview.pageMedia:  A4
+
+*XConsole*text.scrollHorizontal:         False
+*XConsole*text.wrap: line
+
+!
+! XSysinfo 
+!
+XSysinfo*.font:                 fixed
+XSysinfo*.title.label:          Linx System Info
+XSysinfo*.title.width:          200
+XSysinfo*.load.name.label:      CPU Load:
+XSysinfo*.idle.name.label:      CPU Idle:
+XSysinfo*.mem.name.label:       Memory:
+XSysinfo*.swap.name.label:      Swap:
+! set foreground colors for load
+XSysinfo*load*bar.foreground:   RosyBrown1
+XSysinfo*load*bar.foreground1:  IndianRed1
+XSysinfo*load*bar.foreground2:  OrangeRed1
+XSysinfo*load*bar.foreground3:  firebrick1
+XSysinfo*load*bar.foreground4:  pink1
+XSysinfo*load*bar.foreground5:  HotPink1
+XSysinfo*load*bar.foreground6:  DeepPink2
+XSysinfo*load*bar.foreground7:  maroon1
+XSysinfo*load*bar.segmentGap:   1
+
+! set idle gauge color
+XSysinfo*idle*bar.foreground:   green
+XSysinfo*idle*bar.backgroud:   red
+
+! set mem info gauge colors
+XSysinfo*mem*bar.foreground:    tomato
+XSysinfo*mem*bar.foreground1:   green3
+XSysinfo*mem*bar.foreground2:   orchid
+
+! set swap gauge color
+XSysinfo*swap*bar.foreground:   hotpink1
+
+! set background
+XSysinfo*.background:           gray50
+XSysinfo*.BarGauge.background:  white
+
+
+*basicLocale:	C
+*timeFormat:	C
+*numeric:	C
+*displayLang:	C
+*inputLang:	C
+
+*customization:	-color
+
+! ===========================================================================
+!                               Motif
+! ===========================================================================
+
+!*XmText.translations: #override\n\
+!       <Key>osfDelete: delete-previous-character()\n\
+!       <Key>osfBackSpace: delete-next-character()\n
+!
+!*XmTextField.translations: #override\n\
+!       <Key>osfDelete: delete-next-character()\n\
+!       <Key>osfBackSpace: delete-previous-character()\n
+
+
+! ===========================================================================
+!                               XTerm
+! ===========================================================================
+!*vt100.translations: #override \
+!        <Key>Home:      string("[1~") \n\
+!        <Key>Insert:    string("[2~") \n\
+!        <Key>BackSpace: string("[3~") \n\
+!        <Key>End:       string("[4~")
+

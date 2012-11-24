@@ -1,0 +1,67 @@
+#!/bin/sh
+#
+# Xreset:	Do log on of the local or remote user by resetting
+#		utmp/wtmp/lastlog entries for the X session.
+#
+# Copyright (c) 1998-2000 SuSE GmbH Nuernberg, Germany.
+# please report bugfixes or comments at http://www.suse.de/feedback.
+#
+# Author: Werner Fink,   <werner@suse.de>
+#
+  LIBDIR=/usr/lib/X11
+  ETCDIR=/etc/X11
+  XDMDIR=${ETCDIR}/xdm
+  BINDIR=/usr/bin
+xmessage=${BINDIR}/xmessage
+xconsole=${BINDIR}/xconsole
+
+no_exit_on_failed_exec=1
+type shopt &> /dev/null && shopt -s execfail
+set +e     &> /dev/null
+
+# 
+# Find out if this is a local or remote connection
+#
+LOCATION=${DISPLAY%:*}
+LINE=:${DISPLAY#*:}
+if test -z "$LOCATION" ; then
+    # local connection
+    case "$LINE" in
+	:0|:0.0) LOCATION=console   ;;
+	*)       LOCATION=localhost ;;
+    esac
+else
+    # TCP/IP connection (remote or local)
+    LINE=${LINE}/${LOCATION%%.*}
+fi
+
+#
+# Take the devices away from the user.
+#
+case "$DISPLAY" in
+    :[0-5]|:[0-5].0)
+	# Only for local displays we have to reset the owner ship
+	# and permissions of the /dev/xconsole FIFO and the current
+	# virtual console.
+
+	${XDMDIR}/TakeDevices
+	;;
+    *)
+esac
+
+#
+# Shut down xconsole started in Xsetup for display :0
+#
+case "$DISPLAY" in
+    :0|:0.0)
+	/sbin/killproc $xconsole || true
+	;;
+    *)
+esac
+
+#
+# Reset utmp, wtmp, and lastlog entries.
+#
+exec ${BINDIR}/sessreg -l $LINE -h $LOCATION -d $USER
+$xmessage -timeout 10 -default okay -center "$0: sessreg failed."
+exit 1

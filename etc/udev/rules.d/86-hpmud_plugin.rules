@@ -1,0 +1,9 @@
+# Load hp firmware for this printer.
+
+ACTION!="add", GOTO="hpmud_plugin_rules_end"
+
+# hp_Marvel_Device (These printer requires the plugin files. installling when device is detected)
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="03f0", ATTR{idProduct}=="??17", PROGRAM="/bin/sh -c 'logger -p user.info loading hp_printer_device $env{BUSNUM} $env{DEVNUM}'", RUN+="/bin/sh -c '/usr/bin/hp-check-plugin -m &'"
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="03f0", ATTR{idProduct}=="??2a", PROGRAM="/bin/sh -c 'logger -p user.info loading hp_printer_device $env{BUSNUM} $env{DEVNUM}'", RUN+="/bin/sh -c '/usr/bin/hp-check-plugin -m &'"
+
+LABEL="hpmud_plugin_rules_end"

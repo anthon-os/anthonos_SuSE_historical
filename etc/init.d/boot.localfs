@@ -1,0 +1,465 @@
+#! /bin/sh
+#
+# Copyright (c) 2001-2002 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# /etc/init.d/boot.localfs
+#
+### BEGIN INIT INFO
+# Provides:          boot.localfs
+# Required-Start:    boot.udev boot.rootfsck
+# Should-Start:      boot.md boot.lvm dasd_devfs_compat boot.multipath boot.evms boot.loadmodules
+# Required-Stop:     boot.udev
+# Should-Stop:       boot.md boot.lvm dasd_devfs_compat boot.multipath boot.evms
+# Default-Start:     B
+# Default-Stop:
+# X-Interactive:     true
+# Short-Description: check and mount local filesystems except /
+# Description:       check and mount local filesystems except /
+### END INIT INFO
+
+. /etc/rc.status
+
+# to get max number of parallel fsck processes
+. /etc/sysconfig/boot
+. /etc/sysconfig/kernel
+
+test -z "$REDIRECT" && REDIRECT="$(showconsole 2>/dev/null)"
+export REDIRECT
+export FSCK_MAX_INST
+
+#
+# Special file systems (memory and network based)
+#
+typeset -r nomnt=autofs,bdev,rootfs,sockfs,pipefs,anon_inodefs,inotifyfs,eventpollfs,futexfs
+typeset -r tmpfs=tmpfs,ramfs,hugetlbfs,mqueue,usbfs
+typeset -r netfs=nfs,nfs4,smbfs,cifs,afs,ncpfs
+
+tmp=""
+while read tag name rest ; do
+    test "$tag" = "nodev" || continue
+    [[ "$name" =~ ^(${nomnt//,/|})$ ]] && continue
+    [[ "$name" =~ ^(${tmpfs//,/|})$ ]] && continue
+    [[ "$name" =~ ^(${netfs//,/|})$ ]] && continue
+    tmp=${tmp:+$tmp,}$name
+done < /proc/filesystems
+
+typeset -r memfs=$tmp
+typeset -r mntfs=$tmpfs,$memfs
+typeset -r  nofs=no${netfs//,/,no},no${memfs//,/,no}
+
+unset tmp name rest
+
+loopdel ()
+{
+   losetup ${1+"$@"} > /dev/null 2>&1
+   test $? -eq 0 || return 0
+   losetup -d ${1+"$@"}
+}
+
+list_missed ()
+{
+    local dev line
+    local mount_opts="-t no${tmpfs//,/,no},$nofs,nonone -O no_netdev -O nonofail -O nobind"
+    set -- mount -afnv $mount_opts
+    MOUNT_PRINT_SOURCE=1 "$@" 2> /dev/null | while read line ; do
+	dev="${line%% *}"
+	case "$line" in
+	*:\ ignored) continue ;;
+	*:\ already\ mounted) continue ;;
+	*)  test "${dev#/}" = "$dev" -o -e $dev && continue
+	    echo "${dev}" ;;
+	esac
+    done
+}
+
+wait_for_udev ()
+{
+    local dev
+    local -i timeout=1200
+    local missing=$(list_missed)
+
+    test -n "$missing" || return 0
+    echo -n "Waiting for $missing "
+    while test $timeout -gt 0 ; do
+	usleep 25000
+	((timeout % 40 == 1)) && echo -n "."
+	still_missing=""
+	for dev in $missing; do
+	    if test ! -b $dev ; then
+		still_missing="$dev $still_missing"
+	    fi
+	done
+	if test -z "$still_missing" ; then
+	    echo " ok"
+	    break
+	fi
+	missing="$still_missing"
+	let timeout--
+    done
+    test $timeout -eq 0 && echo " timeout! "
+}
+
+memfs_nonudev ()
+{
+    local dev line
+    set -- mount -afnv -t $mntfs -O no_netdev -O nonofail
+    "$@" 2> /dev/null | while read line ; do
+	    dev="${line%% *}"
+	    case "$line" in
+	    *:\ ignored) continue ;;
+	    *:\ already\ mounted) continue ;;
+	    esac
+	    mount $dev
+	done
+}
+
+#
+# Return the shadow mount points of an AuFS
+#
+aufs ()
+{
+    local IFS pos dir list
+
+    IFS='=:'
+    for pos
+    do
+	case "$pos" in
+	    xino*)
+		dir=${pos#xino=}
+		while test -e "$dir" ; do
+		    if mountpoint -q ${dir} ; then
+			list=${list:+$list,}$dir
+			break
+		    fi
+		    dir=${dir%/*}
+		done
+		;;
+	    br*|dir*)
+		for dir in ${pos} ; do
+		    test -z "${dir##/*}" || continue
+		    mountpoint -q ${dir} || continue
+		    list=${list:+$list,}$dir
+		done
+	esac
+    done
+    echo -n $list
+}
+
+rc_reset
+
+case "$1" in
+  start)
+	# rootfs is mounted rw, lvm et al should be up now
+	wait_for_udev
+
+	#
+	# do fsck and start sulogin, if it fails.
+	#
+	MAY_FSCK=1
+        if test -x /usr/bin/on_ac_power ; then
+            # skip fsck if running on battery
+            /usr/bin/on_ac_power -q || MAY_FSCK=0
+        fi
+	FSCK_RETURN=0
+	if test ! -f /fastboot -a "$DO_FASTBOOT" != "yes" -a $MAY_FSCK -eq 1 ; then
+	    # common options for file system check
+	    FSCK_OPTS="-R -A -M -a -t noopts=nofail"
+	    # force file system check if forced
+	    if test -f /forcefsck -o "$DO_FORCEFSCK" = "yes" ; then
+		FSCK_OPTS="$FSCK_OPTS -f"
+	    fi
+	    # If we use a serial console, don't use the fsck progress bar
+	    if test "${REDIRECT##*/}" = "tty1" ; then
+		FSCK_OPTS="$FSCK_OPTS -C"
+	    else
+		FSCK_OPTS="$FSCK_OPTS -V"
+	    fi
+	    preload=$(PIDOF_NETFS=yes pidof preload)
+	    test -n "$preload" && kill -STOP $preload
+	    echo "Checking file systems..."
+	    fsck $FSCK_OPTS
+	    # A return code of 1 indicates that file system errors
+	    # were corrected, but that the boot may proceed.
+	    # A return code of 2 or larger indicates failure.
+	    FSCK_RETURN=$?
+	    test -n "$preload" && kill -CONT $preload
+	    test $FSCK_RETURN -lt 4
+	    rc_status -v1 -r
+	    if test $FSCK_RETURN -gt 1 -a $FSCK_RETURN -lt 4 ; then
+		# if appropriate, switch bootsplash to verbose 
+		# mode to make text messages visible.
+		test -f /proc/splash && echo "verbose" > /proc/splash
+		echo
+		echo "fsck succeed, but reboot is required."
+		echo
+		sleep 1
+		sync
+		reboot -f
+	    elif test $FSCK_RETURN -gt 3; then
+		# if appropriate, switch bootsplash to verbose 
+		# mode to make text messages visible.
+		test -f /proc/splash && echo "verbose" > /proc/splash
+		# Stop blogd since we reboot after sulogin
+		test -x /sbin/blogd && killproc -QUIT /sbin/blogd
+		if test -x /etc/init.d/kbd ; then
+		    /etc/init.d/kbd start
+		fi
+	        echo
+	        echo "fsck failed for at least one filesystem (not /)."
+		echo "Please repair manually and reboot."
+		echo "The root file system is already mounted read-write."
+	        echo
+	        echo "Attention: Only CONTROL-D will reboot the system in this"
+	        echo "maintanance mode. shutdown or reboot will not work."
+	        echo
+	        PS1="(repair filesystem) # "
+	        export PS1
+	        /sbin/sulogin /dev/console
+
+	        # if the user has mounted something rw, this should be umounted
+	        echo "Unmounting file systems (ignore error messages)"
+	        umount -avn
+
+	        # on umsdos fs this would lead to an error message.
+		# so direct errors to /dev/null
+	        mount -no remount,ro / 2> /dev/null
+
+	        sync
+	        reboot -f
+	    fi
+	    if test $FSCK_RETURN -gt 0; then
+		sync
+		> /fsck_corrected_errors
+	    fi
+	fi
+
+	#
+	# clean up
+	#
+	rm -f /etc/nologin /nologin /fastboot /forcefsck /success
+	rc_status -v -r
+
+	#
+	# Mount local filesystems in '/etc/fstab' (and create an entry
+	# for / and /proc).
+	#
+	echo "Mounting local file systems..."
+	if ! test -L /etc/mtab; then
+	    mount -fv -t proc proc /proc
+	    mount -fv -t sysfs sysfs /sys
+	    DEVTMPFS=tmpfs
+	    case "$memfs" in
+	    *,devtmpfs,*) DEVTMPFS=devtmpfs
+	    esac
+	    mount -fv -t $DEVTMPFS -o mode=0755 $DEVTMPFS /dev
+	    rc_status
+	    mount -fv -t tmpfs  -o mode=1777 tmpfs /dev/shm
+	    mount -fv -t devpts -o mode=0620,gid=5 devpts /dev/pts
+	    rc_status
+	fi
+	if test -d /sys/kernel/debug -a "$(stat -fc '%T' /sys/kernel/debug)" != debugfs ; then
+	    case "$memfs" in
+	    *,debugfs,*)
+		mount -t debugfs debugfs /sys/kernel/debug
+	    esac
+	fi
+	if test -d /sys/kernel/security -a "$(stat -fc '%T' /sys/kernel/security)" != securityfs ; then
+	    case "$memfs" in
+	    *,securityfs,*)
+		mount -t securityfs securityfs /sys/kernel/security
+	    esac
+	fi
+	# remount to make sure options from fstab are honoured
+	mount -oremount /proc
+	mount -oremount /sys
+	mount -oremount /dev
+	mount -oremount /dev/pts
+	mount -oremount /dev/shm
+	mount -oremount /run
+	# mount the rest
+	mount -av -t $nofs -O no_netdev
+	rc_status -v1 -r
+
+	if test -d /var/lock && ! mountpoint -q /var/lock; then
+	    mount -n --bind /run/lock /var/lock
+	fi
+	if test -d /var/run && ! mountpoint -q /var/run; then
+	    mount -n --bind /run /var/run
+	fi
+	if test -d /media && ! mountpoint -q /media; then
+	    mount -n -t tmpfs -o mode=0755,nodev,nosuid tmpfs /media
+	fi
+
+	# now handle uncommon mount points
+	memfs_nonudev
+	;;
+    stop)
+	mounts=/etc/fstab
+	test -r /proc/mounts && mounts=/proc/mounts
+
+	if TMPDIR=$(/bin/mktemp -d /dev/shm/.XXXXXX 2>/dev/null) ; then
+	    if command -v rvmtab > /dev/null 2>&1 ; then
+		rvmtab > ${TMPDIR}/mtab
+		rvtab=${TMPDIR}/mtab
+	    else
+		rvtab=$mounts
+	    fi
+	else
+		TMPDIR=/dev/shm
+		rvtab=$mounts
+	fi
+	export TMPDIR
+
+	mtab=
+	test "$2" = "nomtab" && mtab=-n
+
+	echo "Unmounting file systems"
+
+	# move to intermezzo package ?
+	# First umount intermezzo filesystems
+	if command -v umountizo > /dev/null 1>&2 ; then
+	    while read line ; do
+		case "$line" in
+		*[Ii][Nn][Tt][Ee][Rr][Mm][Ee][Zz][Zz][Oo]*)
+		    umountizo >/dev/null 2>&1
+		esac
+	    done < ${rvtab}
+	fi
+
+	ulist=
+	rskip=
+	lskip=
+
+	while read des fs type opts rest; do
+	    case "${des##*/}" in
+		""|\#*)    continue ;;
+		swap)      continue ;;
+	    esac
+	    case ",$nomnt," in
+		*,$type,*) continue ;;
+	    esac
+	    case ",$netfs," in
+		*,$type,*) continue ;;
+	    esac
+	    case "$type" in
+		fuse.clicfs)
+		    if test "$fs" = "/read-only"; then
+			   mount -nv -o remount,sync,ro "$fs"
+			   rskip="${rskip:+$rskip,}$fs"
+			   continue
+		    fi
+	    esac
+	    case "$fs" in
+		/)  if test "$type" = aufs; then
+			   rskip="${rskip:+$rskip,}$(aufs ${opts//,/ })"
+		    fi
+		    if [[ "${des##*/}" =~ ^loop* ]] ; then
+			   lskip="${des##*/}"
+			   tmp=$(losetup ${des} 2>/dev/null)
+			   tmp="${tmp##*(}"
+			   rskip="${rskip:+$rskip,}${tmp%/*})"
+		    fi 
+			   continue ;;
+		/dev*)     continue ;;
+		/proc*)    continue ;;
+		/sys*)     continue ;;
+		/cgroup*)  continue ;;
+		/run)      continue ;;
+		/sys/fs/*) continue ;;
+		/sys/kernel/*)
+			   continue ;;
+		/var/lib/nfs/rpc_pipefs)
+			   continue ;;
+		/read-write)
+			   mount -nv -o remount,sync,ro "$fs"
+			   rskip="${rskip:+$rskip,}$fs"
+	    esac
+	    case ",$rskip," in
+		*,$fs,*)   continue ;;
+	    esac
+	    case "$fs" in
+		/tmp)	   ulist="${ulist:+$ulist }$fs"
+			   continue ;;
+		/var/tmp)  ulist="${ulist:+$ulist }$fs"
+			   continue ;;
+	    esac
+	    case ",$mntfs," in
+		*,$type,*) umount $mtab -t $type $fs ;;
+		*)	   ulist="${ulist:+$ulist }$fs"
+	    esac
+	    case "${des##*/}" in
+		loop*)	   umount $mtab $fs
+			   loopdel $des ;;
+	    esac
+	done < ${rvtab}
+
+	grep "loop" /proc/partitions | while read major minor blocks name ; do
+	    test -n "$lskip" -a "$lskip" = "$name" && continue
+	    case "$name" in
+		loop*)
+		    if test -d /dev/loop ; then
+			   loopdel /dev/loop/${name#loop}
+		    else
+			   loopdel /dev/$name
+		    fi
+	    esac
+	done
+
+	if test -z "$ulist" ; then
+	    rc_status -v1 -r
+	    rc_exit
+	fi
+
+	#
+	# If e.g. /var is on a different filesystem than / make sure we can umount
+	# but check if /etc/ld.so.preload exists and if this may hold a partition
+	# even for root file systems based programs
+	#
+	if test -s /etc/ld.so.preload && grep -qE "(${ulist// /|})" /etc/ld.so.preload ; then
+	    echo "${warn}Oops${done}: /etc/ld.so.preload exist and breaks the system :-("
+	else
+	    mkill -TERM $ulist
+	fi
+
+	UMOUNT_FAILED=false
+	umount -rv $mtab -t no${tmpfs//,/,no},$nofs -O no_netdev $ulist || {
+	    rc_status
+	    UMOUNT_FAILED=true
+	}
+	rc_status -v1 -r
+
+	if test "$UMOUNT_FAILED" = true -a -z "$mtab" ; then
+	    echo "${warn}Oops${done}: umount failed :-(  --  trying to remount readonly..."
+	    ulist=,${ulist// /,},
+	    # Use cat and a pipe because umount changes
+	    # /proc/mounts during direct read call
+	    cat $mounts | \
+	    while read des fs type opts rest; do
+		case "$ulist" in
+		    *,$fs,*) mount -nv -o remount,ro $fs ;;
+		esac
+	    done
+
+	    echo "extra sync..."
+	    sync; sleep 1; sync
+	    echo "... hope now it's ok to reboot."
+	fi
+	;;
+    restart)
+	rc_failed 3
+	rc_status -v
+	;;
+    status)
+        echo -n "Checking if boot.localfs has run"
+        rc_reset
+        grep -q " /dev/shm " /etc/mtab || rc_failed 3
+        rc_status -v
+        ;;
+    *)
+	echo "Usage: $0 {start|stop|status|restart}"
+	exit 1
+	;;
+esac
+
+rc_exit

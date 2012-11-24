@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+
+<!--
+    Special setup used only during the installation of SuSE Linux.
+    During installation, this file is moved to local.conf, otherwise
+    it is not used.
+-->
+
+        <match target="font">
+                <edit name="embeddedbitmap">
+                        <bool>true</bool>
+                </edit>
+        </match>
+
+</fontconfig>

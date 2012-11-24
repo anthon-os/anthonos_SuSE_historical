@@ -1,0 +1,16 @@
+
+[Desktop Entry]
+X-SuSE-translate=true
+Version=1.0
+Name=鼠标和触摸板
+Comment=Configure pointer device behavior and appearance
+Exec=xfce4-mouse-settings
+Icon=preferences-desktop-peripherals
+Terminal=false
+Type=Application
+Categories=XFCE;GTK;Settings;DesktopSettings;X-XFCE-SettingsDialog;X-XFCE-HardwareSettings;X-XFCE;
+StartupNotify=true
+OnlyShowIn=XFCE;
+X-XfcePluggable=true
+X-XfceHelpPage=mouse
+

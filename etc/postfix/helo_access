@@ -1,0 +1,3 @@
+# reject Mails when <helo> has our IP/HOSTNAME
+# IP REJECT  Liar! That's our IP!
+# FQDN REJECT  Liar! That's our HOSTNAME!

@@ -1,0 +1,17 @@
+## Path:        System/Printing/CUPS
+## Description: Cups options
+## Type:        string
+## Default:     cups
+## ServiceReload: cups
+## ServiceRestart: cups
+#
+IDENT="cups"
+## Type:        string
+## Default:     "CUPS printer daemon"
+DESCRIPTIVE="CUPS printer daemon"
+## Type:        string
+## Default:     ""
+#
+# change CUPSD_OPTIONS for arguments of start of cupsd
+# e.g.  CUPSD_OPTIONS="-c /etc/cups/cupsd.conf"
+CUPSD_OPTIONS=""

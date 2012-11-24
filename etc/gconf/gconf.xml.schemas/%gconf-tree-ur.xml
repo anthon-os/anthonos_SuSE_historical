@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<gconf>
+	<dir name="schemas">
+		<dir name="apps">
+			<dir name="nm-applet">
+				<entry name="disable-wifi-create">
+					<local_schema short_desc="WiFi کو بنانا معطل کریں">
+						<longdesc>ایپلیٹ کے استعمال کے دوران adhoc نیٹ ورک کو بننے سے روکنے کے لیے اسے TRUE کردیں.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="stamp">
+					<local_schema short_desc="مہر">
+						<longdesc>یہ جاننے کے لیے استعمال ہوتا ہے کہ آیا ترتیبات نئے نسخے پر منتقل کی جانی چاہئیں یا نہیں.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="suppress-wireless-networks-available">
+					<local_schema short_desc="زیریں نیٹ ورکس دستیابی اطلاعات">
+						<longdesc>وائیرلیس نیٹ ورک کی دستیابی پر اطلاعات کو معطل کرنے کے لیے اسے TRUE کردیں.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="disable-disconnected-notifications">
+					<local_schema short_desc="غیر متصل اطلاعات کو معطل کریں">
+						<longdesc>نیٹ ورک سے اتصال منقطع کرنے کے دوران اطلاعات کو معطل کرنے کے لیے اسے TRUE کردیں.</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="disable-connected-notifications">
+					<local_schema short_desc="متصل اطلاعات کو معطل کریں">
+						<longdesc>نیٹ ورک سے اتصال کے دوران اطلاعات کو معطل کرنے کے لیے اسے TRUE کردیں.</longdesc>
+					</local_schema>
+				</entry>
+			</dir>
+		</dir>
+	</dir>
+</gconf>

@@ -1,0 +1,10 @@
+[Icon Theme]
+Name=HighContrastInverse
+Comment=High Contrast Inverse Theme
+Directories=48x48/stock
+Inherits=gnome
+
+[48x48/stock]
+Size=48
+Context=Stock
+Type=Scalable

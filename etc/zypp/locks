@@ -1,0 +1,12 @@
+
+type: package
+match_type: exact
+case_sensitive: on
+solvable_name: plymouth
+
+
+type: package
+match_type: exact
+case_sensitive: on
+solvable_name: plymouth-branding-openSUSE
+

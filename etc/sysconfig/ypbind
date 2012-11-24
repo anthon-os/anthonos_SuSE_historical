@@ -1,0 +1,68 @@
+## Path:        Network/NIS/NIS client
+## Description: Configuration for ypbind
+## Type:        string
+## Default:     ""
+## ServiceRestart: ypbind
+#
+# Extra options for ypbind. Here you can add options like "-ypset",
+# "-ypsetme" or "-p port".
+#
+YPBIND_OPTIONS=""
+
+## Type:        yesno
+## Default:     no
+## ServiceRestart: ypbind
+#
+# If this option is set, ypbind will only bind to the loopback
+# interface and remote hosts cannot query it. (yes|no)
+#
+YPBIND_LOCAL_ONLY="no"
+
+## Type:        yesno
+## Default:     no
+## ServiceRestart: ypbind
+#
+# If this option is set to "yes", ypbind will ignore /etc/yp.conf
+# and use a broadcast call to find a NIS server in the local subnet.
+# You should avoid to use this, it is a big security risk. (yes|no)
+#
+YPBIND_BROADCAST="no"
+
+## Type:        yesno
+## Default:     no
+## ServiceRestart: ypbind
+#
+# You should set this to "yes" if you have a NIS server in your network,
+# which binds only to high ports over 1024. Since this is a security risk,
+# you should consider to replace the NIS server with another
+# implementation. (yes|no)
+#
+YPBIND_BROKEN_SERVER="no"
+
+## Type:        yesno
+## Default:     no
+## ServiceRestart: ypbind
+#
+# Causes ypbind to syslog any and all changes in the server its
+# bound to. (yes|no)
+#
+YPBIND_VERBOSE="no"
+
+## Type:        yesno
+## Default:     yes
+## ServiceRestart: ypbind
+#
+# You should set this to "no" if you are working with static network
+# interfaces and don't uses NetworkManager. (yes|no)
+#
+YPBIND_DBUS="yes"
+
+## Type:        integer
+## Default:     ""
+## ServiceRestart: ypbind
+#
+# The default value for ypbind to check, if a NIS server is still
+# reacheable, is 20 seconds. With this options another frequency in
+# seconds can be specified.
+#
+YPBIND_PING_INTERVAL=""

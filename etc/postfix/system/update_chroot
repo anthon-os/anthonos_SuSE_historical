@@ -1,0 +1,83 @@
+#!/bin/bash
+#
+# /etc/postfix/system/update_chroot
+#
+# Description:
+#
+#
+
+defaults=/usr/bin/my_print_defaults
+test -f /etc/sysconfig/postfix && . /etc/sysconfig/postfix
+
+warn_user(){
+  tput bold
+  echo -e "\t*** WARNING ***"
+  echo -e $1
+  echo -e "\t*** WARNING ***"
+  tput sgr0
+}
+
+chk_mysql_sock()
+{
+  lcoal -i RET=0
+  local PF_CHROOT="/var/spool/postfix"
+  local MYSQLD="$($defaults mysqld)"
+
+  if [ -n "$MYSQLD" ]; then
+    MYSQL_SOCKET=$(echo "$MYSQLD" | sed -rn '/--socket[[:blank:]=]/{ s@.*[[:blank:]=]([^[:blank:]=]*)@\1@p; }')
+    MYSQL_SOCKET_DIR=${MYSQL_SOCKET%/*}
+    CHR_MYSQL_SOCKET=${PF_CHROOT}${MYSQL_SOCKET}
+    CHR_MYSQL_SOCKET_DIR=${CHR_MYSQL_SOCKET%/*}
+    if [ -S $MYSQL_SOCKET ]; then
+        if [ -d $CHR_MYSQL_SOCKET_DIR ]; then
+          if grep $CHR_MYSQL_SOCKET_DIR /proc/mounts &> /dev/null; then
+                RET=0
+          else
+                RET=8
+          fi
+        else
+          RET=4
+        fi
+    else
+        RET=2
+    fi
+  else
+    RET=1
+  fi
+  return $RET
+}
+
+if [ "${POSTFIX_UPDATE_CHROOT_JAIL,,[A-Z]}" != "no" ]; then
+  if [ "${POSTFIX_MYSQL_CONN,,[A-Z]}" == "socket" -a "${POSTFIX_WITH_MYSQL,,[A-Z]}" != "no" ]; then
+     chk_mysql_sock
+       case $? in
+       1)
+warn_user "\t/etc/my.cnf does not exist!!\n\
+\tThis should not happen!\n\
+\tPlease check if postfix-mysql is installed and check for package mysql."
+	 exit 5
+         ;;
+       2)
+warn_user "\tMySQL not started\n\
+\tPlease check if MySQL is started on boot"
+	 exit 7
+         ;;
+       4)
+warn_user "\t$CHR_MYSQL_SOCKET_DIR does not exist!!\n\
+\tThis should not happen!\n\
+\tPlease run SuSEconfig."
+	 exit 6
+         ;;
+       8)
+         /bin/mount -o bind $MYSQL_SOCKET_DIR $CHR_MYSQL_SOCKET_DIR &> /dev/null
+         [ $? -ne 0 ] && {
+           echo -n " ... can not mount $MYSQL_SOCKET_DIR to $CHR_MYSQL_SOCKET_DIR"
+           exit 1
+         }
+         ;;
+       esac
+  fi
+fi
+exit 0
+#
+# end /etc/postfix/system/update_chroot

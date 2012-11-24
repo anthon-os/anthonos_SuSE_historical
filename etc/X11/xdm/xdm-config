@@ -1,0 +1,45 @@
+!
+! xdm-config:	Configuration of the xdm
+!
+DisplayManager.errorLogFile:	/var/log/xdm.errors
+DisplayManager.pidFile:		/var/run/xdm.pid
+DisplayManager.authDir:		/var/lib/xdm
+DisplayManager.keyFile:		/etc/X11/xdm/xdm-keys
+DisplayManager.servers:		/etc/X11/xdm/Xservers
+DisplayManager.accessFile:	/etc/X11/xdm/Xaccess
+DisplayManager.willing:		su nobody -c /etc/X11/xdm/Xwilling
+!
+! ATTENTION: `authName' should be in general MIT-MAGIC-COOKIE-1
+! For XDM-AUTHENTICATION-1 which is default for xterminals see
+! manual page of xdm and the manual coming with the xterminal.
+!
+DisplayManager.*.authName:	MIT-MAGIC-COOKIE-1
+DisplayManager.*.authComplain:	false
+!
+! All displays should use authorization, but we cannot be sure
+! X terminals will be configured that way, so by default
+! use authorization only for local displays :0, :1, etc.
+!
+DisplayManager._0.authorize:	true
+DisplayManager._1.authorize:	true
+DisplayManager._93.authorize:	true
+!
+! The scripts handling the setup, the startup, the session its self,
+! and the reset of an X session.
+!
+DisplayManager.*.setup:		/etc/X11/xdm/Xsetup
+DisplayManager.*.chooser:	/etc/X11/xdm/RunChooser
+DisplayManager.*.startup:	/etc/X11/xdm/Xstartup
+DisplayManager.*.session:	/etc/X11/xdm/Xsession
+DisplayManager.*.reset:		/etc/X11/xdm/Xreset
+!
+DisplayManager._0.terminateServer:	true
+DisplayManager._93.terminateServer:	true
+!
+DisplayManager*resources:	/etc/X11/xdm/Xresources
+DisplayManager.*.terminateServer:	false
+!
+! SECURITY: do not listen for XDMCP or Chooser requests
+! Comment out this line if you want to manage X terminals with xdm
+!
+DisplayManager.requestPort:	0

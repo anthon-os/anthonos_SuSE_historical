@@ -1,0 +1,16 @@
+
+[Desktop Entry]
+X-SuSE-translate=true
+Version=1.0
+Name=显示
+Comment=Configure screen settings and layout
+Exec=xfce4-display-settings
+Icon=video-display
+Terminal=false
+Type=Application
+Categories=XFCE;GTK;Settings;DesktopSettings;X-XFCE-SettingsDialog;X-XFCE-HardwareSettings;X-XFCE;
+StartupNotify=true
+OnlyShowIn=XFCE;
+X-XfcePluggable=true
+X-XfceHelpPage=display
+

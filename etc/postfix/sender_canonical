@@ -1,0 +1,8 @@
+# The sender_canonical_maps parameter specifies optional address
+# mapping lookup tables for envelope and header SENDER addresses.
+#
+# For example, you want to rewrite the SENDER address user@ugly.domain
+# to user@pretty.domain, while still being able to send mail to the
+# RECIPIENT address user@ugly.domain.
+# See man 5 canonical,  /etc/postfix/canonical or
+# /etc/postfix/sample-canonical.cf for more details

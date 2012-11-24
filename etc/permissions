@@ -1,0 +1,217 @@
+# /etc/permissions
+#
+# Copyright (c) 2001 SuSE GmbH Nuernberg, Germany.
+# Copyright (c) 2011 SUSE Linux Products GmbH Nuernberg, Germany.
+#
+# Author: Roman Drahtmueller <draht@suse.de>, 2001
+#
+# This file is used by SuSEconfig and chkstat to check or set the modes
+# and ownerships of files and directories in the installation.
+#
+# There is a set of files with similar meaning in a SuSE installation:
+# /etc/permissions  (This file)
+# /etc/permissions.easy
+# /etc/permissions.secure
+# /etc/permissions.paranoid
+# /etc/permissions.local
+# Please see the respective files for their meaning.
+#
+#
+# Format: 
+# <file> <owner>:<group> <permission> 
+#
+# How it works:
+# To change an entry copy the line to permissions.local, modify it
+# to suit your needs and call "chkstat --system"
+#
+# chkstat uses the variable PERMISSION_SECURITY from
+# /etc/sysconfig/security to determine which security level to
+# apply.
+# In addition to the central files listed above the directory
+# /etc/permissions.d/ can contain permission files that belong to
+# the packages they modify file modes for. These permission files
+# are to switch between conflicting file modes of the same file
+# paths in different packages (popular example: sendmail and
+# postfix, path /usr/sbin/sendmail).
+
+#
+# root directories:
+#
+
+/                                                       root:root          755
+/root/                                                  root:root          700
+/tmp/                                                   root:root         1777
+/tmp/.X11-unix/                                         root:root         1777
+/tmp/.ICE-unix/                                         root:root         1777
+/dev/                                                   root:root          755
+/bin/                                                   root:root          755
+/sbin/                                                  root:root          755
+/lib/                                                   root:root          755
+/etc/                                                   root:root          755
+/home/                                                  root:root          755
+/boot/                                                  root:root          755
+/opt/                                                   root:root          755
+/usr/                                                   root:root          755
+
+#
+# /var:
+#
+
+/var/tmp/                                               root:root         1777
+/var/log/                                               root:root          755
+/var/spool/                                             root:root          755
+/var/spool/mqueue/                                      root:root          700
+/var/spool/news/                                        news:news          775
+/var/spool/uucp/                                        uucp:uucp          755
+/var/spool/voice/                                       root:root          755
+/var/spool/mail/                                        root:root         1777
+/var/adm/                                               root:root          755
+/var/adm/backup/                                        root:root          700
+/var/cache/                                             root:root          755
+/var/cache/man/                                         man:root           755
+/var/yp/                                                root:root          755
+/var/run/nscd/socket					root:root	   666
+/var/run/sudo/                                          root:root          700
+
+#
+# login tracking
+#
+/var/log/lastlog                                        root:root          644
+/var/log/faillog                                        root:root          600
+/var/log/wtmp                                           root:utmp          664
+/var/log/btmp                                           root:root          600
+/var/run/utmp                                           root:utmp          664
+
+#
+# some device files
+#
+
+/dev/zero                                               root:root          666
+/dev/null                                               root:root          666
+/dev/full                                               root:root          666
+/dev/ip                                                 root:root          660
+/dev/initrd                                             root:disk          660
+/dev/kmem                                               root:kmem          640
+
+#
+# /etc
+#
+/etc/lilo.conf                                          root:root          600
+/etc/passwd                                             root:root          644
+/etc/shadow                                             root:shadow        640
+/etc/init.d/                                            root:root          755
+/etc/HOSTNAME                                           root:root          644
+/etc/hosts                                              root:root          644
+# Changing the hosts_access(5) files causes trouble with services
+# that do not run as root!
+/etc/hosts.allow                                        root:root          644
+/etc/hosts.deny                                         root:root          644
+/etc/hosts.equiv                                        root:root          644
+/etc/hosts.lpd                                          root:root          644
+/etc/ld.so.conf                                         root:root          644
+/etc/ld.so.cache                                        root:root          644
+
+/etc/opiekeys                                           root:root          600
+
+/etc/ppp/                                               root:dialout       750
+/etc/ppp/chap-secrets                                   root:root          600
+/etc/ppp/pap-secrets                                    root:root          600
+
+# sysconfig files:
+/etc/sysconfig/network/providers/                       root:root          700
+
+# utempter
+/usr/sbin/utempter                                      root:utmp         2755
+
+# ensure correct permissions on ssh files to avoid sshd refusing
+# logins (bnc#398250)
+/etc/ssh/ssh_host_key                                   root:root          600
+/etc/ssh/ssh_host_key.pub                               root:root          644
+/etc/ssh/ssh_host_dsa_key                               root:root          600
+/etc/ssh/ssh_host_dsa_key.pub                           root:root          644
+/etc/ssh/ssh_host_rsa_key                               root:root          600
+/etc/ssh/ssh_host_rsa_key.pub                           root:root          644
+/etc/ssh/ssh_config                                     root:root          644
+/etc/ssh/sshd_config                                    root:root          640
+
+#
+# legacy
+#
+# don't set the setuid bit on suidperl! Set it on sperl instead if
+# you really need it as suidperl is a hardlink to perl nowadays.
+/usr/bin/suidperl                                       root:root          755
+
+# new traceroute program by Olaf Kirch does not need setuid root any more.
+/usr/sbin/traceroute                                    root:root          755
+
+# netatalk printer daemon: sgid not needed any more with cups.
+/usr/sbin/papd                                          root:lp           0755
+
+# games:games 775 safe as long as we don't change files below it (#103186)
+# still people do it (#429882) so root:root 755 is the consequence.
+/var/games/                                             root:root         0755
+
+# No longer common. Set setuid bit yourself if you need it
+# (#66191)
+#/usr/bin/ziptool                                        root:trusted      4750
+
+#
+# udev static devices (#438039)
+#
+/lib/udev/devices/net/tun                               root:root         0666
+/lib/udev/devices/null                                  root:root         0666
+/lib/udev/devices/ptmx                                  root:tty          0666
+/lib/udev/devices/tty                                   root:tty          0666
+/lib/udev/devices/zero                                  root:root         0666
+
+#
+# named chroot (#438045)
+#
+/var/lib/named/dev/null                                 root:root         0666
+/var/lib/named/dev/random                               root:root         0666
+
+# we no longer make rpm build dirs 1777
+/usr/src/packages/SOURCES/                              root:root         0755
+/usr/src/packages/BUILD/                                root:root         0755
+/usr/src/packages/BUILDROOT/                            root:root         0755
+/usr/src/packages/RPMS/                                 root:root         0755
+/usr/src/packages/RPMS/alphaev56/                       root:root         0755
+/usr/src/packages/RPMS/alphaev67/                       root:root         0755
+/usr/src/packages/RPMS/alphaev6/                        root:root         0755
+/usr/src/packages/RPMS/alpha/                           root:root         0755
+/usr/src/packages/RPMS/amd64/                           root:root         0755
+/usr/src/packages/RPMS/arm4l/                           root:root         0755
+/usr/src/packages/RPMS/armv4l/                          root:root         0755
+/usr/src/packages/RPMS/armv5tejl/                       root:root         0755
+/usr/src/packages/RPMS/armv5tejvl/                      root:root         0755
+/usr/src/packages/RPMS/armv5tel/                        root:root         0755
+/usr/src/packages/RPMS/armv5tevl/                       root:root         0755
+/usr/src/packages/RPMS/armv6l/                          root:root         0755
+/usr/src/packages/RPMS/armv6vl/                         root:root         0755
+/usr/src/packages/RPMS/armv7l/                          root:root         0755
+/usr/src/packages/RPMS/athlon/                          root:root         0755
+/usr/src/packages/RPMS/geode/                           root:root         0755
+/usr/src/packages/RPMS/hppa2.0/                         root:root         0755
+/usr/src/packages/RPMS/hppa/                            root:root         0755
+/usr/src/packages/RPMS/i386/                            root:root         0755
+/usr/src/packages/RPMS/i486/                            root:root         0755
+/usr/src/packages/RPMS/i586/                            root:root         0755
+/usr/src/packages/RPMS/i686/                            root:root         0755
+/usr/src/packages/RPMS/ia32e/                           root:root         0755
+/usr/src/packages/RPMS/ia64/                            root:root         0755
+/usr/src/packages/RPMS/mips/                            root:root         0755
+/usr/src/packages/RPMS/noarch/                          root:root         0755
+/usr/src/packages/RPMS/pentium3/                        root:root         0755
+/usr/src/packages/RPMS/pentium4/                        root:root         0755
+/usr/src/packages/RPMS/powerpc64/                       root:root         0755
+/usr/src/packages/RPMS/powerpc/                         root:root         0755
+/usr/src/packages/RPMS/ppc64/                           root:root         0755
+/usr/src/packages/RPMS/ppc/                             root:root         0755
+/usr/src/packages/RPMS/s390/                            root:root         0755
+/usr/src/packages/RPMS/s390x/                           root:root         0755
+/usr/src/packages/RPMS/sparc64/                         root:root         0755
+/usr/src/packages/RPMS/sparc/                           root:root         0755
+/usr/src/packages/RPMS/sparcv9/                         root:root         0755
+/usr/src/packages/RPMS/x86_64/                          root:root         0755
+/usr/src/packages/SPECS/                                root:root         0755
+/usr/src/packages/SRPMS/                                root:root         0755

@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<gconf>
+	<dir name="schemas">
+		<dir name="apps">
+			<dir name="aisleriot">
+				<entry name="recent_games_list">
+					<local_schema short_desc="ល្បែង​ដែល​បាន​លេង​ថ្មីៗ">
+						<longdesc>រាយ​បញ្ជី​ល្បែង​ដែល​បាន​លេង​ថ្មីៗ ។</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="statistics">
+					<local_schema short_desc="ស្ថិតិ​នៃ​ល្បែង​ដែល​បាន​លេង">
+						<longdesc>បញ្ជី​នៃ​ខ្សែ​អក្សរ​ដែល​​ជា​ទម្រង់​​ quintuple: ឈ្មោះ ការ​ឈ្នះ ល្បែង​ដែល​បាន​លេង​សរុប ឱកាស​​ល្អ (គិត​ជា​វិនាទី) និង​ឱកាស​មិន​ល្អ (គិត​ជា​វិនាទី) ។ ល្បែង​ដែល​មិន​បាន​លេង​មិន​ចាំបាច់​ត្រូវ​បង្ហាញ​ឡើយ ។​</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="game_file">
+					<local_schema short_desc="ឯកសារ​ល្បែង​ត្រូវ​ប្រើ">
+						<longdesc>ឈ្មោះ​របស់​ឯកសារ​គ្រោងការណ៍​ដែល​មាន​ល្បែង solitaire ត្រូវ​លេង ។</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="animations">
+					<local_schema short_desc="ចលនា">
+						<longdesc>ថា​តើ​ត្រូវ​ធ្វើ​ឲ្យ​ការ​ផ្លាស់ទី​របស់​បៀ​មាន​ចលនា​ដែរ​ឬ​ទេ ។</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="sound">
+					<local_schema short_desc="សំឡេង">
+						<longdesc>តើ​ថា​​ត្រូវ​ចាក់​​​សំឡេង​ព្រឹត្តិការណ៍​​ដែរ​ឬ​ទេ ។</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="click_to_move">
+					<local_schema short_desc="ជ្រើស​រចនាប័ទ្ម​របស់​វត្ថុ​បញ្ជា">
+						<longdesc>ជ្រើស​ថា​តើ​ត្រូវ​អូស​បៀ ឬ​ចុច​លើ​ប្រភព​បន្ទាប់​ទៅកាន់​ទិសដៅ ។</longdesc>
+					</local_schema>
+				</entry>
+				<entry name="show_statusbar">
+					<local_schema short_desc="ថា​តើ​ត្រូវ​បង្ហាញ​របារ​ស្ថានភាព​ដែរ​ឬ​ទេ">
+					</local_schema>
+				</entry>
+				<entry name="show_toolbar">
+					<local_schema short_desc="ថា​តើ​ត្រូវ​បង្ហាញ​របារ​ឧបករណ៍​ដែរ​ឬ​ទេ">
+					</local_schema>
+				</entry>
+				<entry name="card_style">
+					<local_schema short_desc="ឈ្មោះ​ឯកសារ​ស្បែក">
+						<longdesc>ឈ្មោះ​របស់​ឯកសារ​ដែល​មាន​ក្រាហ្វិក​សម្រាប់​បៀ ។</longdesc>
+					</local_schema>
+				</entry>
+			</dir>
+		</dir>
+	</dir>
+</gconf>

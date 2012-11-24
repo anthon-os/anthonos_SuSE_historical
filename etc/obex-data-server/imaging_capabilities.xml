@@ -1,0 +1,6 @@
+<imaging-capabilities version="1.0">
+<preferred-format encoding="JPEG"/>
+<image-formats encoding="JPEG" pixel="80*60-65535*65535"/>
+<image-formats encoding="GIF" pixel="80*60-65535*65535"/>
+<image-formats encoding="PNG" pixel="80*60-65535*65535"/>
+</imaging-capabilities>

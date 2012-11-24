@@ -1,0 +1,468 @@
+#!/bin/bash
+#
+# Copyright (c) 2008 SUSE LINUX Products GmbH, Nuernberg, Germany.
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Author: Michael Calmer <mc@suse.de>
+#         Marius Tomaschewski <mt@suse.de>
+#
+##
+
+unset POSIXLY_CORRECT ; set +o posix # we're using non-posix bash features
+
+if test "$UID" != "0" -a "$USER" != root -a -z "$ROOT" ; then
+    echo "You must be root to start $0." >&2
+    exit 1
+fi
+
+# The environment variable ROOT indicates the root of the system to be
+# managed by SuSEconfig when that root is not '/'
+r="$ROOT"
+
+. "$r/etc/sysconfig/network/scripts/functions.netconfig"
+
+PROGNAME="${0##*/}"
+STATEDIR="$r/var/run/netconfig"
+
+debug "$PROGNAME Module called"
+
+. "$r/etc/sysconfig/network/config"
+. "$r/etc/sysconfig/network/dhcp"
+
+NIS_YPSRV_ENTRIES=()
+NIS_DOMAIN_ENTRIES=()
+NIS_DOMAIN_BROADCAST=()
+NIS_DOMAIN_SLP=()
+NIS_GLOGAL_BROADCAST="no"
+NIS_DOMAIN_DEFAULT=""
+NIS_DOMAIN_CREATED=""
+
+DESTFILE="$r/etc/yp.conf"
+TMP_FILE=""
+
+function format_yp_conf()
+{
+    local domain="$1"
+    local server="$2"
+
+    debug "format_yp_conf called with $domain:$server"
+
+    if [ "$domain" = "broadcast" ]; then
+        NIS_GLOGAL_BROADCAST="yes"
+        debug "configure gloabal broadcast"
+        return 0
+    fi
+
+    #debug "current domain is $NIS_DOMAIN_DEFAULT ; given domain is $domain" 
+    #if [ "$NIS_DOMAIN_DEFAULT" = "$domain" ]; then
+    #    domain=""
+    #    debug "domain matches ... set empty"
+    #fi
+
+    if [ -z "$domain" -a -n "$server" ]; then
+
+        for SRV in $server; do
+            SRV="ypserver $SRV" 
+            # skip duplicates
+            for od in "${NIS_YPSRV_ENTRIES[@]}" ; do
+                 [ "x$SRV" == "x$od" ] && continue 2
+            done
+
+            debug "configure ${SRV}"
+
+            NIS_YPSRV_ENTRIES=("${NIS_YPSRV_ENTRIES[@]}" "${SRV}") 
+        done
+        return 0
+    fi
+
+
+    test -z "$domain" && return 1
+    test -z "$server" && return 1
+
+    for SRV in $server; do 
+        if [ "$SRV" = "broadcast" ]; then
+            SRV="domain $domain $SRV"
+            # skip duplicates
+            for od in "${NIS_DOMAIN_BROADCAST[@]}" ; do
+                 [ "x$SRV" == "x$od" ] && continue 2
+            done
+
+            debug "configure ${SRV}"
+
+            NIS_DOMAIN_BROADCAST=("${NIS_DOMAIN_BROADCAST[@]}" "${SRV}")
+        elif [ "$SRV" = "slp" ]; then
+            SRV="domain $domain $SRV"
+            # skip duplicates
+            for od in "${NIS_DOMAIN_SLP[@]}" ; do
+                 [ "x$SRV" == "x$od" ] && continue 2
+            done
+
+            debug "configure ${SRV}"
+
+            NIS_DOMAIN_SLP=("${NIS_DOMAIN_SLP[@]}" "${SRV}")
+        else
+            SRV="domain $domain server $SRV"
+            # skip duplicates
+            for od in "${NIS_DOMAIN_ENTRIES[@]}" ; do
+                 [ "x$SRV" == "x$od" ] && continue 2
+            done
+
+            debug "configure ${SRV}"
+
+            NIS_DOMAIN_ENTRIES=("${NIS_DOMAIN_ENTRIES[@]}" "${SRV}")
+        fi
+    done
+    return 0
+}
+
+function format_static()
+{
+    local force=$1
+
+    debug "format_static[${force:-0}] called"
+
+    if [ "x$NETCONFIG_NIS_STATIC_DOMAIN"  != "x" -o \
+         "x$NETCONFIG_NIS_STATIC_SERVERS" != "x" ]; then
+        set_nisdomainname "$NETCONFIG_NIS_STATIC_DOMAIN" "" "$force"
+        format_yp_conf "$NETCONFIG_NIS_STATIC_DOMAIN" \
+                       "$NETCONFIG_NIS_STATIC_SERVERS"
+    fi
+
+    for i in {0..99} ; do
+        nis_dom="NETCONFIG_NIS_STATIC_DOMAIN_$i"
+        nis_srv="NETCONFIG_NIS_STATIC_SERVERS_$i"
+
+        if [ "x${!nis_dom}" != "x" -o "x${!nis_srv}" != "x" ]; then
+            set_nisdomainname "${!nis_dom}" "" "$force"
+            format_yp_conf "${!nis_dom}" "${!nis_srv}"
+        fi
+    done
+}
+
+function write_yp_conf()
+{
+    # DESTFILE may be a symlink on a read only /-fs
+    DST_FILE=`read_symlink "${DESTFILE}"`
+    TMP_FILE=`mktemp "${DST_FILE}.XXXXXX" 2>/dev/null || \
+              mktemp -t "${DST_FILE##*/}.XXXXXX"` || return 1
+
+    if test ! -s "$DST_FILE" ; then
+        touch "$DST_FILE" ; chmod 644 "$DST_FILE"
+    fi
+
+    # * copy dest => tmp to get the file attributes
+    # * remove the content 
+    # * print a warning on top of this file
+    #cp -p "$DST_FILE" "$TMP_FILE"
+
+    # set explicit mode on tmp file instead to preserve the
+    # mode of original file that can be wrong (bnc#428458)
+    chmod 644 "$TMP_FILE"
+
+    cat << EOT > "$TMP_FILE"
+### $DESTFILE file autogenerated by netconfig!
+#
+# Before you change this file manually, consider to define the
+# static NIS configuration using the following variables in the
+# /etc/sysconfig/network/config file:
+#     NETCONFIG_NIS_STATIC_DOMAIN[_<number>]
+#     NETCONFIG_NIS_STATIC_SERVERS[_<number>]
+# or disable NIS configuration updates via netconfig by setting:
+#     NETCONFIG_NIS_POLICY=''
+#
+# See also the netconfig(8) manual page and other documentation.
+#
+# Note: Manual change of this file disables netconfig too, but
+# may get lost when this file contains comments or empty lines
+# only, the netconfig settings are same with settings in this
+# file and in case of a "netconfig update -f" call.
+#
+### Please remove (at least) this line when you modify the file!
+EOT
+
+    if [ ${#NIS_YPSRV_ENTRIES[@]} -gt 0 ]; then
+        for srv in "${NIS_YPSRV_ENTRIES[@]}"; do
+            echo $srv
+        done >> "$TMP_FILE"
+    fi
+
+    if [ ${#NIS_DOMAIN_ENTRIES[@]} -gt 0 ]; then
+        for srv in "${NIS_DOMAIN_ENTRIES[@]}"; do
+            echo $srv
+        done >> "$TMP_FILE"
+    fi
+
+    if [ ${#NIS_DOMAIN_BROADCAST[@]} -gt 0 ]; then
+        for srv in "${NIS_DOMAIN_BROADCAST[@]}"; do
+            echo $srv
+        done >> "$TMP_FILE"
+    fi
+
+    if [ ${#NIS_DOMAIN_SLP[@]} -gt 0 ]; then
+        for srv in "${NIS_DOMAIN_SLP[@]}"; do
+            echo $srv
+        done >> "$TMP_FILE"
+    fi
+
+    if [ "$NIS_GLOGAL_BROADCAST" = "yes" ]; then
+        echo "broadcast" >> "$TMP_FILE"
+    fi
+
+    netconfig_check_md5_and_move "$TMP_FILE" "$DESTFILE" ".netconfig" TMP_FILE
+    return $?
+}
+
+function get_uptime()
+{
+    { IFS=. read a b < /proc/uptime; echo "$a"; } 2>/dev/null
+}
+
+function set_nisdomainname()
+{
+    debug "set_nisdomainname: $*"
+    local domain=$1
+    local iface=$2
+    local ctime=$((${3:-$(get_uptime)}))
+
+    # empty is a no as well
+    if [ "x$NETCONFIG_NIS_SETDOMAINNAME" = x -o \
+         "x$NETCONFIG_NIS_SETDOMAINNAME" = xno ] ;
+    then
+        debug "set_nisdomainname: => no"
+        return 0
+    fi
+
+    debug "set_nisdomainname: => $NETCONFIG_NIS_SETDOMAINNAME"
+
+    # don't overwrite a valid domain with empty setting,
+    # except the createtime value is lower than last one.
+    if [ "$NETCONFIG_NIS_SETDOMAINNAME" = "yes" -o \
+         "$NETCONFIG_NIS_SETDOMAINNAME" = "$iface" ] ; then
+
+        if [ "x$NIS_DOMAIN_DEFAULT" = x ] ; then
+            debug "set_nisdomainname: old[$NIS_DOMAIN_CREATED]=$NIS_DOMAIN_DEFAULT, new[$ctime]=$domain"
+            NIS_DOMAIN_DEFAULT="$domain"
+            NIS_DOMAIN_CREATED=$ctime
+            return 0
+        fi
+
+        NIS_DOMAIN_CREATED=$((${NIS_DOMAIN_CREATED:-$(get_uptime)}))
+        if [ $ctime -lt $NIS_DOMAIN_CREATED ] ; then
+            debug "set_nisdomainname: old[$NIS_DOMAIN_CREATED]=$NIS_DOMAIN_DEFAULT, new=[$ctime]$domain"
+            NIS_DOMAIN_DEFAULT="$domain"
+            NIS_DOMAIN_CREATED=$ctime
+            return 0
+        fi
+        debug "set_nisdomainname: skipped [$ctime -lt $(($NIS_DOMAIN_CREATED))]"
+    else
+        debug "set_nisdomainname: skipped [no interface match]"
+    fi
+    return 1
+}
+
+function write_nisdomainname()
+{
+    # don't set anything if it is disabled
+    if [ "x$NETCONFIG_NIS_SETDOMAINNAME" = x -o \
+         "x$NETCONFIG_NIS_SETDOMAINNAME" = xno ] ;
+    then
+        return 0
+    fi
+
+    # fallback to /etc/defaultdomain when empty
+    if [ "x$NIS_DOMAIN_DEFAULT" = x -a -s /etc/defaultdomain ] ; then
+        { NIS_DOMAIN_DEFAULT=`< /etc/defaultdomain`; } 2>/dev/null
+    fi
+
+    # try to use {nis,yp}domainname
+    for tool in {nis,yp,}domainname ; do
+        [ -x "/bin/$tool" ] || continue
+
+        if [ "$NIS_DOMAIN_DEFAULT" != "`/bin/$tool 2>/dev/null`" ] ; then
+            debug "set nis domainname to '$NIS_DOMAIN_DEFAULT'"
+            "/bin/$tool" "$NIS_DOMAIN_DEFAULT" && return 0 || return 2
+        else
+            debug "nis domainname '$NIS_DOMAIN_DEFAULT' is up to date"
+            return 1
+        fi
+    done
+    debug "unable to set domainname -- {nis,yp,}domainname utilities missed"
+    return 2
+}
+
+function get_nis_settings()
+{
+    local cfg=$1 ; shift
+    test "x$cfg" = x && return 1
+
+    debug "exec get_nis_settings: $cfg"
+
+    # clear the variables first
+    NISDOMAIN=""
+    NISSERVERS=""
+    INTERFACE=""
+    CREATETIME=""
+
+    get_variable "NISDOMAIN" "$cfg"
+    get_variable "NISSERVERS" "$cfg"
+    get_variable "INTERFACE" "$cfg"
+    get_variable "CREATETIME" "$cfg"
+    [ $(($CREATETIME)) -le 0 ] && CREATETIME=""
+
+    debug "exit get_nis_settings: $cfg"
+    return 0
+}
+
+function manage_interfaceconfig()
+{
+    local cfg dir="$1" ; shift
+    test "x$dir" != x -a -d "$dir" || return 1
+
+    debug "exec manage_interfaceconfig: $dir"
+    for cfg in `ls -X -r "$dir/" 2>/dev/null`; do
+
+        get_nis_settings "$dir/$cfg"
+
+        if [ "x$NISDOMAIN" = "x" -a "x$NISSERVERS" = "x" ]; then
+            continue;
+        fi
+
+        if [ "x$NISDOMAIN"  != "x" -a "x$NISSERVERS"  = "x" ]; then
+            NISSERVERS="broadcast"
+        fi
+
+        set_nisdomainname "$NISDOMAIN" "$INTERFACE" "$CREATETIME"
+        format_yp_conf "$NISDOMAIN" "$NISSERVERS"
+    done
+    debug "exit manage_interfaceconfig: $dir"
+
+    return 0
+}
+
+
+# *********************
+# EXECUTION STARTS HERE
+# *********************
+
+
+# just for the case we need the original value...
+_NETCONFIG_NIS_POLICY="$NETCONFIG_NIS_POLICY"
+if [ "x$_NETCONFIG_NIS_POLICY" = "xauto" ]; then
+    if [ "x$NETWORKMANAGER" = "xyes" ] ; then
+        #
+        # Use NetworkManager policy merged data
+        #
+        _NETCONFIG_NIS_POLICY='STATIC_FALLBACK NetworkManager'
+    else
+        #
+        # We use static settings and extend them
+        # with interface specific if available
+        #
+        _NETCONFIG_NIS_POLICY='STATIC *'
+    fi
+elif [ "x$_NETCONFIG_NIS_POLICY" = "x" ]; then
+    #
+    # empty policy means do not touch anything. 
+    # successful exit.
+    #
+    exit 0;
+fi
+
+sf=0
+_g=1
+# disable filename glob expansion if needed
+shopt -o -q noglob || _g=0
+[ $_g ] && shopt -o -s noglob
+for POL in $_NETCONFIG_NIS_POLICY; do
+    shopt -o -u noglob
+    case "$POL" in
+    (NetworkManager)
+        if [ "x$NETWORKMANAGER" = "xyes" ] ; then
+            debug "Use NetworkManager policy merged settings"
+            cfg="$STATEDIR/NetworkManager.netconfig"
+            if [ -r "$cfg" ] ; then
+
+                get_nis_settings "$cfg"
+
+                if [ "x$NISDOMAIN" != "x" -a "x$NISSERVERS" = "x" ]; then
+                    NISSERVERS="broadcast"
+                fi
+
+                set_nisdomainname "$NISDOMAIN" "$INTERFACE" "$CREATETIME"
+                format_yp_conf "$NISDOMAIN" "$NISSERVERS"
+            fi
+            break
+        fi
+    ;;
+    (STATIC)
+        debug "Keep Static"
+        format_static $(($sf - 1))
+    ;;
+    (STATIC_FALLBACK)
+        debug "Static Fallback"
+        sf=1
+    ;;
+    (*)
+        debug "Other: $POL"
+        for IFDIR in $STATEDIR/$POL; do
+            IFNAME="${IFDIR##*/}"
+            test -n "$IFNAME" -a -d "$IFDIR" -a \
+                 -d "/sys/class/net/${IFNAME}" || continue
+
+            # proceed every interface we find with this match
+            manage_interfaceconfig  "$IFDIR"
+        done
+    ;;
+    esac
+done
+[ $_g ] && shopt -o -u noglob
+
+if [ $sf -eq 1 -a \
+     ${#NIS_YPSRV_ENTRIES[@]}    -eq 0 -a \
+     ${#NIS_DOMAIN_ENTRIES[@]}   -eq 0 -a \
+     ${#NIS_DOMAIN_BROADCAST[@]} -eq 0 -a \
+     ${#NIS_DOMAIN_SLP[@]}       -eq 0 -a \
+    "$NIS_GLOGAL_BROADCAST"       != yes ] ;
+then
+    debug "Using static fallback"
+    format_static
+fi
+
+# OK, write the config
+write_yp_conf
+RET=$?
+
+if   [ $RET -eq 1 ] ; then
+    # config unchanged, but maybe domain
+    # skip reload when is didn't changed
+    write_nisdomainname
+    RET=$?
+    test $RET -eq 1 && exit 0
+elif [ $RET -eq 2 ] ; then
+    # user modified the config. abort
+    echo "ATTENTION: You have modified $DESTFILE.  Leaving it untouched..."
+    echo "You can find my version in $TMP_FILE ..."
+    exit 20
+fi
+write_nisdomainname
+
+# here we should restart services if needed
+# => reload ypbind
+if [ -x $r/etc/init.d/ypbind ]; then
+    $r/etc/init.d/ypbind reload >/dev/null 2>&1
+fi
+
+exit 0;
+
+# vim: set ts=8 sts=4 sw=4 ai et:

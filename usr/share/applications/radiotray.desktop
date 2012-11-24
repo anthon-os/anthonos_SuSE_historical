@@ -1,0 +1,9 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Name=收音机
+Terminal=false
+Exec=radiotray
+Icon=radiotray
+Type=Application
+Categories=AudioVideo;Player;GTK;
+

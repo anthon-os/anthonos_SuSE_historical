@@ -1,0 +1,14 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Name=目录安装器
+Comment=Install a catalog of software on the system
+Categories=System;
+Exec=gpk-install-catalog %F
+Terminal=false
+Type=Application
+Icon=system-software-install
+StartupNotify=true
+NoDisplay=true
+MimeType=application/x-catalog;
+
+

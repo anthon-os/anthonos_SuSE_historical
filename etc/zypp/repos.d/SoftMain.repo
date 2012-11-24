@@ -1,0 +1,8 @@
+[SoftMain]
+name=SoftMain
+enabled=1
+autorefresh=1
+baseurl=http://mirrors.ustc.edu.cn/opensuse/distribution/12.2/repo/oss
+path=/
+type=yast2
+keeppackages=0

@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-SuSE-translate=true
+Name=软件设置
+Comment=Change software update preferences and enable or disable software sources
+Icon=gpk-prefs
+Exec=gpk-prefs
+Terminal=false
+Type=Application
+Categories=GTK;GNOME;System;X-SuSE-ServiceConfiguration;
+OnlyShowIn=GNOME;
+StartupNotify=true
+

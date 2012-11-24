@@ -1,0 +1,41 @@
+#! /bin/sh
+#
+# Copyright (c) 2001 SuSE GmbH Nuernberg, Germany.  All rights reserved.
+#
+# /etc/init.d/boot.device-mapper
+#
+### BEGIN INIT INFO
+# Provides:          boot.device-mapper
+# Required-Start:    boot.udev boot.rootfsck
+# Required-Stop:     boot.udev
+# Should-Start:      udev-trigger
+# Default-Start:     B
+# Default-Stop:
+# Description:       activate device mapper
+### END INIT INFO
+
+. /etc/rc.status
+
+rc_reset
+
+case "$1" in
+    start)
+	echo -n "Activating device mapper..."
+	modprobe dm-mod || rc_failed 1
+	rc_status -v
+	;;
+    stop)
+	rc_failed 3
+	rc_status -v
+	;;
+    status)
+	rc_failed 4
+	rc_status -v
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status}"
+	exit 1
+	;;
+esac
+
+rc_exit

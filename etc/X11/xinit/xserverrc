@@ -1,0 +1,52 @@
+#!/bin/bash
+
+#
+# move this file to ~/.xserverrc, if you don't want to allow
+# everybody to get access to your X-Server
+#
+
+dspnum=":0"
+  args=""
+  done=no
+if test -z "$XAUTHORITY" ; then
+  auth="$HOME/.Xauthority"
+else
+  auth="$XAUTHORITY"
+fi
+
+while test -n "$1" ; do
+    case "$1" in
+	\:[0-9])
+	    dspnum="$1" ;     shift ;;
+	-auth)
+	    done=yes
+	    args="$args $1" ; shift ;;
+	*)
+	    args="$args $1" ; shift ;;
+    esac
+done
+
+# handle TCP port 6000
+. /etc/sysconfig/displaymanager
+test "$DISPLAYMANAGER_XSERVER_TCP_PORT_6000_OPEN" != "yes" && \
+  args="$args -nolisten tcp"
+
+if test -x "`type -p keygen`" -a "$done" != "yes" ; then
+    host=localhost
+
+    trap "echo" 1 2 15
+    cookie="MIT-MAGIC-COOKIE-1 `keygen`"
+     tcpip="$host$dspnum"
+      unix="${host%%.*}/unix$dspnum"
+
+    xauth -f $auth source - <<-EOF
+	add $tcpip $cookie
+	add $unix  $cookie
+	add ${host}/unix$dspnum $cookie
+	EOF
+    cookie=
+
+    exec X $dspnum -auth $auth $args
+else
+    exec X $dspnum $args
+fi

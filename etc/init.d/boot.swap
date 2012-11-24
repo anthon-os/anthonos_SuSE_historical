@@ -1,0 +1,65 @@
+#! /bin/bash
+#
+# Copyright (c) 2001-2005 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# /etc/init.d/boot.swap
+#
+### BEGIN INIT INFO
+# Provides:          boot.swap
+# Required-Start:    boot.rootfsck $local_fs
+# Should-Start:      boot.md boot.lvm boot.evms boot.crypto
+# Required-Stop:     $local_fs
+# Should-Stop:       boot.lvm boot.crypto
+# Default-Start:     B
+# Default-Stop:
+# Short-Description: start rest of swap devices
+# Description:       start rest of swap devices
+### END INIT INFO
+
+. /etc/rc.status
+. /etc/sysconfig/kernel
+
+rc_reset
+
+case "$1" in
+    start)
+	echo "Activating remaining swap-devices in /etc/fstab..."
+	swapon -a &> /dev/null
+	rc_status -v1 -r
+	;;
+    stop)
+	echo "Turning off swap files"
+	if test -r /proc/swaps ; then
+	    # Use cat and a pipe because swapoff changes
+	    # /proc/swaps during direct read call
+	    cat /proc/swaps | \
+	    while read des type rest ; do
+		# Release swapfiles and partitions on other subsystems
+		# we may want to shut down, like LVM or MD,
+		# so we only keep /dev/sd* for the moment
+		case $des in
+		    /dev/sd*) continue ;;
+		esac
+		swapoff $des &> /dev/null
+	    done
+	    sync
+	fi
+	;;
+    restart)
+	$0 stop
+	$0 start
+	;;
+    status)
+	# assume we have been run (otherwise this would mean parsing fstab manually)
+	rc_reset
+	rc_status -v
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|restart}"
+	exit 1
+	;;
+esac
+
+rc_exit
+

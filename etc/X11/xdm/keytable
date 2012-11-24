@@ -1,0 +1,68 @@
+#!/bin/sh
+
+if [ $UID -ne 0 ]; then
+  echo "You need to be root to run this program"
+  exit 0
+fi
+
+configfile=/etc/sysconfig/keyboard
+cachedir=/var/cache/xdm
+cachefile=keyboard.last
+conffile=/etc/X11/xorg.conf.d/90-keytable.conf
+mapfile=/etc/X11/xdm/Keyboard.map
+
+. ${configfile}
+
+if [ -e $cachedir/$cachefile -a -e $conffile ]
+then
+    . $cachedir/$cachefile
+    [ "$KEYTABLE" = "$cache_keytable" ] && exit 1;
+fi
+
+# layout is mandatory - but $keytable may be bogus
+layout=us
+variant=x
+options=x
+
+keytable=$(basename $KEYTABLE .map.gz)
+
+# if no mapping is available, fall back to "us" (bnc #606063)
+if ! grep -q "^$keytable *:" $mapfile; then
+    mkdir -p $(dirname $conffile)
+    cat > $conffile << EOF
+Section "InputClass"
+	Identifier "LocalKeyboard"
+	MatchIsKeyboard "on"
+	Option  "XkbLayout"     "us"
+EndSection
+EOF
+    exit 0
+fi
+
+layout=$(grep "^$keytable *:" $mapfile | cut -d ":" -f 3|sed 's/ //g')
+variant=$(grep "^$keytable *:" $mapfile | cut -d ":" -f 4|sed 's/ //g')
+options=$(grep "^$keytable *:" $mapfile | cut -d ":" -f 10-12|sed 's/ //g')
+
+mkdir -p $(dirname $conffile)
+cat > $conffile << EOF
+Section "InputClass"
+	Identifier "LocalKeyboard"
+	MatchIsKeyboard "on"
+	Option	"XkbLayout"	"$layout"
+EOF
+
+if [ "$variant" != "x" ]; then
+    echo "	Option	\"XkbVariant\"	\"$variant\"" >> $conffile
+fi
+if [ "$options" != "x" ]; then
+    echo "	Option	\"XkbOptions\"	\"$options\"" >> $conffile
+fi
+
+cat >> $conffile << EOF
+EndSection
+EOF
+
+mkdir -p $cachedir 2>/dev/null
+echo cache_keytable=$KEYTABLE > $cachedir/$cachefile 2>/dev/null
+
+exit 0

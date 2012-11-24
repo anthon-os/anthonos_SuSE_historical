@@ -1,0 +1,375 @@
+#! /bin/bash
+# Copyright (c) 1996-2002 SuSE Linux AG, Nuernberg, Germany.
+# Copyright (c) 2008 SuSE LINUX Products GmbH, Nuernberg, Germany.
+# All rights reserved.
+#
+# Author: Florian La Roche, 1996
+#      Werner Fink <werner@suse.de>, 1996,2008
+#      Burchard Steinbild, 1996
+#
+# Please send feedback to http://www.suse.de/feedback
+#
+# /etc/init.d/nfs
+#
+### BEGIN INIT INFO
+# Provides:       nfs
+# Required-Start: $network $portmap
+# Required-Stop:  $network $portmap
+# Default-Start:  3 5
+# Default-Stop:   0 1 2 6
+# Short-Description: NFS client services 
+# Description:    All necessary services for NFS clients
+### END INIT INFO
+
+. /etc/rc.status
+. /etc/sysconfig/nfs
+
+# XXX: there should be separate init scripts for these really
+IDMAPD_BIN=/usr/sbin/rpc.idmapd
+GSSD_BIN=/usr/sbin/rpc.gssd
+STATD_BIN=/usr/sbin/rpc.statd
+
+IDMAPD_CLIENT_STATE=/var/run/nfs/nfs-rpc.idmapd
+IDMAPD_SERVER_STATE=/var/run/nfs/nfsserver-rpc.idmapd
+
+if [ -z "$RPC_PIPEFS_DIR" ]; then
+    RPC_PIPEFS_DIR=/var/lib/nfs/rpc_pipefs
+fi
+
+NEED_IDMAPD=no
+NEED_GSSD=no
+NEED_LDCONFIG=no
+state=0
+usr=""
+opt=""
+mnt=""
+nfs=$NFS_START_SERVICES
+if [ "x$nfs" != "xyes" ]
+then nfs=no
+fi
+
+while read -r what where type options rest  ; do
+    case "$what" in
+	\#*|"")     continue ;;
+    esac
+    case ",$options," in
+	*,noauto,*) continue ;;
+    esac
+    case "$type" in
+	nfs|nfs4)   ;;
+	*)          continue ;;
+    esac
+    nfs=yes
+    if test "$1" = status ; then
+	grep -qF "$what $where nfs
+$what/ $where nfs" /proc/mounts && continue
+        state=3
+	continue
+    fi
+    case "$where" in
+	/usr*)
+	    usr="${usr:+$usr }$where"
+	    NEED_LDCONFIG=yes
+	    ;;
+	/opt*)
+	    opt="${opt:+$opt }$where"
+	    NEED_LDCONFIG=yes
+	    ;;
+	*)
+	    mnt="${mnt:+$mnt }$where"
+	    test "$NEED_LDCONFIG" = yes        && continue
+	    grep -qE "^$where" /etc/ld.so.conf || continue
+	    NEED_LDCONFIG=yes
+	    ;;
+    esac
+done < /etc/fstab
+unset what where type options rest
+
+case $NFS_SECURITY_GSS in
+  [Nn]*)        flavors="";;
+  [Yy]*)        flavors=krb5;;
+  *)            flavors="$NFS_SECURITY_GSS";;
+esac
+
+if test -n "$flavors" ; then
+    NEED_GSSD=yes
+fi
+
+if test "$NFS4_SUPPORT" = yes ; then
+    NEED_IDMAPD=yes
+fi
+if grep -E '^(sunrpc|fs.nfs)' /etc/sysctl.conf > /dev/null 2>&1 ; then
+    nfs=yes
+fi
+
+check_portmap() {
+   # check if either portmap or rpcbind is running
+   if test -x /sbin/portmap && checkproc /sbin/portmap
+   then true
+   elif test -x /sbin/rpcbind && checkproc /sbin/rpcbind
+   then true
+   else false
+   fi
+}
+
+if ! test "$nfs" = no -o -x /sbin/portmap -o -x /sbin/rpcbind; then
+    echo "portmap/rpcbind is missing"
+    rc_failed 3
+    rc_status -v
+    rc_exit
+fi
+
+mount_rpc_pipefs() {
+    # See if the file system is there yet
+    case `stat -c "%t" -f "$RPC_PIPEFS_DIR"` in
+    *67596969*)
+        return 0;;
+    esac
+    mount -t rpc_pipefs rpc_pipefs "$RPC_PIPEFS_DIR"
+}
+
+umount_rpc_pipefs() {
+    # See if the file system is there
+    case `stat -c "%t" -f "$RPC_PIPEFS_DIR"` in
+    *67596969*)
+        umount "$RPC_PIPEFS_DIR"
+    esac
+}
+
+mount_usr() {
+    test -n "$usr" -o -n "$opt" || return
+    local where
+    for where in $usr $opt ; do
+	mount -o nolock $where || {
+	    # maybe network device hasn't appeared yet.
+	    udevadm settle
+	    mount -o nolock $where
+	}
+    done
+}
+
+do_start_gssd() {
+    for flavor in $flavors; do
+        /sbin/modprobe rpcsec_gss_$flavor
+    done
+    mount_rpc_pipefs
+    startproc $GSSD_BIN
+    return $?
+}
+
+do_start_idmapd() {
+    mount_rpc_pipefs
+
+    # as idmapd needs to be run by server and client
+    # check if there is already a idmapd running
+    if checkproc $IDMAPD_BIN && test -f $IDMAPD_SERVER_STATE; then
+        killproc -HUP $IDMAPD_BIN
+    else
+        startproc $IDMAPD_BIN
+	return $?
+    fi
+}
+
+rc_reset
+case "$1-$nfs" in
+    start-no|reload-no)
+	# Always run smnotify, even if no mounts are listed in fstab.
+	# If there is nothing to do, it will exit quickly, and if there
+	# is something to do, the sooner it is done, the better.
+	/usr/sbin/sm-notify $SM_NOTIFY_OPTIONS
+	echo -n "Not starting NFS client services - no NFS found in /etc/fstab:"
+	rc_status -u
+	;;
+    start-yes|force-start-*)
+	echo -n "Starting NFS client services:"
+	if ! check_portmap ; then
+	    echo "portmap/rpcbind is not running"
+	    rc_failed 3
+	    rc_status -v
+	    rc_exit
+	fi
+
+	# explicit modprobe so we can set some sysctl values
+	# before any daemons (e.g. lockd) start.
+	# When modprobe allows this to be moved to modprobe.d
+	# without breaking --show-depends, this can be removed.
+	modprobe nfs
+	grep -E '^(sunrpc|fs.nfs)' /etc/sysctl.conf | sysctl -q -e -n -p -
+
+	# in case we need /usr and/or /opt via nfs 
+	mount_usr
+
+	# sm-notify
+	echo -n " sm-notify"
+	/usr/sbin/sm-notify $SM_NOTIFY_OPTIONS
+
+	# start gssd
+	if test "$NEED_GSSD" = yes ; then
+ 	    echo -n " gssd"
+	    do_start_gssd || {
+	        rc_status -v
+	        rc_exit
+	    }
+	fi
+
+	# start idmapd
+	if test "$NEED_IDMAPD" = yes ; then
+	    echo -n " idmapd"
+	    do_start_idmapd || {
+	        rc_status -v
+	        rc_exit
+	    }
+	    [ -d /var/run/nfs ] || mkdir /var/run/nfs
+	    echo $IDMAPD_BIN > $IDMAPD_CLIENT_STATE
+	fi
+
+	rc_status -v
+	# remark: statd is started when needed by mount.nfs
+
+	# Mount all auto NFS devices (-> nfs(5) and mount(8) )
+	#  NFS-Server sometime not reachable during boot phase.
+	#  It's sometime usefull to mount NFS devices in
+	#  background with an ampersand (&) and a sleep time of
+	#  two or more seconds, e.g:
+	#  
+	#   sleep 2 && mount -at nfs,nfs4 &
+	#   sleep 2 
+	#  
+	if test -n "$mnt" ; then
+	    # If network devices are not yet discovered, mounts
+	    # might fail, so we might need to 'udevadm settle' to
+	    # wait for the interfaces.
+	    # We cannot try the mount and on failure: 'settle' and try again
+	    # as if there are 'bg' mounts, we could get multiple copies
+	    # of them.  So always 'settle' if there is any mounting to do.
+	    echo -n "Mounting network file systems ..."
+	    udevadm settle
+            mount -at nfs,nfs4 || rc_failed 1
+	    rc_status -v
+	fi
+	#
+    	# generate new list of available shared libraries
+	#
+	if test "$NEED_LDCONFIG" = yes; then
+	    # check if ld.so.cache needs to be refreshed
+	    /etc/init.d/boot.ldconfig start
+	fi
+	#
+	;;
+    stop* )
+	echo -n "Shutting down NFS client services:"
+
+	rootfs=`awk '$2 == "/" && $1 != "rootfs" {print $3}' /proc/mounts`
+
+	if test x$rootfs = xnfs ; then
+	    echo -n " root filesystem is on NFS"
+	    rc_status -s
+	else
+	    # kill process to maximise chance that umount succeeds
+	    mnt=`awk '$3 ~ /^nfs4*$/ {print $2}' /proc/mounts`
+	    runlevel=`runlevel | awk '{print $2}'`
+	    if test "$runlevel" -eq 0 -o "$runlevel" -eq 6; then 
+	      if test -n "$mnt" ; then
+		/sbin/mkill -TERM $mnt
+              fi
+            fi
+
+	    # if filesystems are not busy, wait for unmount to complete..
+	    umount -at nfs,nfs4
+	    # if they are still busy, do a lazy unmount anyway.
+	    umount -alt nfs,nfs4
+
+	    # stop gssd
+	    if checkproc $GSSD_BIN; then
+		echo -n " gssd"
+		killproc $GSSD_BIN
+	    fi
+
+	    # stop idmapd
+	    if test -f $IDMAPD_CLIENT_STATE; then
+	        # only stop idmapd if it is not needed by server
+		if test ! -f $IDMAPD_SERVER_STATE ; then
+		    echo -n " idmapd"
+		    killproc $IDMAPD_BIN
+		fi
+		rm -f $IDMAPD_CLIENT_STATE
+	    fi 
+
+	    # stop rpc.statd if not needed by server
+	    if checkproc $STATD_BIN ; then
+		if [ `cat /proc/fs/nfsd/threads 2> /dev/null`0 -eq 0 ]; then
+		    echo -n " rpc.statd"
+		    killproc $STATD_BIN
+		fi
+	    fi
+
+	    umount_rpc_pipefs
+
+	    rc_status -v
+	fi
+	;;
+    reload*|force-reload*)
+	# only IDMAP has any sense in which 'reload' makes sense.
+	if checkproc $IDMAPD_BIN; then
+	    killproc -HUP $IDMAPD_BIN
+	fi
+	rc_status
+	;;
+    restart*)
+        ## Stop the service and regardless of whether it was
+	## running or not, start it again.
+	$0 stop
+	$0 force-start
+	rc_status
+	;;
+    status*)
+	echo -n "Checking for mounted nfs shares (from /etc/fstab):"
+	if test "$nfs" = yes ; then
+	    rc_failed $state
+        else
+	    rc_failed 3
+	fi
+	#
+	if test "$NEED_GSSD" = yes && ! checkproc $GSSD_BIN; then
+	    echo "gssd not running"
+	    rc_failed 3
+	fi
+	# 
+	if test "$NEED_IDMAPD" = yes && ! checkproc $IDMAPD_BIN; then
+	    echo "idmapd not running"
+	    rc_failed 3
+	fi
+	if ! check_portmap; then
+	    echo "Warning: portmap/rpcbind not running - nfs may not work well"
+	fi
+        rc_status -v
+	;;
+    try-restart*|condrestart*)
+	# This restart is not only conditional on the services already
+	# running, but is also gentler in that NFS filesystems are
+	# not unmounted or remounted.
+	# It is possible that the programs have been reinstalled so
+	# we pass a basename rather than a full path to checkproc and killproc
+	echo -n "Restarting NFS services:"
+	if checkproc ${GSSD_BIN##*/}; then
+	    echo -n " gssd"
+	    killproc ${GSSD_BIN##*/}
+	    startproc $GSSD_BIN
+	fi
+	if checkproc ${IDMAPD_BIN##*/}; then
+	    echo -n " idmapd"
+	    killproc ${IDMAPD_BIN##*/}
+	    startproc $IDMAPD_BIN
+	fi
+	if checkproc ${STATD_BIN##*/}; then
+	    echo -n " statd"
+	    killproc ${STATD_BIN##*/}
+	    /usr/sbin/start-statd
+	fi
+	rc_status -v
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|reload|force-reload|restart|try-restart}"
+	exit 1
+esac
+rc_exit
